@@ -7,6 +7,7 @@ export enum BookStatus {
 export default class Book {
   constructor(
     private data: {
+      id: string;
       authorId: string;
       title: string;
       description: string;
@@ -18,6 +19,10 @@ export default class Book {
       filePath: string;
     }
   ) {}
+
+  get id() {
+    return this.data.id;
+  }
 
   get authorId() {
     return this.data.authorId;

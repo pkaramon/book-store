@@ -17,6 +17,7 @@ export default function buildPublishBook(deps: Dependencies): PublishBook {
 
   function createBook(data: InputData) {
     return new Book({
+      id: deps.createId(),
       authorId: data.userId,
       title: data.title,
       whenCreated: data.whenCreated,

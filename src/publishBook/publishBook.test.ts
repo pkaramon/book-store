@@ -146,6 +146,7 @@ test("creating a book", async () => {
   const { bookId } = await publishBook({ ...validData });
   expect(bookId).toEqual(createId());
   const savedBook = saveBook.mock.calls[0][0] as Book;
+  expect(savedBook.id).toEqual(bookId);
   expect(savedBook.authorId).toEqual(validData.userId);
   expect(savedBook.title).toEqual(validData.title);
   expect(savedBook.description).toEqual(validData.description);
