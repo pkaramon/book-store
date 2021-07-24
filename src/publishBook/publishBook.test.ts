@@ -1,25 +1,28 @@
-import buildPublishBook from "./impl";
+import buildPublishBook from "./imp";
 import Book, { BookStatus } from "../domain/Book";
 import {
   InputData,
   ValidationError,
   CouldNotCompleteRequest,
 } from "./interface";
+import FakeClock from "../fakes/FakeClock";
+import InMemoryBookDb from "../fakes/InMemoryBookDb";
+import NumberIdCreator from "../fakes/NumberIdCreator";
 
-const clock = { now: () => new Date(2020, 1, 1) };
-const saveBook = jest.fn();
-const createId = jest.fn(() => "123");
+const bookDb = new InMemoryBookDb();
+const idCreator = new NumberIdCreator();
 const isCorrectEbookFile = jest.fn().mockResolvedValue(true);
-const publishBook = buildPublishBook({
-  clock,
-  saveBook,
-  createId,
+const dependencies = {
+  clock: new FakeClock({ now: new Date(2020, 1, 1) }),
+  saveBook: bookDb.save,
+  createId: idCreator.create,
   isCorrectEbookFile,
-});
+};
+const publishBook = buildPublishBook(dependencies);
 
 beforeEach(() => {
-  saveBook.mockClear();
-  createId.mockClear();
+  bookDb.clear();
+  idCreator.reset();
   isCorrectEbookFile.mockClear();
 });
 
@@ -41,26 +44,20 @@ const validData: InputData = {
   whenCreated: new Date("2018-02-18"),
   numberOfPages: 123,
   filePath: "books/first book.pdf",
-  sampleFilePath: "books/first book chapter one.pdf",
+  sampleFilePath: "books/first book chapter one.epub",
 };
 
 describe("validation", () => {
   test("title cannot be empty", async () => {
-    await expectValidationToFail("title", "", "title cannot be empty");
-    await expectValidationToFail("title", " ", "title cannot be empty");
+    const errorMessage = "title cannot be empty";
+    await expectValidationToFail("title", "", errorMessage);
+    await expectValidationToFail("title", " ", errorMessage);
   });
 
   test("description cannot be empty", async () => {
-    await expectValidationToFail(
-      "description",
-      "",
-      "description cannot be empty"
-    );
-    await expectValidationToFail(
-      "description",
-      "   ",
-      "description cannot be empty"
-    );
+    const errorMessage = "description cannot be empty";
+    await expectValidationToFail("description", "", errorMessage);
+    await expectValidationToFail("description", "   ", errorMessage);
   });
 
   test("description must be at most 1000 characters long", async () => {
@@ -73,25 +70,19 @@ describe("validation", () => {
   });
 
   test("price must be positive", async () => {
-    await expectValidationToFail("price", -1, "price must be positive");
-    await expectValidationToFail("price", 0, "price must be positive");
+    const errorMessage = "price must be positive";
+    await expectValidationToFail("price", -1, errorMessage);
+    await expectValidationToFail("price", 0, errorMessage);
   });
 
   test("numberOfPages must be positive", async () => {
-    await expectValidationToFail(
-      "numberOfPages",
-      -1,
-      "numberOfPages must be positive"
-    );
-    await expectValidationToFail(
-      "numberOfPages",
-      0,
-      "numberOfPages must be positive"
-    );
+    const errorMessage = "numberOfPages must be positive";
+    await expectValidationToFail("numberOfPages", -1, errorMessage);
+    await expectValidationToFail("numberOfPages", 0, errorMessage);
   });
 
   test("whenCreated cannot be in the future", async () => {
-    await expectValidationToPass("whenCreated", clock.now());
+    await expectValidationToPass("whenCreated", dependencies.clock.now());
     await expectValidationToFail(
       "whenCreated",
       new Date(2020, 1, 2),
@@ -144,8 +135,9 @@ describe("validation", () => {
 
 test("creating a book", async () => {
   const { bookId } = await publishBook({ ...validData });
-  expect(bookId).toEqual(createId());
-  const savedBook = saveBook.mock.calls[0][0] as Book;
+  expect(bookId).toEqual(idCreator.lastCreated());
+
+  const savedBook = (await bookDb.getById(bookId)) as Book;
   expect(savedBook.id).toEqual(bookId);
   expect(savedBook.authorId).toEqual(validData.userId);
   expect(savedBook.title).toEqual(validData.title);
@@ -163,16 +155,15 @@ test("file system error", async () => {
   isCorrectEbookFile.mockRejectedValueOnce(
     new Error("could not check the file")
   );
-  await expect(() => publishBook({ ...validData })).rejects.toThrow(
-    CouldNotCompleteRequest
-  );
+  await expectToThrowError(publishBook, validData, CouldNotCompleteRequest);
 });
 
 test("database error", async () => {
-  saveBook.mockRejectedValueOnce(new Error("could not connect to db"));
-  await expect(() => publishBook({ ...validData })).rejects.toThrow(
-    CouldNotCompleteRequest
-  );
+  const publishBook = buildPublishBook({
+    ...dependencies,
+    saveBook: jest.fn().mockRejectedValueOnce(new Error("could not save book")),
+  });
+  await expectToThrowError(publishBook, validData, CouldNotCompleteRequest);
 });
 
 async function expectValidationToFail<Key extends keyof InputData>(
@@ -195,6 +186,10 @@ async function expectValidationToPass<Key extends keyof InputData>(
   value: typeof validData[Key]
 ) {
   await publishBook({ ...validData, [key]: value });
+}
+
+async function expectToThrowError(fn: Function, data: any, expectedError: any) {
+  await expect(() => fn(data)).rejects.toThrowError(expectedError);
 }
 
 function nCharString(n: number) {

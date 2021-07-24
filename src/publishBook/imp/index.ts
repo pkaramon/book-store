@@ -12,7 +12,7 @@ export default function buildPublishBook(deps: Dependencies): PublishBook {
     await validateInputData(deps, data);
     const book = createBook(data);
     await tryToSaveBook(book);
-    return { bookId: deps.createId() };
+    return { bookId: book.id };
   };
 
   function createBook(data: InputData) {
