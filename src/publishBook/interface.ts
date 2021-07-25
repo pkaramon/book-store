@@ -17,33 +17,11 @@ export interface InputData {
   filePath: string;
 }
 
-export interface Dependencies {
-  clock: Clock;
-  saveBook: SaveBook;
-  createId: CreateId;
-  isCorrectEbookFile: IsCorrectEbookFile;
-}
-
-export interface Clock {
-  now(): Date;
-}
-
-export interface SaveBook {
-  (book: Book): Promise<void>;
-}
-
-export interface CreateId {
-  (): string;
-}
-
-export interface IsCorrectEbookFile {
-  (path: string): Promise<boolean>;
-}
-
-export class ValidationError extends Error {
-  constructor(public readonly errors: Record<string, string>) {
+export type InvalidBookDataErrors = Partial<Record<keyof InputData, string>>;
+export class InvalidBookData extends Error {
+  constructor(public readonly errors: InvalidBookDataErrors) {
     super();
-    this.name = ValidationError.name;
+    this.name = InvalidBookData.name;
   }
 
   get invalidProperties() {
@@ -56,4 +34,23 @@ export class CouldNotCompleteRequest extends Error {
     super(message);
     this.name = CouldNotCompleteRequest.name;
   }
+}
+
+export interface Dependencies {
+  now: () => Date;
+  saveBook: SaveBook;
+  createId: CreateId;
+  isCorrectEbookFile: IsCorrectEbookFile;
+}
+
+export interface SaveBook {
+  (book: Book): Promise<void>;
+}
+
+export interface CreateId {
+  (): string;
+}
+
+export interface IsCorrectEbookFile {
+  (path: string): Promise<boolean>;
 }

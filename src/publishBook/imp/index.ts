@@ -9,7 +9,7 @@ import validateInputData from "./validateInputData";
 
 export default function buildPublishBook(deps: Dependencies): PublishBook {
   return async function publishBook(data: InputData) {
-    await validateInputData(deps, data);
+    await validateInputData(data, deps);
     const book = createBook(data);
     await tryToSaveBook(book);
     return { bookId: book.id };

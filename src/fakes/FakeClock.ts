@@ -1,6 +1,4 @@
-import { Clock } from "../publishBook/interface";
-
-export default class FakeClock implements Clock {
+export default class FakeClock {
   constructor(private data: { now: Date }) {
     this.now = this.now.bind(this);
   }

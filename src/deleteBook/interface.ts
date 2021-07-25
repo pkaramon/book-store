@@ -9,14 +9,6 @@ export interface InputData {
   bookId: string;
 }
 
-export interface DeleteBookById {
-  (bookId: string): Promise<void>;
-}
-
-export interface GetBookById {
-  (bookId: string): Promise<Book | null>;
-}
-
 export class BookNotFound extends Error {
   constructor(bookId: string) {
     super(`book with id: ${bookId} was not found`);
@@ -36,4 +28,12 @@ export class CouldNotCompleteRequest extends Error {
     super(reason);
     this.name = CouldNotCompleteRequest.name;
   }
+}
+
+export interface DeleteBookById {
+  (bookId: string): Promise<void>;
+}
+
+export interface GetBookById {
+  (bookId: string): Promise<Book | null>;
 }

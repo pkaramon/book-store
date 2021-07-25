@@ -2,7 +2,7 @@ import buildPublishBook from "./imp";
 import Book, { BookStatus } from "../domain/Book";
 import {
   InputData,
-  ValidationError,
+  InvalidBookData,
   CouldNotCompleteRequest,
 } from "./interface";
 import FakeClock from "../fakes/FakeClock";
@@ -13,7 +13,7 @@ const bookDb = new InMemoryBookDb();
 const idCreator = new NumberIdCreator();
 const isCorrectEbookFile = jest.fn().mockResolvedValue(true);
 const dependencies = {
-  clock: new FakeClock({ now: new Date(2020, 1, 1) }),
+  now: new FakeClock({ now: new Date(2020, 1, 1) }).now,
   saveBook: bookDb.save,
   createId: idCreator.create,
   isCorrectEbookFile,
@@ -82,7 +82,7 @@ describe("validation", () => {
   });
 
   test("whenCreated cannot be in the future", async () => {
-    await expectValidationToPass("whenCreated", dependencies.clock.now());
+    await expectValidationToPass("whenCreated", dependencies.now());
     await expectValidationToFail(
       "whenCreated",
       new Date(2020, 1, 2),
@@ -95,7 +95,7 @@ describe("validation", () => {
       await publishBook({ ...validData, title: "", price: -1 });
       throw "should have thrown";
     } catch (e) {
-      expect(e).toBeInstanceOf(ValidationError);
+      expect(e).toBeInstanceOf(InvalidBookData);
       expect(e.errors.title).not.toBeUndefined();
       expect(e.errors.price).not.toBeUndefined();
       expect(e.invalidProperties).toContain("title");
@@ -175,7 +175,7 @@ async function expectValidationToFail<Key extends keyof InputData>(
     await publishBook({ ...validData, [key]: value });
     throw "should have thrown";
   } catch (e) {
-    expect(e).toBeInstanceOf(ValidationError);
+    expect(e).toBeInstanceOf(InvalidBookData);
     expect(e.errors).toEqual({ [key]: expectedErrorMessage });
     expect(e.invalidProperties).toEqual([key]);
   }

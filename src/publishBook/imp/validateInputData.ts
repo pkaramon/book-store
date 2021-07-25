@@ -1,82 +1,86 @@
 import {
   InputData,
-  ValidationError,
+  InvalidBookData,
   CouldNotCompleteRequest,
-  Dependencies,
-  Clock,
   IsCorrectEbookFile,
+  InvalidBookDataErrors,
 } from "../interface";
 
 export default async function validateInputData(
-  deps: Dependencies,
-  data: InputData
+  data: InputData,
+  tools: { now: () => Date; isCorrectEbookFile: IsCorrectEbookFile }
 ) {
-  const errors: Record<string, string> = {};
-  validateTitle(data.title, errors);
-  validateDescription(data.description, errors);
-  validatePrice(data.price, errors);
-  validateNumberOfPages(data.numberOfPages, errors);
-  validateWhenCreated(deps.clock, data.whenCreated, errors);
-  await validateBookFilePath(
-    deps.isCorrectEbookFile,
-    "sampleFilePath",
-    data.sampleFilePath,
-    errors
+  const validator = new BookDataValidator(
+    data,
+    tools.now,
+    tools.isCorrectEbookFile
   );
-  await validateBookFilePath(
-    deps.isCorrectEbookFile,
-    "filePath",
-    data.filePath,
-    errors
-  );
-  if (Reflect.ownKeys(errors).length > 0) throw new ValidationError(errors);
+  const errors = await validator.validate();
+  if (Reflect.ownKeys(errors).length > 0) throw new InvalidBookData(errors);
 }
 
-function validateTitle(title: string, errors: Record<string, string>) {
-  if (title.trim().length === 0) errors.title = "title cannot be empty";
-}
+class BookDataValidator {
+  public errors: InvalidBookDataErrors = {};
 
-function validateDescription(
-  description: string,
-  errors: Record<string, string>
-) {
-  if (description.trim().length === 0)
-    errors.description = "description cannot be empty";
-  if (description.trim().length > 1000)
-    errors.description = "description cannot be more than 1000 characters long";
-}
+  constructor(
+    private data: InputData,
+    private now: () => Date,
+    private isCorrectEbookFile: IsCorrectEbookFile
+  ) {}
 
-function validatePrice(price: number, errors: Record<string, string>) {
-  if (price <= 0) errors.price = "price must be positive";
-}
+  async validate() {
+    this.validateTitle();
+    this.validateDescription();
+    this.validatePrice();
+    this.validateNumberOfPages();
+    this.validateWhenCreated();
+    await this.validateSampleFilePath();
+    await this.validateFilePath();
+    return this.errors;
+  }
 
-function validateNumberOfPages(
-  numberOfPages: number,
-  errors: Record<string, string>
-) {
-  if (numberOfPages <= 0)
-    errors.numberOfPages = "numberOfPages must be positive";
-}
+  private validateTitle() {
+    if (this.data.title.trim().length === 0)
+      this.errors.title = "title cannot be empty";
+  }
 
-function validateWhenCreated(
-  clock: Clock,
-  whenCreated: Date,
-  errors: Record<string, string>
-) {
-  if (whenCreated.getTime() > clock.now().getTime())
-    errors.whenCreated = "whenCreated cannot be in the future";
-}
+  private validateDescription() {
+    if (this.data.description.trim().length === 0)
+      this.errors.description = "description cannot be empty";
+    if (this.data.description.trim().length > 1000)
+      this.errors.description =
+        "description cannot be more than 1000 characters long";
+  }
 
-async function validateBookFilePath(
-  isCorrectEbookFile: IsCorrectEbookFile,
-  pathName: string,
-  path: string | undefined,
-  errors: Record<string, string>
-) {
-  try {
-    if (path !== undefined && !(await isCorrectEbookFile(path)))
-      errors[pathName] = `${pathName} is invalid`;
-  } catch {
-    throw new CouldNotCompleteRequest();
+  private validatePrice() {
+    if (this.data.price <= 0) this.errors.price = "price must be positive";
+  }
+
+  private validateNumberOfPages() {
+    if (this.data.numberOfPages <= 0)
+      this.errors.numberOfPages = "numberOfPages must be positive";
+  }
+
+  private validateWhenCreated() {
+    if (this.data.whenCreated.getTime() > this.now().getTime())
+      this.errors.whenCreated = "whenCreated cannot be in the future";
+  }
+
+  private async validateSampleFilePath() {
+    await this.validateBookFilePath("sampleFilePath");
+  }
+
+  private async validateFilePath() {
+    await this.validateBookFilePath("filePath");
+  }
+
+  private async validateBookFilePath(pathName: "sampleFilePath" | "filePath") {
+    try {
+      const path = this.data[pathName];
+      if (path !== undefined && !(await this.isCorrectEbookFile(path)))
+        this.errors[pathName] = `${pathName} is invalid`;
+    } catch {
+      throw new CouldNotCompleteRequest();
+    }
   }
 }
