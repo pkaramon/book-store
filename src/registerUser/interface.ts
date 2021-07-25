@@ -1,4 +1,5 @@
 import User from "../domain/User";
+import UserDataValidator from "../domain/User/UserDataValidator";
 
 export default interface RegisterUser {
   (data: InputData): Promise<{ userId: string }>;
@@ -13,7 +14,7 @@ export interface InputData {
 }
 
 export class InvalidUserRegisterData extends Error {
-  constructor(public errors: Record<keyof InputData, string | string[]>) {
+  constructor(public errors: Partial<Record<keyof InputData, string[]>>) {
     super();
   }
   get invalidProperties() {
@@ -28,11 +29,10 @@ export class CouldNotCompleteRequest extends Error {
 }
 
 export interface Dependencies {
-  validateEmail: ValidateEmail;
-  now: () => Date;
   saveUser: SaveUser;
   createId: () => string;
   hashPassword: HashPassword;
+  userDataValidator: UserDataValidator;
 }
 
 export interface ValidateEmail {

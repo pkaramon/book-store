@@ -1,4 +1,5 @@
 import User from "../domain/User";
+import UserDataValidatorImp from "../domain/UserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import buildEditProfileDetails from "./imp";
@@ -21,9 +22,9 @@ test("user does not exist", async () => {
 
 test("getUserById failure", async () => {
   const editProfileDetails = buildEditProfileDetails({
-    now,
     getUserById: jest.fn().mockRejectedValue(new Error("could not get user")),
     saveUser: userDb.save,
+    userDataValidator,
   });
   const fn = () =>
     editProfileDetails({
@@ -111,9 +112,9 @@ describe("changing multiple properties at at time", () => {
 
 test("saveUser failure", async () => {
   const editProfileDetails = buildEditProfileDetails({
-    now,
     getUserById: userDb.getById,
     saveUser: jest.fn().mockRejectedValue(new Error("could not save the user")),
+    userDataValidator,
   });
   const fn = () =>
     editProfileDetails({
@@ -126,10 +127,11 @@ test("saveUser failure", async () => {
 
 const userDb = new InMemoryUserDb();
 const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
+const userDataValidator = new UserDataValidatorImp(now);
 const editProfileDetails = buildEditProfileDetails({
-  now,
   getUserById: userDb.getById,
   saveUser: userDb.save,
+  userDataValidator,
 });
 const userData = {
   id: "1",
@@ -148,13 +150,13 @@ beforeEach(async () => {
 async function expectValidationToFail<K extends keyof EditProfileInputData>(
   key: K,
   value: EditProfileInputData[K],
-  errorMessage: string
+  ...errorMessages: string[]
 ) {
   try {
     await editProfileDetails({ userId: userData.id, [key]: value });
     throw "should have thrown";
   } catch (e) {
     expect(e).toBeInstanceOf(InvalidEditProfileData);
-    expect(e.errorMessages[key]).toEqual(errorMessage);
+    expect(e.errorMessages[key]).toEqual(errorMessages);
   }
 }

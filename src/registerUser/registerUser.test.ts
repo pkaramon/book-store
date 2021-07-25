@@ -1,3 +1,4 @@
+import UserDataValidatorImp from "../domain/UserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import fakeHashPassword from "../fakes/fakeHashPassword";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
@@ -22,9 +23,7 @@ describe("validation", () => {
     await expectValidationToFail("lastName", " ", errorMessage);
   });
   test("email is not an email", async () => {
-    validateEmail.mockReturnValueOnce(false);
     await expectValidationToFail("email", "bblabla@@#!#", "email is invalid");
-    expect(validateEmail).toHaveBeenCalledWith("bblabla@@#!#");
   });
   test("password contains less than 8 characters", async () => {
     await expectValidationToFail(
@@ -91,11 +90,13 @@ describe("validation", () => {
   });
 
   test("accumulation of password errors", async () => {
-    await expectValidationToFail("password", "123", [
+    await expectValidationToFail(
+      "password",
+      "123",
       "password must contain at least 8 characters",
       "password must contain at least 1 uppercase character",
-      "password must contain at least 1 special character",
-    ]);
+      "password must contain at least 1 special character"
+    );
   });
 
   test("birthDate cannot be in the future", async () => {
@@ -143,7 +144,6 @@ test("hashing failure", async () => {
   await expect(fn).rejects.toThrowError("hashing failure");
 });
 
-const validateEmail = jest.fn().mockReturnValue(true);
 const userDb = new InMemoryUserDb();
 const hashPassword = fakeHashPassword;
 const idCreator = new NumberIdCreator();
@@ -160,16 +160,14 @@ const validData: InputData = {
 beforeEach(() => {
   userDb.clear();
   idCreator.reset();
-  validateEmail.mockClear();
 });
 
 function buildRegisterUserHelper(newDeps: Partial<Dependencies>) {
   return buildRegisterUser({
     hashPassword,
     saveUser: userDb.save,
-    now: fakeClock.now,
-    validateEmail,
     createId: idCreator.create,
+    userDataValidator: new UserDataValidatorImp(fakeClock.now),
     ...newDeps,
   });
 }
@@ -177,7 +175,7 @@ function buildRegisterUserHelper(newDeps: Partial<Dependencies>) {
 async function expectValidationToFail<K extends keyof InputData>(
   key: K,
   value: InputData[K],
-  errorMessage: string | string[]
+  ...errorMessages: string[]
 ) {
   try {
     await registerUser({ ...validData, [key]: value });
@@ -186,7 +184,7 @@ async function expectValidationToFail<K extends keyof InputData>(
     expect(e).toBeInstanceOf(InvalidUserRegisterData);
     expect(e.invalidProperties).toHaveLength(1);
     expect(e.invalidProperties).toContain(key);
-    expect(e.errors).toEqual({ [key]: errorMessage });
+    expect(e.errors).toEqual({ [key]: errorMessages });
   }
 }
 

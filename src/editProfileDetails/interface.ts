@@ -1,4 +1,5 @@
 import User from "../domain/User";
+import UserDataValidator from "../domain/User/UserDataValidator";
 
 export default interface EditProfileDetails {
   (data: EditProfileInputData): Promise<void>;
@@ -26,9 +27,9 @@ export class CouldNotCompleteRequest extends Error {
 }
 
 export interface EditProfileDetailsErrorMessages {
-  firstName?: string;
-  lastName?: string;
-  birthDate?: string;
+  firstName?: string[];
+  lastName?: string[];
+  birthDate?: string[];
 }
 export class InvalidEditProfileData extends Error {
   constructor(public errorMessages: EditProfileDetailsErrorMessages) {
@@ -40,7 +41,7 @@ export class InvalidEditProfileData extends Error {
 export interface Dependencies {
   getUserById: GetUserById;
   saveUser: SaveUser;
-  now: () => Date;
+  userDataValidator: UserDataValidator;
 }
 
 export interface GetUserById {

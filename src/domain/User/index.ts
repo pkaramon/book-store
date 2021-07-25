@@ -1,14 +1,13 @@
+export interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  birthDate: Date;
+}
+
 export default class User {
-  constructor(
-    private data: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      password: string;
-      birthDate: Date;
-    }
-  ) {}
+  constructor(private data: { id: string } & UserData) {}
 
   get id() {
     return this.data.id;

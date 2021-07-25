@@ -1,35 +1,24 @@
-import User from "../../domain/User";
+import User, { UserData } from "../../domain/User";
 import RegisterUser, {
   InputData,
   Dependencies,
   CouldNotCompleteRequest,
+  InvalidUserRegisterData,
 } from "../interface";
 import validateData from "./validateData";
 
 export default function buildRegisterUser({
-  validateEmail,
-  now,
   saveUser,
   createId,
   hashPassword,
+  userDataValidator,
 }: Dependencies): RegisterUser {
   return async function (data: InputData) {
-    const cleaned = cleanData(data);
-    validateData(cleaned, { now, validateEmail });
+    const cleaned = validateData(userDataValidator, data);
     const user = await createUser(cleaned);
     await tryToSaveUser(user);
     return { userId: user.id };
   };
-
-  function cleanData(data: InputData): InputData {
-    return {
-      ...data,
-      firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
-      email: data.email.trim(),
-      password: data.password.trim(),
-    };
-  }
 
   async function createUser(data: InputData) {
     return new User({
