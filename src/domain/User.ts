@@ -18,8 +18,16 @@ export default class User {
     return this.data.firstName;
   }
 
+  set firstName(firstName: string) {
+    this.data.firstName = firstName;
+  }
+
   get lastName() {
     return this.data.lastName;
+  }
+
+  set lastName(lastName: string) {
+    this.data.lastName = lastName;
   }
 
   get email() {
@@ -32,5 +40,9 @@ export default class User {
 
   get birthDate() {
     return this.data.birthDate;
+  }
+
+  set birthDate(birthDate: Date) {
+    this.data.birthDate = birthDate;
   }
 }
