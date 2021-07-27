@@ -9,11 +9,11 @@ export default class UserDataValidatorImp implements UserDataValidator {
 
   validateUserData(data: UserData): UserDataValidationResult {
     const validationResults = [
-      this.validateFirstName(data.firstName),
-      this.validateLastName(data.lastName),
-      this.validateEmail(data.email),
-      this.validatePassword(data.password),
-      this.validateBirthDate(data.birthDate),
+      this.validateProperty("firstName", data.firstName),
+      this.validateProperty("lastName", data.lastName),
+      this.validateProperty("email", data.email),
+      this.validateProperty("password", data.password),
+      this.validateProperty("birthDate", data.birthDate),
     ];
 
     return {
@@ -21,6 +21,26 @@ export default class UserDataValidatorImp implements UserDataValidator {
       value: this.constructCleanedData(validationResults),
       errorMessages: this.constructErrorMessages(validationResults),
     };
+  }
+
+  validateProperty<Key extends keyof UserData>(
+    key: Key,
+    value: UserData[Key]
+  ): ValidationResult<Key> {
+    switch (key) {
+      case "firstName":
+        return this.validateFirstName(value as string) as any;
+      case "lastName":
+        return this.validateLastName(value as string) as any;
+      case "email":
+        return this.validateEmail(value as string) as any;
+      case "password":
+        return this.validatePassword(value as string) as any;
+      case "birthDate":
+        return this.validateBirthDate(value as Date) as any;
+      default:
+        throw new Error(`UNKNOWN PROPERTY: ${key}=${value}`);
+    }
   }
 
   private computeIsValid(results: ValidationResult<any>[]) {
@@ -39,21 +59,21 @@ export default class UserDataValidatorImp implements UserDataValidator {
     return cleanedData;
   }
 
-  validateFirstName(firstName: string): ValidationResult<"firstName"> {
+  private validateFirstName(firstName: string): ValidationResult<"firstName"> {
     const data = new ValidationData("firstName", firstName.trim());
     if (data.value.length === 0)
       data.addErrorMessage("firstName cannot be empty");
     return data.toValidationResult();
   }
 
-  validateLastName(lastName: string): ValidationResult<"lastName"> {
+  private validateLastName(lastName: string): ValidationResult<"lastName"> {
     const data = new ValidationData("lastName", lastName.trim());
     if (data.value.length === 0)
       data.addErrorMessage("lastName cannot be empty");
     return data.toValidationResult();
   }
 
-  validateEmail(email: string): ValidationResult<"email"> {
+  private validateEmail(email: string): ValidationResult<"email"> {
     const data = new ValidationData("email", email.trim());
     if (!UserDataValidatorImp.EMAIL_REGEX.test(data.value))
       data.addErrorMessage("email is invalid");
@@ -63,7 +83,7 @@ export default class UserDataValidatorImp implements UserDataValidator {
   private static EMAIL_REGEX =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-  validatePassword(password: string): ValidationResult<"password"> {
+  private validatePassword(password: string): ValidationResult<"password"> {
     const data = new ValidationData("password", password.trim());
 
     this.validatePasswordsLength(password, data);
@@ -149,7 +169,7 @@ export default class UserDataValidatorImp implements UserDataValidator {
     return false;
   }
 
-  validateBirthDate(birthDate: Date): ValidationResult<"birthDate"> {
+  private validateBirthDate(birthDate: Date): ValidationResult<"birthDate"> {
     const data = new ValidationData("birthDate", birthDate);
     if (birthDate.getTime() > this.now().getTime())
       data.addErrorMessage("birthDate cannot be in the future");

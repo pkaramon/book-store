@@ -22,33 +22,31 @@ export default class UserDetailsUpdater {
   }
 
   private tryToUpdateFirstName() {
-    if (this.data.firstName !== undefined) {
-      const result = this.userDataValidator.validateFirstName(
-        this.data.firstName
-      );
-      if (result.isValid) this.user.firstName = result.value;
-      else this.errorMessages.firstName = result.errorMessages;
-    }
+    const { isValid, value } = this.getValidationResultsFor("firstName");
+    if (isValid) this.user.firstName = value;
   }
 
   private tryToUpdateLastName() {
-    if (this.data.lastName !== undefined) {
-      const result = this.userDataValidator.validateLastName(
-        this.data.lastName
-      );
-      if (result.isValid) this.user.lastName = result.value;
-      else this.errorMessages.lastName = result.errorMessages;
-    }
+    const { isValid, value } = this.getValidationResultsFor("lastName");
+    if (isValid) this.user.lastName = value;
   }
 
   private tryToUpdateBirthDate() {
-    if (this.data.birthDate !== undefined) {
-      const result = this.userDataValidator.validateBirthDate(
-        this.data.birthDate
-      );
-      if (result.isValid) this.user.birthDate = result.value;
-      else this.errorMessages.birthDate = result.errorMessages;
-    }
+    const { isValid, value } = this.getValidationResultsFor("birthDate");
+    if (isValid) this.user.birthDate = value;
+  }
+
+  private getValidationResultsFor<
+    Key extends "firstName" | "lastName" | "birthDate"
+  >(key: Key) {
+    const { isValid, value, errorMessages } =
+      this.data[key] === undefined
+        ? { isValid: false, errorMessages: [], value: undefined }
+        : this.userDataValidator.validateProperty(key, this.data[key] as any);
+
+    if (errorMessages.length > 0) this.errorMessages[key] = errorMessages;
+
+    return { isValid, value: value! };
   }
 
   private throwInvalidEditProfileDataIfThereAreErrorMessages() {

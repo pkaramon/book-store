@@ -1,9 +1,8 @@
-import User, { UserData } from "../../domain/User";
+import User from "../../domain/User";
 import RegisterUser, {
   InputData,
   Dependencies,
   CouldNotCompleteRequest,
-  InvalidUserRegisterData,
 } from "../interface";
 import validateData from "./validateData";
 
