@@ -11,11 +11,13 @@ export default function buildRegisterUser({
   createId,
   hashPassword,
   userDataValidator,
+  notifyUser,
 }: Dependencies): RegisterUser {
   return async function (data: InputData) {
     const cleaned = validateData(userDataValidator, data);
     const user = await createUser(cleaned);
     await tryToSaveUser(user);
+    await tryToNotifyUser(user);
     return { userId: user.id };
   };
 
@@ -43,6 +45,14 @@ export default function buildRegisterUser({
       await saveUser(u);
     } catch {
       throw new CouldNotCompleteRequest("could not save the user");
+    }
+  }
+
+  async function tryToNotifyUser(u: User) {
+    try {
+      await notifyUser(u);
+    } catch {
+      // silencing errors is desired behaviour in this case
     }
   }
 }

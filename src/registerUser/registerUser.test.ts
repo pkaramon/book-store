@@ -135,6 +135,21 @@ test("hashing passwords", async () => {
   expect(u?.password).toEqual(await hashPassword(validData.password));
 });
 
+test("user should receive a notification when successfully registered", async () => {
+  const notifyUser = jest.fn().mockResolvedValue(undefined);
+  const registerUser = buildRegisterUserHelper({ notifyUser });
+  const { userId } = await registerUser({ ...validData });
+  expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
+});
+
+test("errors thrown from notifyUser are silenced, they do not impact the result of the transaction", async () => {
+  const registerUser = buildRegisterUserHelper({
+    notifyUser: jest.fn().mockRejectedValue(new Error("email server error")),
+  });
+  const { userId } = await registerUser({ ...validData });
+  expect(await userDb.getById(userId)).not.toBeNull();
+});
+
 test("hashing failure", async () => {
   const registerUser = buildRegisterUserHelper({
     hashPassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
@@ -166,6 +181,7 @@ function buildRegisterUserHelper(newDeps: Partial<Dependencies>) {
   return buildRegisterUser({
     hashPassword,
     saveUser: userDb.save,
+    notifyUser: jest.fn().mockResolvedValue(undefined),
     createId: idCreator.create,
     userDataValidator: new UserDataValidatorImp(fakeClock.now),
     ...newDeps,

@@ -32,7 +32,12 @@ export interface Dependencies {
   saveUser: SaveUser;
   createId: () => string;
   hashPassword: HashPassword;
+  notifyUser: NotifyUser;
   userDataValidator: UserDataValidator;
+}
+
+export interface NotifyUser {
+  (user: User): Promise<void>;
 }
 
 export interface ValidateEmail {
