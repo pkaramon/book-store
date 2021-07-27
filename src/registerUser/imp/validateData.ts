@@ -1,11 +1,22 @@
 import UserDataValidator from "../../domain/User/UserDataValidator";
-import { InputData, InvalidUserRegisterData } from "../interface";
+import {
+  GetUserByEmail,
+  InputData,
+  InvalidUserRegisterData,
+} from "../interface";
 
-export default function validateData(
+export default async function validateData(
+  getUserByEmail: GetUserByEmail,
   userDataValidator: UserDataValidator,
   data: InputData
 ) {
   const result = userDataValidator.validateUserData(data);
+  const u = await getUserByEmail(data.email);
+  if (u !== null) {
+    result.errorMessages.email.push("email is already taken");
+    result.isValid = false;
+  }
+
   if (!result.isValid)
     throw new InvalidUserRegisterData(
       removePropertiesWithNoErrors(result.errorMessages)

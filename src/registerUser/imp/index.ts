@@ -12,9 +12,10 @@ export default function buildRegisterUser({
   hashPassword,
   userDataValidator,
   notifyUser,
+  getUserByEmail
 }: Dependencies): RegisterUser {
-  return async function (data: InputData) {
-    const cleaned = validateData(userDataValidator, data);
+  return async function registerUser(data: InputData) {
+    const cleaned = await validateData(getUserByEmail, userDataValidator, data);
     const user = await createUser(cleaned);
     await tryToSaveUser(user);
     await tryToNotifyUser(user);

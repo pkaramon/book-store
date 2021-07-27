@@ -3,6 +3,7 @@ import FakeClock from "../fakes/FakeClock";
 import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import NumberIdCreator from "../fakes/NumberIdCreator";
+import { getThrownError } from "../__test__/fixtures";
 import buildRegisterUser from "./imp";
 import {
   CouldNotCompleteRequest,
@@ -129,6 +130,22 @@ test("saving user to db", async () => {
   expect(u?.birthDate).toEqual(validData.birthDate);
 });
 
+test("email must be unique", async () => {
+  await registerUser({ ...validData });
+  const err: InvalidUserRegisterData = await getThrownError(() =>
+    registerUser({
+      firstName: "Tom",
+      lastName: "Smith",
+      email: validData.email,
+      password: "Pass123$",
+      birthDate: new Date(1992, 1, 3),
+    })
+  );
+  expect(err).toBeInstanceOf(InvalidUserRegisterData);
+  expect(err.errors.email).toEqual(["email is already taken"]);
+  expect(err.invalidProperties).toEqual(["email"]);
+});
+
 test("hashing passwords", async () => {
   const { userId } = await registerUser({ ...validData });
   const u = await userDb.getById(userId);
@@ -184,6 +201,7 @@ function buildRegisterUserHelper(newDeps: Partial<Dependencies>) {
     notifyUser: jest.fn().mockResolvedValue(undefined),
     createId: idCreator.create,
     userDataValidator: new UserDataValidatorImp(fakeClock.now),
+    getUserByEmail: userDb.getByEmail,
     ...newDeps,
   });
 }
@@ -201,6 +219,8 @@ async function expectValidationToFail<K extends keyof InputData>(
     expect(e.invalidProperties).toHaveLength(1);
     expect(e.invalidProperties).toContain(key);
     expect(e.errors).toEqual({ [key]: errorMessages });
+  } finally {
+    userDb.clear();
   }
 }
 
@@ -209,4 +229,5 @@ async function expectValidationToPass<K extends keyof InputData>(
   value: InputData[K]
 ) {
   await registerUser({ ...validData, [key]: value });
+  userDb.clear();
 }

@@ -8,20 +8,7 @@ import {
   InvalidLoginData,
 } from "./interface";
 import buildLogin from "./imp";
-
-async function expectToThrowCouldNotCompleteRequest(
-  fn: Function,
-  expectedData: { message: string; originalError: any }
-) {
-  try {
-    await fn();
-  } catch (e) {
-    const err = e as CouldNotCompleteRequest;
-    expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-    expect(err.originalError).toEqual(expectedData.originalError);
-    expect(err.message).toEqual(expectedData.message);
-  }
-}
+import { getThrownError } from "../__test__/fixtures";
 
 test("getUserByEmail unexpected failure", async () => {
   const login = buildLoginHelper({
@@ -109,11 +96,12 @@ function buildLoginHelper(newDeps?: Partial<Dependencies>) {
   });
 }
 
-async function getThrownError(fn: Function) {
-  try {
-    await fn();
-    throw "should have thrown";
-  } catch (e) {
-    return e;
-  }
+async function expectToThrowCouldNotCompleteRequest(
+  fn: Function,
+  expectedData: { message: string; originalError: any }
+) {
+  const err: CouldNotCompleteRequest = await getThrownError(fn);
+  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
+  expect(err.originalError).toEqual(expectedData.originalError);
+  expect(err.message).toEqual(expectedData.message);
 }

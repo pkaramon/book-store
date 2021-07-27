@@ -30,6 +30,7 @@ export class CouldNotCompleteRequest extends Error {
 
 export interface Dependencies {
   saveUser: SaveUser;
+  getUserByEmail: GetUserByEmail;
   createId: () => string;
   hashPassword: HashPassword;
   notifyUser: NotifyUser;
@@ -38,6 +39,10 @@ export interface Dependencies {
 
 export interface NotifyUser {
   (user: User): Promise<void>;
+}
+
+export interface GetUserByEmail {
+  (email: string): Promise<User | null>;
 }
 
 export interface ValidateEmail {
