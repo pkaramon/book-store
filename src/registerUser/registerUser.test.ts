@@ -1,6 +1,6 @@
 import UserDataValidatorImp from "../domain/UserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
-import fakeHashPassword from "../fakes/fakeHashPassword";
+import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import NumberIdCreator from "../fakes/NumberIdCreator";
 import buildRegisterUser from "./imp";

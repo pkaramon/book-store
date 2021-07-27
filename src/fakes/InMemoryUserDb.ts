@@ -7,6 +7,7 @@ export default class InMemoryUserDb {
     this.save = this.save.bind(this);
     this.getById = this.getById.bind(this);
     this.deleteById = this.deleteById.bind(this);
+    this.getByEmail = this.getByEmail.bind(this);
     this.clear = this.clear.bind(this);
   }
 
@@ -20,6 +21,11 @@ export default class InMemoryUserDb {
 
   async deleteById(id: string) {
     this.users.delete(id);
+  }
+
+  async getByEmail(email: string): Promise<User | null> {
+    const users = Array.from(this.users.values());
+    return users.find((u) => u.email === email) ?? null;
   }
 
   clear() {
