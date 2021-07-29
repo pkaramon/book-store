@@ -1,56 +1,41 @@
+import Admin from "../domain/Admin";
 import Book from "../domain/Book";
-import { TableOfContentsData } from "../domain/TableOfContents";
 
 export default interface PublishBook {
-  (data: InputData): Promise<{ bookId: string }>;
+  (data: InputData): Promise<void>;
 }
 
 export interface InputData {
-  userId: string;
-  title: string;
-  description: string;
-  tableOfContents: undefined | TableOfContentsData;
-  price: number;
-  whenCreated: Date;
-  numberOfPages: number;
-  sampleFilePath?: string;
-  filePath: string;
+  adminId: string;
+  bookId: string;
 }
 
-export type InvalidBookDataErrors = Partial<Record<keyof InputData, string>>;
-export class InvalidBookData extends Error {
-  constructor(public readonly errors: InvalidBookDataErrors) {
-    super();
-    this.name = InvalidBookData.name;
+export class BookNotFound extends Error {
+  constructor(public readonly bookId: string) {
+    super(`book with id ${bookId} was not found`);
   }
+}
 
-  get invalidProperties() {
-    return Reflect.ownKeys(this.errors);
+export class AdminNotFound extends Error {
+  constructor(public readonly adminId: string) {
+    super(`admin with id ${adminId} was not found`);
+  }
+}
+
+export class AlreadyPublished extends Error {
+  constructor(public readonly bookId: string) {
+    super(`book with id ${bookId} was already published`);
   }
 }
 
 export class CouldNotCompleteRequest extends Error {
-  constructor(message?: string) {
+  constructor(message: string, public originalError: any) {
     super(message);
-    this.name = CouldNotCompleteRequest.name;
   }
 }
 
 export interface Dependencies {
-  now: () => Date;
-  saveBook: SaveBook;
-  createId: CreateId;
-  isCorrectEbookFile: IsCorrectEbookFile;
-}
-
-export interface SaveBook {
-  (book: Book): Promise<void>;
-}
-
-export interface CreateId {
-  (): string;
-}
-
-export interface IsCorrectEbookFile {
-  (path: string): Promise<boolean>;
+  getBookById: (id: string) => Promise<Book | null>;
+  saveBook: (b: Book) => Promise<void>;
+  getAdminById: (id: string) => Promise<Admin | null> 
 }

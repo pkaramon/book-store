@@ -4,7 +4,7 @@ export type TableOfContentsData = Array<{
 }>;
 
 export default class TableOfContents {
-  static NullTableOfContents: TableOfContents = new TableOfContents([]);
+  static EmptyTableOfContents: TableOfContents = new TableOfContents([]);
 
   constructor(public readonly data: TableOfContentsData) {}
 }

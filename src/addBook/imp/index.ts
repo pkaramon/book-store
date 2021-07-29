@@ -1,14 +1,14 @@
 import Book from "../../domain/Book";
 import TableOfContents from "../../domain/TableOfContents";
-import PublishBook, {
+import AddBook, {
   InputData,
   CouldNotCompleteRequest,
   Dependencies,
 } from "../interface";
 import validateInputData from "./validateInputData";
 
-export default function buildPublishBook(deps: Dependencies): PublishBook {
-  return async function publishBook(data: InputData) {
+export default function buildAddBook(deps: Dependencies): AddBook {
+  return async function addBook(data: InputData) {
     await validateInputData(data, deps);
     const book = createBook(data);
     await tryToSaveBook(book);
@@ -28,7 +28,7 @@ export default function buildPublishBook(deps: Dependencies): PublishBook {
       sampleFilePath: data.sampleFilePath ?? null,
       tableOfContents: data.tableOfContents
         ? new TableOfContents(data.tableOfContents)
-        : TableOfContents.NullTableOfContents,
+        : TableOfContents.EmptyTableOfContents,
     });
   }
 

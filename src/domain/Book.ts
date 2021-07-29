@@ -1,12 +1,18 @@
 import TableOfContents from "./TableOfContents";
 
 export enum BookStatus {
+  published,
   notPublished,
 }
 
 export default class Book {
+  private data = {
+    ...this.incomingData,
+    status: BookStatus.notPublished,
+  };
+
   constructor(
-    private data: {
+    private incomingData: {
       id: string;
       authorId: string;
       title: string;
@@ -53,7 +59,11 @@ export default class Book {
   }
 
   get status() {
-    return BookStatus.notPublished;
+    return this.data.status;
+  }
+
+  publish() {
+    this.data.status = BookStatus.published;
   }
 
   get filePath() {

@@ -1,6 +1,6 @@
 import Book from "../domain/Book";
 
-export default class IMemoryBookDb {
+export default class InMemoryBookDb {
   private books = new Map<string, Book>();
 
   constructor() {
