@@ -1,14 +1,13 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import User from "../domain/User";
 
 export default class FakeTokenManager {
   constructor() {
-    this.createToken = this.createToken.bind(this);
+    this.createTokenFor = this.createTokenFor.bind(this);
     this.verifyToken = this.verifyToken.bind(this);
   }
 
-  createToken(u: User) {
-    return `***${u.id}***`;
+  createTokenFor(userId: string) {
+    return `***${userId}***`;
   }
 
   verifyToken(token: string) {
@@ -24,6 +23,6 @@ export default class FakeTokenManager {
   }
 
   private extractUserIdFromToken(token: string) {
-    return token.replace("*", "");
+    return token.replace(/\*/g, "");
   }
 }

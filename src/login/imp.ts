@@ -19,7 +19,7 @@ export default function buildLogin({
 
   function tryToCreateToken(user: User) {
     try {
-      return createToken(user);
+      return createToken(user.id);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not create token", e);
     }

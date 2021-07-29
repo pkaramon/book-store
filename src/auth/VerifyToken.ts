@@ -1,7 +1,7 @@
 type UserId = string;
 
 export default interface VerifyToken {
-  (token: string): Promise<UserId>;
+  (token: string): UserId;
 }
 
 export class TokenVerificationError extends Error {

@@ -90,7 +90,7 @@ beforeEach(async () => {
 function buildLoginHelper(newDeps?: Partial<Dependencies>) {
   return buildLogin({
     getUserByEmail: userDb.getByEmail,
-    createToken: tokenManager.createToken,
+    createToken: tokenManager.createTokenFor,
     comparePasswords,
     ...newDeps,
   });
