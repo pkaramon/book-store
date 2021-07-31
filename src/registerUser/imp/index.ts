@@ -12,7 +12,7 @@ export default function buildRegisterUser({
   hashPassword,
   userDataValidator,
   notifyUser,
-  getUserByEmail
+  getUserByEmail,
 }: Dependencies): RegisterUser {
   return async function registerUser(data: InputData) {
     const cleaned = await validateData(getUserByEmail, userDataValidator, data);
@@ -36,16 +36,16 @@ export default function buildRegisterUser({
   async function tryToHashPassword(pass: string) {
     try {
       return await hashPassword(pass);
-    } catch {
-      throw new CouldNotCompleteRequest("hashing failure");
+    } catch (e) {
+      throw new CouldNotCompleteRequest("hashing failure", e);
     }
   }
 
   async function tryToSaveUser(u: User) {
     try {
       await saveUser(u);
-    } catch {
-      throw new CouldNotCompleteRequest("could not save the user");
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not save the user", e);
     }
   }
 
@@ -53,7 +53,7 @@ export default function buildRegisterUser({
     try {
       await notifyUser(u);
     } catch {
-      // silencing errors is desired behaviour in this case
+      // silencing errors is desired in this case
     }
   }
 }

@@ -3,12 +3,11 @@ import FakeClock from "../fakes/FakeClock";
 import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import NumberIdCreator from "../fakes/NumberIdCreator";
-import { getThrownError } from "../__test__/fixtures";
+import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildRegisterUser from "./imp";
 import {
   CouldNotCompleteRequest,
   InputData,
-  Dependencies,
   InvalidUserRegisterData,
 } from "./interface";
 
@@ -114,9 +113,11 @@ test("saveUser throws error", async () => {
   const registerUser = buildRegisterUserHelper({
     saveUser: jest.fn().mockRejectedValue(new Error("could not save user")),
   });
-  const fn = () => registerUser({ ...validData });
-  await expect(fn).rejects.toThrowError(CouldNotCompleteRequest);
-  await expect(fn).rejects.toThrowError("could not save the user");
+  const err: CouldNotCompleteRequest = await getThrownError(() =>
+    registerUser({ ...validData })
+  );
+  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
+  expect(err.originalError).toEqual(new Error("could not save user"));
 });
 
 test("saving user to db", async () => {
@@ -142,7 +143,7 @@ test("email must be unique", async () => {
     })
   );
   expect(err).toBeInstanceOf(InvalidUserRegisterData);
-  expect(err.errors.email).toEqual(["email is already taken"]);
+  expect(err.errorMessages.email).toEqual(["email is already taken"]);
   expect(err.invalidProperties).toEqual(["email"]);
 });
 
@@ -171,15 +172,25 @@ test("hashing failure", async () => {
   const registerUser = buildRegisterUserHelper({
     hashPassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
   });
-  const fn = () => registerUser({ ...validData });
-  await expect(fn).rejects.toThrowError(CouldNotCompleteRequest);
-  await expect(fn).rejects.toThrowError("hashing failure");
+  const err: CouldNotCompleteRequest = await getThrownError(() =>
+    registerUser({ ...validData })
+  );
+  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
+  expect(err.originalError).toEqual(new Error("hashing failure"));
 });
 
 const userDb = new InMemoryUserDb();
 const hashPassword = fakeHashPassword;
 const idCreator = new NumberIdCreator();
 const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
+const buildRegisterUserHelper = createBuildHelper(buildRegisterUser, {
+  hashPassword,
+  saveUser: userDb.save,
+  notifyUser: jest.fn().mockResolvedValue(undefined),
+  createId: idCreator.create,
+  userDataValidator: new UserDataValidatorImp(fakeClock.now),
+  getUserByEmail: userDb.getByEmail,
+});
 const registerUser = buildRegisterUserHelper({});
 const validData: InputData = {
   firstName: "Bob",
@@ -194,34 +205,18 @@ beforeEach(() => {
   idCreator.reset();
 });
 
-function buildRegisterUserHelper(newDeps: Partial<Dependencies>) {
-  return buildRegisterUser({
-    hashPassword,
-    saveUser: userDb.save,
-    notifyUser: jest.fn().mockResolvedValue(undefined),
-    createId: idCreator.create,
-    userDataValidator: new UserDataValidatorImp(fakeClock.now),
-    getUserByEmail: userDb.getByEmail,
-    ...newDeps,
-  });
-}
-
 async function expectValidationToFail<K extends keyof InputData>(
   key: K,
   value: InputData[K],
   ...errorMessages: string[]
 ) {
-  try {
-    await registerUser({ ...validData, [key]: value });
-    throw "should have thrown";
-  } catch (e) {
-    expect(e).toBeInstanceOf(InvalidUserRegisterData);
-    expect(e.invalidProperties).toHaveLength(1);
-    expect(e.invalidProperties).toContain(key);
-    expect(e.errors).toEqual({ [key]: errorMessages });
-  } finally {
-    userDb.clear();
-  }
+  const err: InvalidUserRegisterData = await getThrownError(() =>
+    registerUser({ ...validData, [key]: value })
+  );
+  expect(err).toBeInstanceOf(InvalidUserRegisterData);
+  expect(err.invalidProperties).toHaveLength(1);
+  expect(err.invalidProperties).toContain(key);
+  expect(err.errorMessages).toEqual({ [key]: errorMessages });
 }
 
 async function expectValidationToPass<K extends keyof InputData>(

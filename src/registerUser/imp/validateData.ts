@@ -1,12 +1,8 @@
 import UserDataValidator from "../../domain/User/UserDataValidator";
-import {
-  GetUserByEmail,
-  InputData,
-  InvalidUserRegisterData,
-} from "../interface";
+import { Dependencies, InputData, InvalidUserRegisterData } from "../interface";
 
 export default async function validateData(
-  getUserByEmail: GetUserByEmail,
+  getUserByEmail: Dependencies["getUserByEmail"],
   userDataValidator: UserDataValidator,
   data: InputData
 ) {

@@ -14,44 +14,27 @@ export interface InputData {
 }
 
 export class InvalidUserRegisterData extends Error {
-  constructor(public errors: Partial<Record<keyof InputData, string[]>>) {
+  constructor(
+    public errorMessages: Partial<Record<keyof InputData, string[]>>
+  ) {
     super();
   }
   get invalidProperties() {
-    return Reflect.ownKeys(this.errors);
+    return Reflect.ownKeys(this.errorMessages);
   }
 }
 
 export class CouldNotCompleteRequest extends Error {
-  constructor(reason?: string) {
+  constructor(reason: string, public originalError: any) {
     super(reason);
   }
 }
 
 export interface Dependencies {
-  saveUser: SaveUser;
-  getUserByEmail: GetUserByEmail;
+  saveUser: (u: User) => Promise<void>;
+  getUserByEmail: (email: string) => Promise<User | null>;
   createId: () => string;
-  hashPassword: HashPassword;
-  notifyUser: NotifyUser;
+  hashPassword: (pass: string) => Promise<string>;
+  notifyUser: (user: User) => Promise<void>;
   userDataValidator: UserDataValidator;
-}
-
-export interface NotifyUser {
-  (user: User): Promise<void>;
-}
-
-export interface GetUserByEmail {
-  (email: string): Promise<User | null>;
-}
-
-export interface ValidateEmail {
-  (email: string): boolean;
-}
-
-export interface SaveUser {
-  (u: User): Promise<void>;
-}
-export interface HashPassword {
-  (pass: string): Promise<string>;
 }
