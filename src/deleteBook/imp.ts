@@ -2,19 +2,20 @@ import Book from "../domain/Book";
 import DeleteBook, {
   BookNotFound,
   CouldNotCompleteRequest,
-  DeleteBookById,
-  GetBookById,
+  Dependencies,
   InputData,
   NotAllowed,
 } from "./interface";
 
-export default function buildDeleteBook(
-  deleteBookById: DeleteBookById,
-  getBookById: GetBookById
-): DeleteBook {
+export default function buildDeleteBook({
+  deleteBookById,
+  getBookById,
+  verifyUserAuthToken,
+}: Dependencies): DeleteBook {
   return async function (data: InputData) {
+    const userId = await verifyUserAuthToken(data.userAuthToken);
     const book = await tryToGetBook(data.bookId);
-    await tryToDeleteBook(validateBook(book, data));
+    await tryToDeleteBook(validateBook(book, { userId, bookId: data.bookId }));
   };
 
   async function tryToGetBook(bookId: string) {
@@ -30,7 +31,8 @@ export default function buildDeleteBook(
     data: { userId: string; bookId: string }
   ): Book {
     if (book === null) throw new BookNotFound(data.bookId);
-    if (book.authorId !== data.userId) throw new NotAllowed(data.userId);
+    if (book.authorId !== data.userId)
+      throw new NotAllowed(data.userId, data.bookId);
     return book;
   }
 

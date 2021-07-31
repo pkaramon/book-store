@@ -1,3 +1,4 @@
+import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
 
 export default interface DeleteBook {
@@ -5,19 +6,19 @@ export default interface DeleteBook {
 }
 
 export interface InputData {
-  userId: string;
+  userAuthToken: string;
   bookId: string;
 }
 
 export class BookNotFound extends Error {
-  constructor(bookId: string) {
+  constructor(public readonly bookId: string) {
     super(`book with id: ${bookId} was not found`);
     this.name = BookNotFound.name;
   }
 }
 
 export class NotAllowed extends Error {
-  constructor(userId: string) {
+  constructor(public readonly userId: string, public readonly bookId: string) {
     super(`user with id: ${userId} is not the author of the book`);
     this.name = BookNotFound.name;
   }
@@ -30,10 +31,8 @@ export class CouldNotCompleteRequest extends Error {
   }
 }
 
-export interface DeleteBookById {
-  (bookId: string): Promise<void>;
-}
-
-export interface GetBookById {
-  (bookId: string): Promise<Book | null>;
+export interface Dependencies {
+  deleteBookById: (bookId: string) => Promise<void>;
+  getBookById: (bookId: string) => Promise<Book | null>;
+  verifyUserAuthToken: VerifyToken;
 }

@@ -5,7 +5,7 @@ export default class InMemoryBookDb {
 
   constructor() {
     this.save = this.save.bind(this);
-    this.delete = this.delete.bind(this);
+    this.deleteById = this.deleteById.bind(this);
     this.getById = this.getById.bind(this);
   }
 
@@ -13,7 +13,7 @@ export default class InMemoryBookDb {
     this.books.set(book.id, book);
   }
 
-  async delete(bookId: string): Promise<void> {
+  async deleteById(bookId: string): Promise<void> {
     this.books.delete(bookId);
   }
 
