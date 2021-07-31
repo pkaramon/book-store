@@ -37,6 +37,10 @@ export default class User {
     return this.data.password;
   }
 
+  set password(password: string) {
+    this.data.password = password;
+  }
+
   get birthDate() {
     return this.data.birthDate;
   }
