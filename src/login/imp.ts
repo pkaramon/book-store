@@ -14,7 +14,7 @@ export default function buildLogin({
   return async function login(data: LoginData) {
     const user = await getUser(data.email);
     await checkIfPasswordsMatch(user.password, data.password);
-    return { token: tryToCreateToken(user) };
+    return { token: await tryToCreateToken(user) };
   };
 
   function tryToCreateToken(user: User) {

@@ -1,3 +1,4 @@
+import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
 import { TableOfContentsData } from "../domain/TableOfContents";
 
@@ -6,10 +7,14 @@ export default interface AddBook {
 }
 
 export interface InputData {
-  userId: string;
+  userToken: string;
+  bookData:  BookData
+}
+
+export interface BookData {
   title: string;
   description: string;
-  tableOfContents: undefined | TableOfContentsData;
+  tableOfContents?: TableOfContentsData;
   price: number;
   whenCreated: Date;
   numberOfPages: number;
@@ -17,7 +22,7 @@ export interface InputData {
   filePath: string;
 }
 
-export type InvalidBookDataErrors = Partial<Record<keyof InputData, string>>;
+export type InvalidBookDataErrors = Partial<Record<keyof BookData, string>>;
 export class InvalidBookData extends Error {
   constructor(public readonly errors: InvalidBookDataErrors) {
     super();
@@ -41,6 +46,7 @@ export interface Dependencies {
   saveBook: SaveBook;
   createId: CreateId;
   isCorrectEbookFile: IsCorrectEbookFile;
+  verifyUserToken: VerifyToken;
 }
 
 export interface SaveBook {

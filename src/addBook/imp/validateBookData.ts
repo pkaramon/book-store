@@ -1,13 +1,12 @@
 import {
-  InputData,
   InvalidBookData,
   CouldNotCompleteRequest,
   IsCorrectEbookFile,
-  InvalidBookDataErrors,
+  BookData,
 } from "../interface";
 
-export default async function validateInputData(
-  data: InputData,
+export default async function validateBookData(
+  data: BookData,
   tools: { now: () => Date; isCorrectEbookFile: IsCorrectEbookFile }
 ) {
   const validator = new BookDataValidator(
@@ -15,15 +14,15 @@ export default async function validateInputData(
     tools.now,
     tools.isCorrectEbookFile
   );
-  const errors = await validator.validate();
-  if (Reflect.ownKeys(errors).length > 0) throw new InvalidBookData(errors);
+  const container = await validator.validate();
+  if (container.hasAny())
+    throw new InvalidBookData(container.getErrorMessages());
 }
 
 class BookDataValidator {
-  public errors: InvalidBookDataErrors = {};
-
+  public container = new ErrorMessagesContainer<BookData>();
   constructor(
-    private data: InputData,
+    private data: BookData,
     private now: () => Date,
     private isCorrectEbookFile: IsCorrectEbookFile
   ) {}
@@ -36,34 +35,40 @@ class BookDataValidator {
     this.validateWhenCreated();
     await this.validateSampleFilePath();
     await this.validateFilePath();
-    return this.errors;
+    return this.container;
   }
 
   private validateTitle() {
     if (this.data.title.trim().length === 0)
-      this.errors.title = "title cannot be empty";
+      this.container.add("title", "title cannot be empty");
   }
 
   private validateDescription() {
     if (this.data.description.trim().length === 0)
-      this.errors.description = "description cannot be empty";
+      this.container.add("description", "description cannot be empty");
     if (this.data.description.trim().length > 1000)
-      this.errors.description =
-        "description cannot be more than 1000 characters long";
+      this.container.add(
+        "description",
+        "description cannot be more than 1000 characters long"
+      );
   }
 
   private validatePrice() {
-    if (this.data.price <= 0) this.errors.price = "price must be positive";
+    if (this.data.price <= 0)
+      this.container.add("price", "price must be positive");
   }
 
   private validateNumberOfPages() {
     if (this.data.numberOfPages <= 0)
-      this.errors.numberOfPages = "numberOfPages must be positive";
+      this.container.add("numberOfPages", "numberOfPages must be positive");
   }
 
   private validateWhenCreated() {
     if (this.data.whenCreated.getTime() > this.now().getTime())
-      this.errors.whenCreated = "whenCreated cannot be in the future";
+      this.container.add(
+        "whenCreated",
+        "whenCreated cannot be in the future"
+      );
   }
 
   private async validateSampleFilePath() {
@@ -78,9 +83,25 @@ class BookDataValidator {
     try {
       const path = this.data[pathName];
       if (path !== undefined && !(await this.isCorrectEbookFile(path)))
-        this.errors[pathName] = `${pathName} is invalid`;
+        this.container.add(pathName, `${pathName} is invalid`);
     } catch {
       throw new CouldNotCompleteRequest();
     }
+  }
+}
+
+class ErrorMessagesContainer<DataStruct extends Record<string, any>> {
+  private errorMessages: Partial<Record<keyof DataStruct, string>> = {};
+
+  add(key: keyof DataStruct, errorMessage: string) {
+    this.errorMessages[key] = errorMessage;
+  }
+
+  hasAny() {
+    return Reflect.ownKeys(this.errorMessages).length > 0;
+  }
+
+  getErrorMessages() {
+    return this.errorMessages;
   }
 }

@@ -4,21 +4,23 @@ import AddBook, {
   InputData,
   CouldNotCompleteRequest,
   Dependencies,
+  BookData,
 } from "../interface";
-import validateInputData from "./validateInputData";
+import validateBookData from "./validateBookData";
 
 export default function buildAddBook(deps: Dependencies): AddBook {
-  return async function addBook(data: InputData) {
-    await validateInputData(data, deps);
-    const book = createBook(data);
+  async function addBook({ bookData, userToken }: InputData) {
+    const authorId = await deps.verifyUserToken(userToken);
+    await validateBookData(bookData, deps);
+    const book = createBook(authorId, bookData);
     await tryToSaveBook(book);
     return { bookId: book.id };
-  };
+  }
 
-  function createBook(data: InputData) {
+  function createBook(authorId: string, data: BookData) {
     return new Book({
       id: deps.createId(),
-      authorId: data.userId,
+      authorId,
       title: data.title,
       whenCreated: data.whenCreated,
       numberOfPages: data.numberOfPages,
@@ -39,4 +41,6 @@ export default function buildAddBook(deps: Dependencies): AddBook {
       throw new CouldNotCompleteRequest();
     }
   }
+
+  return addBook;
 }

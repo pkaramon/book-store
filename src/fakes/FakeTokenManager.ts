@@ -6,11 +6,11 @@ export default class FakeTokenManager {
     this.verifyToken = this.verifyToken.bind(this);
   }
 
-  createTokenFor(userId: string) {
+  async createTokenFor(userId: string) {
     return `***${userId}***`;
   }
 
-  verifyToken(token: string) {
+  async verifyToken(token: string) {
     if (this.isTokenValid(token)) {
       return this.extractUserIdFromToken(token);
     } else {
