@@ -1,17 +1,19 @@
 import User from "../../domain/User";
 import UserDataValidator from "../../domain/User/UserDataValidator";
+import ErrorMessagesContainer from "../../utils/ErrorMessagesContainer";
 import {
   EditProfileDetailsErrorMessages,
-  EditProfileInputData,
   InvalidEditProfileData,
+  ToUpdate,
 } from "../interface";
 
 export default class UserDetailsUpdater {
   public errorMessages: EditProfileDetailsErrorMessages = {};
+  public container = new ErrorMessagesContainer<ToUpdate>();
   constructor(
     private user: User,
     private userDataValidator: UserDataValidator,
-    private data: EditProfileInputData
+    private data: ToUpdate
   ) {}
 
   update() {
@@ -44,14 +46,12 @@ export default class UserDetailsUpdater {
         ? { isValid: false, errorMessages: [], value: undefined }
         : this.userDataValidator.validateProperty(key, this.data[key] as any);
 
-    if (errorMessages.length > 0) this.errorMessages[key] = errorMessages;
-
+    if (errorMessages.length > 0) this.container.set(key, errorMessages);
     return { isValid, value: value! };
   }
 
   private throwInvalidEditProfileDataIfThereAreErrorMessages() {
-    if (Reflect.ownKeys(this.errorMessages).length > 0) {
-      throw new InvalidEditProfileData(this.errorMessages);
-    }
+    if (this.container.hasAny())
+      throw new InvalidEditProfileData(this.container.getErrorMessages());
   }
 }

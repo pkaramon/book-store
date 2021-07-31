@@ -1,3 +1,4 @@
+import ErrorMessagesContainer from "../../utils/ErrorMessagesContainer";
 import {
   InvalidBookData,
   CouldNotCompleteRequest,
@@ -14,9 +15,7 @@ export default async function validateBookData(
     tools.now,
     tools.isCorrectEbookFile
   );
-  const container = await validator.validate();
-  if (container.hasAny())
-    throw new InvalidBookData(container.getErrorMessages());
+  await validator.validate();
 }
 
 class BookDataValidator {
@@ -35,7 +34,8 @@ class BookDataValidator {
     this.validateWhenCreated();
     await this.validateSampleFilePath();
     await this.validateFilePath();
-    return this.container;
+    if (this.container.hasAny())
+      throw new InvalidBookData(this.container.getErrorMessages());
   }
 
   private validateTitle() {
@@ -65,10 +65,7 @@ class BookDataValidator {
 
   private validateWhenCreated() {
     if (this.data.whenCreated.getTime() > this.now().getTime())
-      this.container.add(
-        "whenCreated",
-        "whenCreated cannot be in the future"
-      );
+      this.container.add("whenCreated", "whenCreated cannot be in the future");
   }
 
   private async validateSampleFilePath() {
@@ -90,18 +87,3 @@ class BookDataValidator {
   }
 }
 
-class ErrorMessagesContainer<DataStruct extends Record<string, any>> {
-  private errorMessages: Partial<Record<keyof DataStruct, string>> = {};
-
-  add(key: keyof DataStruct, errorMessage: string) {
-    this.errorMessages[key] = errorMessage;
-  }
-
-  hasAny() {
-    return Reflect.ownKeys(this.errorMessages).length > 0;
-  }
-
-  getErrorMessages() {
-    return this.errorMessages;
-  }
-}

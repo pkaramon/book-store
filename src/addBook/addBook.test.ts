@@ -192,7 +192,7 @@ test("database error", async () => {
 async function expectValidationToFail<Key extends keyof BookData>(
   key: Key,
   value: BookData[Key],
-  expectedErrorMessage: string
+  ...expectedErrorMessages: string[]
 ) {
   try {
     await addBook({
@@ -202,7 +202,7 @@ async function expectValidationToFail<Key extends keyof BookData>(
     throw "should have thrown";
   } catch (e) {
     expect(e).toBeInstanceOf(InvalidBookData);
-    expect(e.errors).toEqual({ [key]: expectedErrorMessage });
+    expect(e.errors).toEqual({ [key]: expectedErrorMessages });
     expect(e.invalidProperties).toEqual([key]);
   }
 }

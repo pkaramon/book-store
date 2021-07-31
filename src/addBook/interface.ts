@@ -8,7 +8,7 @@ export default interface AddBook {
 
 export interface InputData {
   userToken: string;
-  bookData:  BookData
+  bookData: BookData;
 }
 
 export interface BookData {
@@ -22,7 +22,7 @@ export interface BookData {
   filePath: string;
 }
 
-export type InvalidBookDataErrors = Partial<Record<keyof BookData, string>>;
+export type InvalidBookDataErrors = Partial<Record<keyof BookData, string[]>>;
 export class InvalidBookData extends Error {
   constructor(public readonly errors: InvalidBookDataErrors) {
     super();

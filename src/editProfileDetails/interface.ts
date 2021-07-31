@@ -1,19 +1,24 @@
+import VerifyToken from "../auth/VerifyToken";
 import User from "../domain/User";
 import UserDataValidator from "../domain/User/UserDataValidator";
 
 export default interface EditProfileDetails {
-  (data: EditProfileInputData): Promise<void>;
+  (data: InputData): Promise<void>;
 }
 
-export interface EditProfileInputData {
-  userId: string;
+export interface InputData {
+  userAuthToken: string;
+  toUpdate: ToUpdate;
+}
+
+export interface ToUpdate {
   firstName?: string;
   lastName?: string;
   birthDate?: Date;
 }
 
 export class UserNotFound extends Error {
-  constructor(public userId: string) {
+  constructor(public readonly userId: string) {
     super(`user with id: ${userId} was not found`);
     this.name = UserNotFound.name;
   }
@@ -26,11 +31,9 @@ export class CouldNotCompleteRequest extends Error {
   }
 }
 
-export interface EditProfileDetailsErrorMessages {
-  firstName?: string[];
-  lastName?: string[];
-  birthDate?: string[];
-}
+export type EditProfileDetailsErrorMessages = Partial<
+  Record<keyof ToUpdate, string[]>
+>;
 export class InvalidEditProfileData extends Error {
   constructor(public errorMessages: EditProfileDetailsErrorMessages) {
     super();
@@ -42,6 +45,7 @@ export interface Dependencies {
   getUserById: GetUserById;
   saveUser: SaveUser;
   userDataValidator: UserDataValidator;
+  verifyUserAuthToken: VerifyToken;
 }
 
 export interface GetUserById {

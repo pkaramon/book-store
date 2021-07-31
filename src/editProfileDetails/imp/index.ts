@@ -1,7 +1,7 @@
 import User from "../../domain/User";
 import EditProfileDetails, {
   Dependencies,
-  EditProfileInputData,
+  InputData,
   CouldNotCompleteRequest,
   UserNotFound,
 } from "../interface";
@@ -11,11 +11,17 @@ export default function buildEditProfileDetails({
   getUserById,
   saveUser,
   userDataValidator,
+  verifyUserAuthToken,
 }: Dependencies): EditProfileDetails {
-  return async function (data: EditProfileInputData) {
-    const user = await tryToGetUser(data.userId);
-    validateUser(user, data);
-    const updater = new UserDetailsUpdater(user!, userDataValidator, data);
+  return async function (data: InputData) {
+    const userId = await verifyUserAuthToken(data.userAuthToken);
+    const user = await tryToGetUser(userId);
+    validateUser(user, userId);
+    const updater = new UserDetailsUpdater(
+      user!,
+      userDataValidator,
+      data.toUpdate
+    );
     updater.update();
     await tryToSaveUser(user!);
   };
@@ -28,8 +34,8 @@ export default function buildEditProfileDetails({
     }
   }
 
-  function validateUser(user: User | null, data: EditProfileInputData) {
-    if (user === null) throw new UserNotFound(data.userId);
+  function validateUser(user: User | null, userId: string) {
+    if (user === null) throw new UserNotFound(userId);
   }
 
   async function tryToSaveUser(u: User) {

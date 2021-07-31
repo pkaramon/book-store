@@ -5,7 +5,7 @@ import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import { BookNotFound, NotAllowed, CouldNotCompleteRequest } from "./interface";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
-import { TokenVerificationError } from "../auth/VerifyToken";
+import  { TokenVerificationError } from "../auth/VerifyToken";
 
 const db = new InMemoryBookDb();
 const tm = new FakeTokenManager();
