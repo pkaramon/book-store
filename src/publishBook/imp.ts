@@ -5,15 +5,18 @@ import PublishBook, {
   BookNotFound,
   CouldNotCompleteRequest,
   Dependencies,
+  InputData,
 } from "./interface";
 
 export default function buildPublishBook({
   getBookById,
   saveBook,
   getAdminById,
+  verifyAdminAuthToken,
 }: Dependencies): PublishBook {
-  return async function publishBook(data: { adminId: string; bookId: string }) {
-    await checkIfAdminExists(data.adminId);
+  return async function publishBook(data: InputData) {
+    const adminId = await verifyAdminAuthToken(data.adminAuthToken);
+    await checkIfAdminExists(adminId);
     const book = checkIfBookWasFound(data.bookId, await getBook(data.bookId));
     checkIfBookWasAlreadyPublished(book);
     book.publish();

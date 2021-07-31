@@ -1,9 +1,10 @@
 import Admin from "../domain/Admin";
 import Book, { BookStatus } from "../domain/Book";
 import TableOfContents from "../domain/TableOfContents";
+import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import InMemoryDb from "../fakes/InMemoryDb";
-import { getThrownError } from "../__test__/fixtures";
+import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildPublishBook from "./imp";
 import {
   AdminNotFound,
@@ -13,15 +14,25 @@ import {
   Dependencies,
 } from "./interface";
 
+const tm = new FakeTokenManager();
 const bookDb = new InMemoryBookDb();
 const adminDb = new InMemoryDb<Admin>();
+const buildPublishBookHelper = createBuildHelper(buildPublishBook, {
+  getBookById: bookDb.getById,
+  saveBook: bookDb.save,
+  getAdminById: adminDb.getById,
+  verifyAdminAuthToken: tm.verifyToken,
+});
 const publishBook = buildPublishBookHelper({});
+const adminId = "1001";
+const bookId = "1";
+let adminAuthToken: string;
 beforeEach(async () => {
   bookDb.clear();
   adminDb.clear();
   await bookDb.save(
     new Book({
-      id: "1",
+      id: bookId,
       price: 3.0,
       title: "t",
       description: "d",
@@ -35,7 +46,7 @@ beforeEach(async () => {
   );
   await adminDb.save(
     new Admin({
-      id: "1001",
+      id: adminId,
       email: "adminemail@mail.com",
       firstName: "Joe",
       lastName: "Smith",
@@ -43,19 +54,23 @@ beforeEach(async () => {
       birthDate: new Date(2000, 1, 1),
     })
   );
+  adminAuthToken = await tm.createTokenFor(adminId);
 });
 
 test("book does not exist", async () => {
   const err: BookNotFound = await getThrownError(() =>
-    publishBook({ adminId: "1001", bookId: "37" })
+    publishBook({ adminAuthToken, bookId: "37" })
   );
   expect(err).toBeInstanceOf(BookNotFound);
   expect(err.bookId).toEqual("37");
 });
 
 test("admin with passed id does not exist", async () => {
-  const err: AdminNotFound = await getThrownError(() =>
-    publishBook({ adminId: "123321", bookId: "1" })
+  const err: AdminNotFound = await getThrownError(async () =>
+    publishBook({
+      adminAuthToken: await tm.createTokenFor("123321"),
+      bookId,
+    })
   );
   expect(err).toBeInstanceOf(AdminNotFound);
 });
@@ -71,19 +86,19 @@ test("getById failure", async () => {
 });
 
 test("publishing a book", async () => {
-  await publishBook({ bookId: "1", adminId: "1001" });
-  const book = await bookDb.getById("1");
+  await publishBook({ bookId, adminAuthToken });
+  const book = await bookDb.getById(bookId);
   expect(book?.status).toEqual(BookStatus.published);
 });
 
 test("book has been already published", async () => {
-  await publishBook({ bookId: "1", adminId: "1001" });
+  await publishBook({ bookId, adminAuthToken });
 
   const err: AlreadyPublished = await getThrownError(() =>
-    publishBook({ bookId: "1", adminId: "1001" })
+    publishBook({ bookId, adminAuthToken })
   );
   expect(err).toBeInstanceOf(AlreadyPublished);
-  expect(err.bookId).toEqual("1");
+  expect(err.bookId).toEqual(bookId);
 });
 
 test("saveBook failure", async () => {
@@ -102,18 +117,9 @@ async function expectToThrowCouldNotCompleteRequest(
 ) {
   const publishBook = buildPublishBookHelper({ ...newDeps });
   const err: CouldNotCompleteRequest = await getThrownError(() =>
-    publishBook({ adminId: "1001", bookId: "1" })
+    publishBook({ adminAuthToken, bookId })
   );
   expect(err).toBeInstanceOf(CouldNotCompleteRequest);
   expect(err.originalError).toEqual(data.originalError);
   expect(err.message).toEqual(data.message);
-}
-
-function buildPublishBookHelper(newDeps?: Partial<Dependencies>) {
-  return buildPublishBook({
-    getBookById: bookDb.getById,
-    saveBook: bookDb.save,
-    getAdminById: adminDb.getById,
-    ...newDeps,
-  });
 }

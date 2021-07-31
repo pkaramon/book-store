@@ -17,9 +17,9 @@ export default function buildLogin({
     return { token: await tryToCreateToken(user) };
   };
 
-  function tryToCreateToken(user: User) {
+  async function tryToCreateToken(user: User) {
     try {
-      return createToken(user.id);
+      return await createToken(user.id);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not create token", e);
     }

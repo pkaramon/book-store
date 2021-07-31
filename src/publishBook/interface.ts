@@ -1,3 +1,4 @@
+import VerifyToken from "../auth/VerifyToken";
 import Admin from "../domain/Admin";
 import Book from "../domain/Book";
 
@@ -6,7 +7,7 @@ export default interface PublishBook {
 }
 
 export interface InputData {
-  adminId: string;
+  adminAuthToken: string;
   bookId: string;
 }
 
@@ -37,5 +38,6 @@ export class CouldNotCompleteRequest extends Error {
 export interface Dependencies {
   getBookById: (id: string) => Promise<Book | null>;
   saveBook: (b: Book) => Promise<void>;
-  getAdminById: (id: string) => Promise<Admin | null> 
+  getAdminById: (id: string) => Promise<Admin | null>;
+  verifyAdminAuthToken: VerifyToken;
 }
