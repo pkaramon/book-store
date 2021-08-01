@@ -13,6 +13,18 @@ export default class ErrorMessagesContainer<
     this.saveErrorMessagesFor(key, errorMessages);
   }
 
+  hasAny() {
+    return Reflect.ownKeys(this.errorMessages).length > 0;
+  }
+
+  getErrorMessages() {
+    return this.errorMessages;
+  }
+
+  getInavlidProperties(): (keyof DataStruct)[] {
+    return Reflect.ownKeys(this.errorMessages) as any;
+  }
+
   private getErrorMessagesFor(key: keyof DataStruct): string[] {
     return this.errorMessages[key] === undefined
       ? []
@@ -21,13 +33,5 @@ export default class ErrorMessagesContainer<
 
   private saveErrorMessagesFor(key: keyof DataStruct, errorMessages: string[]) {
     this.errorMessages[key] = errorMessages;
-  }
-
-  hasAny() {
-    return Reflect.ownKeys(this.errorMessages).length > 0;
-  }
-
-  getErrorMessages() {
-    return this.errorMessages;
   }
 }
