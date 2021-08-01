@@ -15,7 +15,7 @@ export default function buildFinishChangePassword(
     const userId = await verifyResetPasswordToken(token);
     const user = await getUser(userId);
     const newPass = validateNewPassword(newPassword);
-    user.password = newPass;
+    user.password = await deps.hashPassword(newPass);
     await save(user);
     return { userId };
   }

@@ -44,6 +44,7 @@ export interface Dependencies {
   };
   getUserById: (id: string) => Promise<User | null>;
   saveUser: (u: User) => Promise<void>;
+  hashPassword: (pass: string) => Promise<string>;
 }
 
 interface VerifyResetPasswordToken {
