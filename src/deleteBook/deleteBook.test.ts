@@ -1,8 +1,7 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import { BookStatus, TableOfContents } from "../domain/Book";
+import getFakeBook from "../fakes/FakeBook";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import makeBook from "../fakes/makeBook";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildDeleteBook from "./imp";
 import { BookNotFound, CouldNotCompleteRequest, NotAllowed } from "./interface";
@@ -22,23 +21,7 @@ const bookId = "1";
 beforeEach(async () => {
   authorAuthToken = await tm.createTokenFor(authorId);
   db.clear();
-  const book = await makeBook({
-    id: bookId,
-    status: BookStatus.notPublished,
-    authorId,
-    price: 3,
-    title: "t",
-    filePath: "books/t.pdf",
-    description: "d",
-    whenCreated: new Date("2012-03-12"),
-    numberOfPages: 123,
-    sampleFilePath: null,
-    tableOfContents: new TableOfContents([
-      { title: "chapter 1" },
-      { title: "chapter 2" },
-    ]),
-  });
-  await db.save(book);
+  await db.save(await getFakeBook({ id: bookId, authorId }));
 });
 
 test("book does not exist", async () => {

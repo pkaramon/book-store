@@ -1,4 +1,3 @@
-import User from "../../domain/User";
 import RawUserDataValidator from "../../domain/RawUserDataValidator";
 import ErrorMessagesContainer from "../../utils/ErrorMessagesContainer";
 import {
@@ -6,12 +5,13 @@ import {
   InvalidEditProfileData,
   ToUpdate,
 } from "../interface";
+import CustomUser from "../../domain/CustomUser";
 
 export default class UserDetailsUpdater {
   public errorMessages: EditProfileDetailsErrorMessages = {};
   public container = new ErrorMessagesContainer<ToUpdate>();
   constructor(
-    private user: User,
+    private user: CustomUser,
     private userDataValidator: RawUserDataValidator,
     private data: ToUpdate
   ) {}

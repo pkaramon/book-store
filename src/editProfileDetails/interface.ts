@@ -24,6 +24,13 @@ export class UserNotFound extends Error {
   }
 }
 
+export class InvalidUserType extends Error {
+  constructor() {
+    super();
+    this.name = InvalidUserType.name;
+  }
+}
+
 export class CouldNotCompleteRequest extends Error {
   constructor(reason?: string) {
     super(reason);

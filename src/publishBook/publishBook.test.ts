@@ -1,9 +1,9 @@
-import { BookStatus, TableOfContents } from "../domain/Book";
+import { BookStatus } from "../domain/Book";
+import getFakeAdmin from "../fakes/FakeAdmin";
+import getFakeBook from "../fakes/FakeBook";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryAdminDb from "../fakes/InMemoryAdminDb";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import makeAdmin from "../fakes/makeAdmin";
-import makeBook from "../fakes/makeBook";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildPublishBook from "./imp";
 import {
@@ -30,31 +30,8 @@ let adminAuthToken: string;
 beforeEach(async () => {
   bookDb.clear();
   adminDb.clear();
-  await bookDb.save(
-    await makeBook({
-      id: bookId,
-      status: BookStatus.notPublished,
-      price: 3.0,
-      title: "t",
-      description: "d",
-      authorId: "101",
-      filePath: "books/book.pdf",
-      whenCreated: new Date(2000, 1, 1),
-      numberOfPages: 123,
-      sampleFilePath: "books/sample.pdf",
-      tableOfContents: TableOfContents.EmptyTableOfContents,
-    })
-  );
-  await adminDb.save(
-    await makeAdmin({
-      id: adminId,
-      email: "adminemail@mail.com",
-      firstName: "Joe",
-      lastName: "Smith",
-      password: "HASHED - Pass123$",
-      birthDate: new Date(2000, 1, 1),
-    })
-  );
+  await bookDb.save(await getFakeBook({ id: bookId }));
+  await adminDb.save(await getFakeAdmin({ id: adminId }));
   adminAuthToken = await tm.createTokenFor(adminId);
 });
 

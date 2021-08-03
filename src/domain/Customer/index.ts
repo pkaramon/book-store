@@ -1,3 +1,3 @@
-import User from "../User";
+import CustomUser from "../CustomUser";
 
-export default abstract class Customer extends User {}
+export default abstract class Customer extends CustomUser {}

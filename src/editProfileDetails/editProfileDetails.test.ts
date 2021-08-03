@@ -12,8 +12,10 @@ import {
   CouldNotCompleteRequest,
   InvalidEditProfileData,
   ToUpdate,
+  InvalidUserType,
 } from "./interface";
 import makePassword from "../fakes/makePassword";
+import getFakePlainUser from "../fakes/FakePlainUser";
 
 test("user does not exist", async () => {
   const err: UserNotFound = await getThrownError(async () =>
@@ -48,6 +50,18 @@ test("getUserById failure", async () => {
     });
   await expect(fn).rejects.toThrowError(CouldNotCompleteRequest);
   await expect(fn).rejects.toThrowError("could not get the user from db");
+});
+
+test("user returned from db is not a CustomUser", async () => {
+  const editProfileDetails = buildEditProfileDetailsHelper({
+    getUserById: jest.fn().mockResolvedValue(await getFakePlainUser()),
+  });
+  const fn = async () =>
+    editProfileDetails({
+      userAuthToken,
+      toUpdate: { firstName: "Tom" },
+    });
+  await expect(fn).rejects.toThrowError(InvalidUserType);
 });
 
 describe("changing firstName", () => {
@@ -176,7 +190,6 @@ beforeEach(async () => {
     birthDate: new Date(2000, 1, 1),
   };
   userAuthToken = await tm.createTokenFor(userInfo.id);
-
   userDb.clear();
   await userDb.save(await makeCustomer(userInfo));
 });

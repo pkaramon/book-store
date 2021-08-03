@@ -1,3 +1,4 @@
+import getFakeCustomer from "../fakes/FakeCustomer";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeCustomer from "../fakes/makeCustomer";
@@ -22,18 +23,13 @@ test("getUserByEmail unexpected failure", async () => {
 
 test("unexpected failure when comparing passwords", async () => {
   await userDb.save(
-    await makeCustomer({
-      id: "1",
-      email: validLoginData.email,
+    await getFakeCustomer({
       password: {
         hashedString: () => "123",
         isEqual: async () => {
           throw new Error("hash err");
         },
       },
-      firstName: "bob",
-      lastName: "smith",
-      birthDate: new Date(2000, 1, 1),
     })
   );
 
@@ -87,16 +83,13 @@ const validLoginData = {
 };
 beforeEach(async () => {
   await userDb.save(
-    await makeCustomer({
+    await getFakeCustomer({
       id: "1",
       email: validLoginData.email,
       password: await makePassword({
         password: validLoginData.password,
         isHashed: false,
       }),
-      firstName: "bob",
-      lastName: "smith",
-      birthDate: new Date(2000, 1, 1),
     })
   );
 });

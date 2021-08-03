@@ -1,5 +1,5 @@
+import getFakeCustomer from "../../fakes/FakeCustomer";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
-import makeCustomer from "../../fakes/makeCustomer";
 import makePassword from "../../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildInitChangePassword from "./imp";
@@ -31,13 +31,10 @@ beforeEach(async () => {
   createResetPasswordToken.mockClear();
   userDb.clear();
   await userDb.save(
-    await makeCustomer({
+    await getFakeCustomer({
       id: "1",
       email: "bob@mail.com",
-      firstName: "bob",
-      lastName: "smith",
       password: await makePassword({ password: "Pass123$", isHashed: false }),
-      birthDate: new Date(2000, 1, 1),
     })
   );
 });

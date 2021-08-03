@@ -1,12 +1,5 @@
-export default interface Admin {
-  info: AdminInfo;
-}
+import User, { UserInfo } from "../User";
 
-export interface AdminInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  birthDate: Date;
-}
+export default abstract class Admin extends User {}
+
+export interface AdminInfo extends UserInfo {}
