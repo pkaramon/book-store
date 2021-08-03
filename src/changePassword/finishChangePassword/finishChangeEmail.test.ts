@@ -1,6 +1,6 @@
-import User from "../../domain/User";
 import { fakeHashPassword } from "../../fakes/fakeHashing";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import makeCustomer from "../../fakes/makeCustomer";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildFinishChangePassword from "./imp";
 import {
@@ -21,7 +21,7 @@ const userDb = new InMemoryUserDb();
 beforeEach(async () => {
   userDb.clear();
   await userDb.save(
-    new User({
+    await makeCustomer({
       password: "Hashed - 123Aa!@#",
       email: "bob@mail.com",
       id: "1",
@@ -105,7 +105,9 @@ test("changing the password", async () => {
   const { userId } = await finishChangePassword(validData);
   expect(userId).toEqual("1");
   const bob = await userDb.getByEmail("bob@mail.com");
-  expect(bob?.password).toEqual(await fakeHashPassword(validData.newPassword));
+  expect(bob?.info.password).toEqual(
+    await fakeHashPassword(validData.newPassword)
+  );
 });
 
 test("user does not exist, ie maybe it got deleted after calling initChangePassword", async () => {

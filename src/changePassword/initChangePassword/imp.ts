@@ -36,7 +36,7 @@ export default function buildInitChangePassword({
   async function createTokenFor(user: User) {
     try {
       return await createResetPasswordToken(
-        { email: user.email, userId: user.id },
+        { email: user.info.email, userId: user.info.id },
         5
       );
     } catch (e) {

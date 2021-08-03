@@ -1,13 +1,13 @@
 import VerifyToken from "../auth/VerifyToken";
-import Comment from "../domain/Comment";
+import MakeComment from "../domain/Comment/MakeComment";
 import ErrorMessagesContainer from "../utils/ErrorMessagesContainer";
 
 interface Dependencies {
+  makeComment: MakeComment;
   saveComment: (comment: any) => Promise<void>;
   verifyUserAuthToken: VerifyToken;
   doesBookExist: (bookId: string) => Promise<boolean>;
   now: () => Date;
-  createId: () => string;
 }
 
 export interface InputData {
@@ -35,18 +35,17 @@ export default function buildPostComment(deps: Dependencies) {
 
     const validator = new CommentDataValidator(data.comment);
     const commentData = validator.validate();
-    const comment: Comment = {
-      id: deps.createId(),
+    const comment = await deps.makeComment({
       bookId,
       authorId: userId,
       stars: commentData.stars,
       title: commentData.title,
       body: commentData.body,
       createdAt: deps.now(),
-    };
+    });
 
     await deps.saveComment(comment);
-    return { commentId: comment.id };
+    return { commentId: comment.info.id };
   };
 }
 

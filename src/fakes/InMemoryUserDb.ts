@@ -9,6 +9,10 @@ export default class InMemoryUserDb extends InMemoryDb<User> {
 
   async getByEmail(email: string): Promise<User | null> {
     const users = Array.from(this.items.values());
-    return users.find((u) => u.email === email) ?? null;
+    return users.find((u) => u.info.email === email) ?? null;
+  }
+
+  protected getId(item: User): string {
+    return item.info.id;
   }
 }

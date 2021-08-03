@@ -1,14 +1,15 @@
+import Customer from "../domain/Customer";
 import UserDataValidatorImp from "../domain/UserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import NumberIdCreator from "../fakes/NumberIdCreator";
+import makeCustomer from "../fakes/makeCustomer";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
-import buildRegisterUser from "./imp";
+import buildRegisterCustomer from "./imp";
 import {
   CouldNotCompleteRequest,
   InputData,
-  InvalidUserRegisterData,
+  InvalidCustomerRegisterData,
 } from "./interface";
 
 describe("validation", () => {
@@ -109,32 +110,34 @@ describe("validation", () => {
   });
 });
 
-test("saveUser throws error", async () => {
-  const registerUser = buildRegisterUserHelper({
-    saveUser: jest.fn().mockRejectedValue(new Error("could not save user")),
+test("saveCustomer throws error", async () => {
+  const registerCustomer = buildRegisterCustomerHelper({
+    saveCustomer: jest
+      .fn()
+      .mockRejectedValue(new Error("could not save customer")),
   });
   const err: CouldNotCompleteRequest = await getThrownError(() =>
-    registerUser({ ...validData })
+    registerCustomer({ ...validData })
   );
   expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("could not save user"));
+  expect(err.originalError).toEqual(new Error("could not save customer"));
 });
 
-test("saving user to db", async () => {
-  const { userId } = await registerUser({ ...validData });
-  expect(userId).toEqual(idCreator.lastCreated());
-  const u = await userDb.getById(userId);
-  expect(u?.id).toEqual(userId);
-  expect(u?.firstName).toEqual(validData.firstName);
-  expect(u?.lastName).toEqual(validData.lastName);
-  expect(u?.email).toEqual(validData.email);
-  expect(u?.birthDate).toEqual(validData.birthDate);
+test("saving customer to db", async () => {
+  const { userId } = await registerCustomer({ ...validData });
+  expect(typeof userId).toBe("string");
+  const u = (await userDb.getById(userId)) as Customer;
+  expect(u?.info.id).toEqual(userId);
+  expect(u?.info.firstName).toEqual(validData.firstName);
+  expect(u?.info.lastName).toEqual(validData.lastName);
+  expect(u?.info.email).toEqual(validData.email);
+  expect(u?.info.birthDate).toEqual(validData.birthDate);
 });
 
 test("email must be unique", async () => {
-  await registerUser({ ...validData });
-  const err: InvalidUserRegisterData = await getThrownError(() =>
-    registerUser({
+  await registerCustomer({ ...validData });
+  const err: InvalidCustomerRegisterData = await getThrownError(() =>
+    registerCustomer({
       firstName: "Tom",
       lastName: "Smith",
       email: validData.email,
@@ -142,38 +145,38 @@ test("email must be unique", async () => {
       birthDate: new Date(1992, 1, 3),
     })
   );
-  expect(err).toBeInstanceOf(InvalidUserRegisterData);
+  expect(err).toBeInstanceOf(InvalidCustomerRegisterData);
   expect(err.errorMessages.email).toEqual(["email is already taken"]);
   expect(err.invalidProperties).toEqual(["email"]);
 });
 
 test("hashing passwords", async () => {
-  const { userId } = await registerUser({ ...validData });
+  const { userId } = await registerCustomer({ ...validData });
   const u = await userDb.getById(userId);
-  expect(u?.password).toEqual(await hashPassword(validData.password));
+  expect(u?.info.password).toEqual(await hashPassword(validData.password));
 });
 
-test("user should receive a notification when successfully registered", async () => {
+test("customer should receive a notification when successfully registered", async () => {
   const notifyUser = jest.fn().mockResolvedValue(undefined);
-  const registerUser = buildRegisterUserHelper({ notifyUser });
-  const { userId } = await registerUser({ ...validData });
+  const registerCustomer = buildRegisterCustomerHelper({ notifyUser });
+  const { userId } = await registerCustomer({ ...validData });
   expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
 });
 
 test("errors thrown from notifyUser are silenced, they do not impact the result of the transaction", async () => {
-  const registerUser = buildRegisterUserHelper({
+  const registerCustomer = buildRegisterCustomerHelper({
     notifyUser: jest.fn().mockRejectedValue(new Error("email server error")),
   });
-  const { userId } = await registerUser({ ...validData });
+  const { userId } = await registerCustomer({ ...validData });
   expect(await userDb.getById(userId)).not.toBeNull();
 });
 
 test("hashing failure", async () => {
-  const registerUser = buildRegisterUserHelper({
+  const registerCustomer = buildRegisterCustomerHelper({
     hashPassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
   });
   const err: CouldNotCompleteRequest = await getThrownError(() =>
-    registerUser({ ...validData })
+    registerCustomer({ ...validData })
   );
   expect(err).toBeInstanceOf(CouldNotCompleteRequest);
   expect(err.originalError).toEqual(new Error("hashing failure"));
@@ -181,17 +184,16 @@ test("hashing failure", async () => {
 
 const userDb = new InMemoryUserDb();
 const hashPassword = fakeHashPassword;
-const idCreator = new NumberIdCreator();
 const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
-const buildRegisterUserHelper = createBuildHelper(buildRegisterUser, {
+const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
   hashPassword,
-  saveUser: userDb.save,
+  saveCustomer: userDb.save,
   notifyUser: jest.fn().mockResolvedValue(undefined),
-  createId: idCreator.create,
   userDataValidator: new UserDataValidatorImp(fakeClock.now),
   getUserByEmail: userDb.getByEmail,
+  makeCustomer,
 });
-const registerUser = buildRegisterUserHelper({});
+const registerCustomer = buildRegisterCustomerHelper({});
 const validData: InputData = {
   firstName: "Bob",
   lastName: "Smith",
@@ -202,7 +204,6 @@ const validData: InputData = {
 
 beforeEach(() => {
   userDb.clear();
-  idCreator.reset();
 });
 
 async function expectValidationToFail<K extends keyof InputData>(
@@ -210,10 +211,10 @@ async function expectValidationToFail<K extends keyof InputData>(
   value: InputData[K],
   ...errorMessages: string[]
 ) {
-  const err: InvalidUserRegisterData = await getThrownError(() =>
-    registerUser({ ...validData, [key]: value })
+  const err: InvalidCustomerRegisterData = await getThrownError(() =>
+    registerCustomer({ ...validData, [key]: value })
   );
-  expect(err).toBeInstanceOf(InvalidUserRegisterData);
+  expect(err).toBeInstanceOf(InvalidCustomerRegisterData);
   expect(err.invalidProperties).toHaveLength(1);
   expect(err.invalidProperties).toContain(key);
   expect(err.errorMessages).toEqual({ [key]: errorMessages });
@@ -223,6 +224,6 @@ async function expectValidationToPass<K extends keyof InputData>(
   key: K,
   value: InputData[K]
 ) {
-  await registerUser({ ...validData, [key]: value });
+  await registerCustomer({ ...validData, [key]: value });
   userDb.clear();
 }

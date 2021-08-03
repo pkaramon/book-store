@@ -1,5 +1,5 @@
 import UserDataValidator from "../../domain/User/UserDataValidator";
-import { Dependencies, InputData, InvalidUserRegisterData } from "../interface";
+import { Dependencies, InputData, InvalidCustomerRegisterData } from "../interface";
 
 export default async function validateData(
   getUserByEmail: Dependencies["getUserByEmail"],
@@ -14,7 +14,7 @@ export default async function validateData(
   }
 
   if (!result.isValid)
-    throw new InvalidUserRegisterData(
+    throw new InvalidCustomerRegisterData(
       removePropertiesWithNoErrors(result.errorMessages)
     );
   return result.value;

@@ -3,7 +3,7 @@ import BookStatus from "./BookStatus";
 import TableOfContents from "./TableOfContents";
 
 export default interface Book {
-  info: BookInfo;
+  readonly info: BookInfo;
   publish(): void;
 }
 export { BookStatus, BookInfo, TableOfContents };

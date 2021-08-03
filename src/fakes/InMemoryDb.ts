@@ -1,4 +1,4 @@
-export default class InMemoryDb<T extends { id: string }> {
+export default abstract class InMemoryDb<T> {
   public items = new Map<string, T>();
 
   constructor() {
@@ -9,7 +9,7 @@ export default class InMemoryDb<T extends { id: string }> {
   }
 
   async save(item: T) {
-    this.items.set(item.id, item);
+    this.items.set(this.getId(item), item);
   }
 
   async getById(itemId: string): Promise<T | null> {
@@ -19,6 +19,8 @@ export default class InMemoryDb<T extends { id: string }> {
   async deleteById(itemId: string): Promise<void> {
     this.items.delete(itemId);
   }
+
+  protected abstract getId(item: T): string;
 
   clear() {
     this.items = new Map();

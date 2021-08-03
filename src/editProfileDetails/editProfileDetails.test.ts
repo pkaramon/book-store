@@ -4,6 +4,7 @@ import UserDataValidatorImp from "../domain/UserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import makeCustomer from "../fakes/makeCustomer";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildEditProfileDetails from "./imp";
 import {
@@ -55,7 +56,7 @@ describe("changing firstName", () => {
       toUpdate: { firstName: "Tom" },
     });
     const u = await userDb.getById(userData.id);
-    expect(u?.firstName).toBe("Tom");
+    expect(u?.info.firstName).toBe("Tom");
   });
   test("invalid firstName", async () => {
     await expectValidationToFail("firstName", "", "firstName cannot be empty");
@@ -70,7 +71,7 @@ describe("changing lastName", () => {
       toUpdate: { lastName: "Johnson" },
     });
     const u = await userDb.getById(userData.id);
-    expect(u?.lastName).toBe("Johnson");
+    expect(u?.info.lastName).toBe("Johnson");
   });
   test("invalid lastName", async () => {
     await expectValidationToFail("lastName", "", "lastName cannot be empty");
@@ -85,7 +86,7 @@ describe("changing birthDate", () => {
       toUpdate: { birthDate: new Date(1990, 1, 3) },
     });
     const u = await userDb.getById(userData.id);
-    expect(u?.birthDate).toEqual(new Date(1990, 1, 3));
+    expect(u?.info.birthDate).toEqual(new Date(1990, 1, 3));
   });
   test("invalid birthDate", async () => {
     await expectValidationToFail(
@@ -107,9 +108,9 @@ describe("changing multiple properties at at time", () => {
       },
     });
     const u = await userDb.getById(userData.id);
-    expect(u?.firstName).toEqual("Tom");
-    expect(u?.lastName).toEqual("Johnson");
-    expect(u?.birthDate).toEqual(new Date(1990, 1, 1));
+    expect(u?.info.firstName).toEqual("Tom");
+    expect(u?.info.lastName).toEqual("Johnson");
+    expect(u?.info.birthDate).toEqual(new Date(1990, 1, 1));
   });
 
   test("multiple errors", async () => {
@@ -171,7 +172,7 @@ let userAuthToken: string;
 beforeEach(async () => {
   userAuthToken = await tm.createTokenFor(userData.id);
   userDb.clear();
-  await userDb.save(new User(userData));
+  await userDb.save(await makeCustomer(userData));
 });
 
 async function expectValidationToFail<K extends keyof ToUpdate>(

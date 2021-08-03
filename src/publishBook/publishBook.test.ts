@@ -1,9 +1,8 @@
-import Admin from "../domain/Admin";
-import { BookStatus } from "../domain/Book";
-import TableOfContents from "../domain/Book/TableOfContents";
+import { BookStatus, TableOfContents } from "../domain/Book";
 import FakeTokenManager from "../fakes/FakeTokenManager";
+import InMemoryAdminDb from "../fakes/InMemoryAdminDb";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import InMemoryDb from "../fakes/InMemoryDb";
+import makeAdmin from "../fakes/makeAdmin";
 import makeBook from "../fakes/makeBook";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildPublishBook from "./imp";
@@ -17,7 +16,7 @@ import {
 
 const tm = new FakeTokenManager();
 const bookDb = new InMemoryBookDb();
-const adminDb = new InMemoryDb<Admin>();
+const adminDb = new InMemoryAdminDb();
 const buildPublishBookHelper = createBuildHelper(buildPublishBook, {
   getBookById: bookDb.getById,
   saveBook: bookDb.save,
@@ -47,7 +46,7 @@ beforeEach(async () => {
     })
   );
   await adminDb.save(
-    new Admin({
+    await makeAdmin({
       id: adminId,
       email: "adminemail@mail.com",
       firstName: "Joe",

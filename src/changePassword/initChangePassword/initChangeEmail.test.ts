@@ -1,5 +1,6 @@
 import User from "../../domain/User";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import makeCustomer from "../../fakes/makeCustomer";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildInitChangePassword from "./imp";
 import {
@@ -30,9 +31,9 @@ beforeEach(async () => {
   createResetPasswordToken.mockClear();
   userDb.clear();
   await userDb.save(
-    new User({
-      email: "bob@mail.com",
+    await makeCustomer({
       id: "1",
+      email: "bob@mail.com",
       firstName: "bob",
       lastName: "smith",
       password: "HASHED - Pass123$",

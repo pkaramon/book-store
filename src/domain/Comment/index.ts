@@ -1,4 +1,8 @@
 export default interface Comment {
+  info: CommentInfo;
+}
+
+export interface CommentInfo {
   id: string;
   bookId: string;
   authorId: string;

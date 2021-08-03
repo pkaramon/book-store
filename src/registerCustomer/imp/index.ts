@@ -1,30 +1,29 @@
 import User from "../../domain/User";
-import RegisterUser, {
+import RegisterCustomer, {
   InputData,
   Dependencies,
   CouldNotCompleteRequest,
 } from "../interface";
 import validateData from "./validateData";
 
-export default function buildRegisterUser({
-  saveUser,
-  createId,
+export default function buildRegisterCustomer({
+  saveCustomer: saveUser,
   hashPassword,
   userDataValidator,
   notifyUser,
   getUserByEmail,
-}: Dependencies): RegisterUser {
-  return async function registerUser(data: InputData) {
+  makeCustomer,
+}: Dependencies): RegisterCustomer {
+  return async function registerCustomer(data: InputData) {
     const cleaned = await validateData(getUserByEmail, userDataValidator, data);
-    const user = await createUser(cleaned);
-    await tryToSaveUser(user);
-    await tryToNotifyUser(user);
-    return { userId: user.id };
+    const customer = await createCustomer(cleaned);
+    await tryToSaveCustomer(customer);
+    await tryToNotifyUser(customer);
+    return { userId: customer.info.id };
   };
 
-  async function createUser(data: InputData) {
-    return new User({
-      id: createId(),
+  async function createCustomer(data: InputData) {
+    return makeCustomer({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
@@ -41,7 +40,7 @@ export default function buildRegisterUser({
     }
   }
 
-  async function tryToSaveUser(u: User) {
+  async function tryToSaveCustomer(u: User) {
     try {
       await saveUser(u);
     } catch (e) {

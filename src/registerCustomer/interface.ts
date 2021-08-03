@@ -1,7 +1,9 @@
+import Customer from "../domain/Customer";
+import MakeCustomer from "../domain/Customer/MakeCustomer";
 import User from "../domain/User";
 import UserDataValidator from "../domain/User/UserDataValidator";
 
-export default interface RegisterUser {
+export default interface RegisterCustomer {
   (data: InputData): Promise<{ userId: string }>;
 }
 
@@ -13,7 +15,7 @@ export interface InputData {
   birthDate: Date;
 }
 
-export class InvalidUserRegisterData extends Error {
+export class InvalidCustomerRegisterData extends Error {
   constructor(
     public errorMessages: Partial<Record<keyof InputData, string[]>>
   ) {
@@ -31,10 +33,10 @@ export class CouldNotCompleteRequest extends Error {
 }
 
 export interface Dependencies {
-  saveUser: (u: User) => Promise<void>;
+  saveCustomer: (cus: Customer) => Promise<void>;
   getUserByEmail: (email: string) => Promise<User | null>;
-  createId: () => string;
   hashPassword: (pass: string) => Promise<string>;
   notifyUser: (user: User) => Promise<void>;
   userDataValidator: UserDataValidator;
+  makeCustomer: MakeCustomer
 }

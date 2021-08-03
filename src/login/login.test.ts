@@ -9,6 +9,7 @@ import {
 } from "./interface";
 import buildLogin from "./imp";
 import { getThrownError } from "../__test__/fixtures";
+import makeCustomer from "../fakes/makeCustomer";
 
 test("getUserByEmail unexpected failure", async () => {
   const login = buildLoginHelper({
@@ -75,8 +76,8 @@ const validLoginData = {
   password: "Pass123$",
 };
 beforeEach(async () => {
-  userDb.save(
-    new User({
+  await userDb.save(
+    await makeCustomer({
       id: "1",
       email: validLoginData.email,
       password: await hashPassword(validLoginData.password),

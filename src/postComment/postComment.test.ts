@@ -1,17 +1,17 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryDb from "../fakes/InMemoryDb";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
-import Comment from "../domain/Comment";
 import buildPostComment, {
   BookNotFound,
   InputData,
   InvalidCommentData,
 } from "./imp";
 import FakeClock from "../fakes/FakeClock";
+import InMemoryCommentDb from "../fakes/InMemoryCommentDb";
+import makeComment from "../fakes/makeComment";
 
 const doesBookExist = async (bookId: string) => bookId === "1";
-const commentDb = new InMemoryDb<Comment>();
+const commentDb = new InMemoryCommentDb();
 const tm = new FakeTokenManager();
 const clock = new FakeClock({ now: new Date(2020, 1, 1) });
 const buildPostCommentHelper = createBuildHelper(buildPostComment, {
@@ -19,7 +19,7 @@ const buildPostCommentHelper = createBuildHelper(buildPostComment, {
   saveComment: commentDb.save,
   verifyUserAuthToken: tm.verifyToken,
   now: clock.now,
-  createId: () => Math.random().toString(),
+  makeComment,
 });
 const postComment = buildPostCommentHelper({});
 
@@ -93,12 +93,12 @@ test("creating a comment", async () => {
     userAuthToken,
   });
   const com = await commentDb.getById(commentId);
-  expect(com?.title).toEqual(comment.title);
-  expect(com?.body).toEqual(comment.body);
-  expect(com?.createdAt).toEqual(clock.now());
-  expect(com?.stars).toEqual(comment.stars);
-  expect(com?.authorId).toEqual(userId);
-  expect(com?.bookId).toEqual(comment.bookId);
+  expect(com?.info.title).toEqual(comment.title);
+  expect(com?.info.body).toEqual(comment.body);
+  expect(com?.info.createdAt).toEqual(clock.now());
+  expect(com?.info.stars).toEqual(comment.stars);
+  expect(com?.info.authorId).toEqual(userId);
+  expect(com?.info.bookId).toEqual(comment.bookId);
 });
 
 async function expectValidationToFail(

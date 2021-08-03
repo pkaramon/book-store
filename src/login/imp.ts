@@ -13,13 +13,13 @@ export default function buildLogin({
 }: Dependencies): Login {
   return async function login(data: LoginData) {
     const user = await getUser(data.email);
-    await checkIfPasswordsMatch(user.password, data.password);
+    await checkIfPasswordsMatch(user.info.password, data.password);
     return { token: await tryToCreateToken(user) };
   };
 
   async function tryToCreateToken(user: User) {
     try {
-      return await createToken(user.id);
+      return await createToken(user.info.id);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not create token", e);
     }

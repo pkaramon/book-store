@@ -25,17 +25,17 @@ export default class UserDetailsUpdater {
 
   private tryToUpdateFirstName() {
     const { isValid, value } = this.getValidationResultsFor("firstName");
-    if (isValid) this.user.firstName = value;
+    if (isValid) this.user.changeFirstName(value);
   }
 
   private tryToUpdateLastName() {
     const { isValid, value } = this.getValidationResultsFor("lastName");
-    if (isValid) this.user.lastName = value;
+    if (isValid) this.user.changeLastName(value);
   }
 
   private tryToUpdateBirthDate() {
     const { isValid, value } = this.getValidationResultsFor("birthDate");
-    if (isValid) this.user.birthDate = value;
+    if (isValid) this.user.changeBirthDate(value);
   }
 
   private getValidationResultsFor<
