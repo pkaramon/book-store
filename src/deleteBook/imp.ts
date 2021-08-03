@@ -12,11 +12,11 @@ export default function buildDeleteBook({
   getBookById,
   verifyUserAuthToken,
 }: Dependencies): DeleteBook {
-  return async function (data: InputData) {
+  async function deleteBook(data: InputData) {
     const userId = await verifyUserAuthToken(data.userAuthToken);
     const book = await tryToGetBook(data.bookId);
     await tryToDeleteBook(validateBook(book, { userId, bookId: data.bookId }));
-  };
+  }
 
   async function tryToGetBook(bookId: string) {
     try {
@@ -31,16 +31,17 @@ export default function buildDeleteBook({
     data: { userId: string; bookId: string }
   ): Book {
     if (book === null) throw new BookNotFound(data.bookId);
-    if (book.authorId !== data.userId)
+    if (book.info.authorId !== data.userId)
       throw new NotAllowed(data.userId, data.bookId);
     return book;
   }
 
   async function tryToDeleteBook(book: Book) {
     try {
-      await deleteBookById(book.id);
+      await deleteBookById(book.info.id);
     } catch {
       throw new CouldNotCompleteRequest("could not delete the book from db");
     }
   }
+  return deleteBook;
 }

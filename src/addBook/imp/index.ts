@@ -1,5 +1,5 @@
-import Book from "../../domain/Book";
-import TableOfContents from "../../domain/TableOfContents";
+import Book, { BookStatus } from "../../domain/Book";
+import TableOfContents from "../../domain/Book/TableOfContents";
 import AddBook, {
   InputData,
   CouldNotCompleteRequest,
@@ -8,18 +8,24 @@ import AddBook, {
 } from "../interface";
 import validateBookData from "./validateBookData";
 
-export default function buildAddBook(deps: Dependencies): AddBook {
+export default function buildAddBook({
+  verifyUserToken,
+  makeBook,
+  saveBook,
+  now,
+  isCorrectEbookFile,
+}: Dependencies): AddBook {
   async function addBook({ bookData, userToken }: InputData) {
-    const authorId = await deps.verifyUserToken(userToken);
-    await validateBookData(bookData, deps);
-    const book = createBook(authorId, bookData);
+    const authorId = await verifyUserToken(userToken);
+    await validateBookData(bookData, { isCorrectEbookFile, now });
+    const book = await createBook(authorId, bookData);
     await tryToSaveBook(book);
-    return { bookId: book.id };
+    return { bookId: book.info.id };
   }
 
   function createBook(authorId: string, data: BookData) {
-    return new Book({
-      id: deps.createId(),
+    return makeBook({
+      status: BookStatus.notPublished,
       authorId,
       title: data.title,
       whenCreated: data.whenCreated,
@@ -36,7 +42,7 @@ export default function buildAddBook(deps: Dependencies): AddBook {
 
   async function tryToSaveBook(book: Book) {
     try {
-      await deps.saveBook(book);
+      await saveBook(book);
     } catch {
       throw new CouldNotCompleteRequest();
     }

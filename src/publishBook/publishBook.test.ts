@@ -1,9 +1,10 @@
 import Admin from "../domain/Admin";
-import Book, { BookStatus } from "../domain/Book";
-import TableOfContents from "../domain/TableOfContents";
+import { BookStatus } from "../domain/Book";
+import TableOfContents from "../domain/Book/TableOfContents";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import InMemoryDb from "../fakes/InMemoryDb";
+import makeBook from "../fakes/makeBook";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildPublishBook from "./imp";
 import {
@@ -31,8 +32,9 @@ beforeEach(async () => {
   bookDb.clear();
   adminDb.clear();
   await bookDb.save(
-    new Book({
+    await makeBook({
       id: bookId,
+      status: BookStatus.notPublished,
       price: 3.0,
       title: "t",
       description: "d",
@@ -88,7 +90,7 @@ test("getById failure", async () => {
 test("publishing a book", async () => {
   await publishBook({ bookId, adminAuthToken });
   const book = await bookDb.getById(bookId);
-  expect(book?.status).toEqual(BookStatus.published);
+  expect(book?.info?.status).toEqual(BookStatus.published);
 });
 
 test("book has been already published", async () => {

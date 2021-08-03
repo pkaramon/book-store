@@ -8,19 +8,18 @@ import {
 } from "./interface";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import NumberIdCreator from "../fakes/NumberIdCreator";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import { getThrownError } from "../__test__/fixtures";
 import { TokenVerificationError } from "../auth/VerifyToken";
+import makeBook from "../fakes/makeBook";
 
 const bookDb = new InMemoryBookDb();
-const idCreator = new NumberIdCreator();
 const isCorrectEbookFile = jest.fn().mockResolvedValue(true);
 const tokenManager = new FakeTokenManager();
 const dependencies = {
   now: new FakeClock({ now: new Date(2020, 1, 1) }).now,
   saveBook: bookDb.save,
-  createId: idCreator.create,
+  makeBook,
   isCorrectEbookFile,
   verifyUserToken: tokenManager.verifyToken,
 };
@@ -52,7 +51,6 @@ beforeEach(async () => {
   };
 
   bookDb.clear();
-  idCreator.reset();
   isCorrectEbookFile.mockClear();
 });
 
@@ -155,23 +153,22 @@ describe("validation", () => {
 
 test("creating a book", async () => {
   const { bookId } = await addBook({ ...validData });
-  expect(bookId).toEqual(idCreator.lastCreated());
+  expect(typeof bookId).toBe("string");
 
   const savedBook = (await bookDb.getById(bookId)) as Book;
-  expect(savedBook.id).toEqual(bookId);
-  expect(savedBook.authorId).toEqual(
+  expect(savedBook.info.id).toEqual(bookId);
+  expect(savedBook.info.authorId).toEqual(
     await tokenManager.verifyToken(validData.userToken)
   );
   const { bookData } = validData;
-  expect(savedBook.title).toEqual(bookData.title);
-  expect(savedBook.description).toEqual(bookData.description);
-  expect(savedBook.price).toEqual(bookData.price);
-  expect(savedBook.whenCreated).toEqual(bookData.whenCreated);
-  expect(savedBook.numberOfPages).toEqual(bookData.numberOfPages);
-  expect(savedBook.tableOfContents.data).toEqual(bookData.tableOfContents);
-  expect(savedBook.status).toEqual(BookStatus.notPublished);
-  expect(savedBook.filePath).toEqual(bookData.filePath);
-  expect(savedBook.sampleFilePath).toEqual(bookData.sampleFilePath);
+  expect(savedBook.info.title).toEqual(bookData.title);
+  expect(savedBook.info.price).toEqual(bookData.price);
+  expect(savedBook.info.whenCreated).toEqual(bookData.whenCreated);
+  expect(savedBook.info.numberOfPages).toEqual(bookData.numberOfPages);
+  expect(savedBook.info.tableOfContents.data).toEqual(bookData.tableOfContents);
+  expect(savedBook.info.status).toEqual(BookStatus.notPublished);
+  expect(savedBook.info.filePath).toEqual(bookData.filePath);
+  expect(savedBook.info.sampleFilePath).toEqual(bookData.sampleFilePath);
 });
 
 test("file system error", async () => {

@@ -1,6 +1,7 @@
 import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
-import { TableOfContentsData } from "../domain/TableOfContents";
+import MakeBook from "../domain/Book/MakeBook";
+import { TableOfContentsData } from "../domain/Book/TableOfContents";
 
 export default interface AddBook {
   (data: InputData): Promise<{ bookId: string }>;
@@ -44,7 +45,7 @@ export class CouldNotCompleteRequest extends Error {
 export interface Dependencies {
   now: () => Date;
   saveBook: SaveBook;
-  createId: CreateId;
+  makeBook: MakeBook;
   isCorrectEbookFile: IsCorrectEbookFile;
   verifyUserToken: VerifyToken;
 }

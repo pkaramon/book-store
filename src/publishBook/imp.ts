@@ -14,14 +14,14 @@ export default function buildPublishBook({
   getAdminById,
   verifyAdminAuthToken,
 }: Dependencies): PublishBook {
-  return async function publishBook(data: InputData) {
+  async function publishBook(data: InputData) {
     const adminId = await verifyAdminAuthToken(data.adminAuthToken);
     await checkIfAdminExists(adminId);
     const book = checkIfBookWasFound(data.bookId, await getBook(data.bookId));
     checkIfBookWasAlreadyPublished(book);
     book.publish();
     await save(book);
-  };
+  }
 
   async function checkIfAdminExists(adminId: string) {
     if ((await getAdminById(adminId)) === null)
@@ -45,8 +45,8 @@ export default function buildPublishBook({
   }
 
   function checkIfBookWasAlreadyPublished(book: Book) {
-    if (book.status === BookStatus.published)
-      throw new AlreadyPublished(book.id);
+    if (book.info.status === BookStatus.published)
+      throw new AlreadyPublished(book.info.id);
   }
 
   async function save(b: Book) {
@@ -59,4 +59,6 @@ export default function buildPublishBook({
       );
     }
   }
+
+  return publishBook;
 }

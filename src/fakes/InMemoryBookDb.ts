@@ -10,7 +10,7 @@ export default class InMemoryBookDb {
   }
 
   async save(book: Book) {
-    this.books.set(book.id, book);
+    this.books.set(book.info.id, book);
   }
 
   async deleteById(bookId: string): Promise<void> {
