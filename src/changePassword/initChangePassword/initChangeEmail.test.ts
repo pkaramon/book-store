@@ -1,5 +1,6 @@
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
 import makeCustomer from "../../fakes/makeCustomer";
+import makePassword from "../../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildInitChangePassword from "./imp";
 import {
@@ -35,7 +36,7 @@ beforeEach(async () => {
       email: "bob@mail.com",
       firstName: "bob",
       lastName: "smith",
-      password: "HASHED - Pass123$",
+      password: await makePassword({ password: "Pass123$", isHashed: false }),
       birthDate: new Date(2000, 1, 1),
     })
   );

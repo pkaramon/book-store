@@ -5,6 +5,4 @@ export default interface MakeCustomer {
   (data: CustomerData): Promise<Customer> | Customer;
 }
 
-export interface CustomerData extends UserInfo {
-  id?: string;
-}
+export type CustomerData = Omit<UserInfo, "id"> & { id?: string };

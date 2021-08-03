@@ -1,16 +1,16 @@
-export default interface User {
-  readonly info: UserInfo;
-  changeFirstName(value: string): void;
-  changeLastName(value: string): void;
-  changePassword(value: string): void;
-  changeBirthDate(value: Date): void;
+import Password from "../Password";
+import UserInfo from "./UserInfo";
+
+export default abstract class User {
+  get password() {
+    return this.info.password;
+  }
+
+  abstract readonly info: UserInfo;
+  abstract changeFirstName(value: string): void;
+  abstract changeLastName(value: string): void;
+  abstract changePassword(value: Password): void;
+  abstract changeBirthDate(value: Date): void;
 }
 
-export interface UserInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  birthDate: Date;
-}
+export { UserInfo };

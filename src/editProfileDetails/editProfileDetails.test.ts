@@ -1,5 +1,5 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import User from "../domain/User";
+import { UserInfo } from "../domain/User";
 import RawUserDataValidatorImp from "../domain/RawUserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
@@ -13,6 +13,7 @@ import {
   InvalidEditProfileData,
   ToUpdate,
 } from "./interface";
+import makePassword from "../fakes/makePassword";
 
 test("user does not exist", async () => {
   const err: UserNotFound = await getThrownError(async () =>
@@ -55,7 +56,7 @@ describe("changing firstName", () => {
       userAuthToken,
       toUpdate: { firstName: "Tom" },
     });
-    const u = await userDb.getById(userData.id);
+    const u = await userDb.getById(userInfo.id);
     expect(u?.info.firstName).toBe("Tom");
   });
   test("invalid firstName", async () => {
@@ -70,7 +71,7 @@ describe("changing lastName", () => {
       userAuthToken,
       toUpdate: { lastName: "Johnson" },
     });
-    const u = await userDb.getById(userData.id);
+    const u = await userDb.getById(userInfo.id);
     expect(u?.info.lastName).toBe("Johnson");
   });
   test("invalid lastName", async () => {
@@ -85,7 +86,7 @@ describe("changing birthDate", () => {
       userAuthToken,
       toUpdate: { birthDate: new Date(1990, 1, 3) },
     });
-    const u = await userDb.getById(userData.id);
+    const u = await userDb.getById(userInfo.id);
     expect(u?.info.birthDate).toEqual(new Date(1990, 1, 3));
   });
   test("invalid birthDate", async () => {
@@ -107,7 +108,7 @@ describe("changing multiple properties at at time", () => {
         lastName: "Johnson",
       },
     });
-    const u = await userDb.getById(userData.id);
+    const u = await userDb.getById(userInfo.id);
     expect(u?.info.firstName).toEqual("Tom");
     expect(u?.info.lastName).toEqual("Johnson");
     expect(u?.info.birthDate).toEqual(new Date(1990, 1, 1));
@@ -159,20 +160,25 @@ const buildEditProfileDetailsHelper = createBuildHelper(
   }
 );
 const editProfileDetails = buildEditProfileDetailsHelper({});
-const userData = {
-  id: "1",
-  firstName: "bob",
-  lastName: "smith",
-  email: "bob@mail.com",
-  password: "HASHED - Pas@!#1231232",
-  birthDate: new Date(2000, 1, 1),
-};
+let userInfo: UserInfo;
 let userAuthToken: string;
 
 beforeEach(async () => {
-  userAuthToken = await tm.createTokenFor(userData.id);
+  userInfo = {
+    id: "1",
+    firstName: "bob",
+    lastName: "smith",
+    email: "bob@mail.com",
+    password: await makePassword({
+      password: "Pas@!#1231232",
+      isHashed: false,
+    }),
+    birthDate: new Date(2000, 1, 1),
+  };
+  userAuthToken = await tm.createTokenFor(userInfo.id);
+
   userDb.clear();
-  await userDb.save(await makeCustomer(userData));
+  await userDb.save(await makeCustomer(userInfo));
 });
 
 async function expectValidationToFail<K extends keyof ToUpdate>(
@@ -182,7 +188,7 @@ async function expectValidationToFail<K extends keyof ToUpdate>(
 ) {
   try {
     await editProfileDetails({
-      userAuthToken: await tm.createTokenFor(userData.id),
+      userAuthToken: await tm.createTokenFor(userInfo.id),
       toUpdate: { [key]: value },
     });
     throw "should have thrown";

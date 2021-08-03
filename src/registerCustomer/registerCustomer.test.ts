@@ -1,9 +1,9 @@
 import Customer from "../domain/Customer";
 import RawUserDataValidatorImp from "../domain/RawUserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
-import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeCustomer from "../fakes/makeCustomer";
+import makePassword from "../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../__test__/fixtures";
 import buildRegisterCustomer from "./imp";
 import {
@@ -112,9 +112,7 @@ describe("validation", () => {
 
 test("saveCustomer throws error", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    saveUser: jest
-      .fn()
-      .mockRejectedValue(new Error("could not save customer")),
+    saveUser: jest.fn().mockRejectedValue(new Error("could not save customer")),
   });
   const err: CouldNotCompleteRequest = await getThrownError(() =>
     registerCustomer({ ...validData })
@@ -153,7 +151,8 @@ test("email must be unique", async () => {
 test("hashing passwords", async () => {
   const { userId } = await registerCustomer({ ...validData });
   const u = await userDb.getById(userId);
-  expect(u?.info.password).toEqual(await hashPassword(validData.password));
+  const pass = u?.password;
+  expect(await pass?.isEqual(validData.password)).toBe(true);
 });
 
 test("customer should receive a notification when successfully registered", async () => {
@@ -173,7 +172,7 @@ test("errors thrown from notifyUser are silenced, they do not impact the result 
 
 test("hashing failure", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    hashPassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
+    makePassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
   });
   const err: CouldNotCompleteRequest = await getThrownError(() =>
     registerCustomer({ ...validData })
@@ -183,15 +182,14 @@ test("hashing failure", async () => {
 });
 
 const userDb = new InMemoryUserDb();
-const hashPassword = fakeHashPassword;
 const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
 const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
-  hashPassword,
   saveUser: userDb.save,
   notifyUser: jest.fn().mockResolvedValue(undefined),
   userDataValidator: new RawUserDataValidatorImp(fakeClock.now),
   getUserByEmail: userDb.getByEmail,
   makeCustomer,
+  makePassword,
 });
 const registerCustomer = buildRegisterCustomerHelper({});
 const validData: InputData = {

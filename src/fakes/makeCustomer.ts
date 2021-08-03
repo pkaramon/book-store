@@ -1,6 +1,6 @@
 import Customer from "../domain/Customer";
-import MakeCustomer from "../domain/Customer/MakeCustomer";
-import { UserInfo } from "../domain/User";
+import MakeCustomer, { CustomerData } from "../domain/Customer/MakeCustomer";
+import Password from "../domain/Password";
 
 const makeCustomer: MakeCustomer = (data) => {
   return new CustomerImp({
@@ -10,8 +10,10 @@ const makeCustomer: MakeCustomer = (data) => {
 };
 export default makeCustomer;
 
-export class CustomerImp implements Customer {
-  constructor(private _info: { id: string } & UserInfo) {}
+export class CustomerImp extends Customer {
+  constructor(private _info: { id: string } & CustomerData) {
+    super();
+  }
 
   get info() {
     return this._info;
@@ -23,7 +25,7 @@ export class CustomerImp implements Customer {
   changeLastName(value: string): void {
     this._info.lastName = value;
   }
-  changePassword(value: string): void {
+  changePassword(value: Password): void {
     this._info.password = value;
   }
   changeBirthDate(value: Date): void {

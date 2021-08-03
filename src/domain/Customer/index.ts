@@ -1,3 +1,3 @@
 import User from "../User";
 
-export default interface Customer extends User {}
+export default abstract class Customer extends User {}

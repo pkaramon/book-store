@@ -1,3 +1,4 @@
+import MakePassword from "../../domain/Password/MakePassword";
 import User from "../../domain/User";
 
 export default interface FinishChangePassword {
@@ -37,14 +38,14 @@ export class InvalidNewPassword extends Error {
 
 export interface Dependencies {
   verifyResetPasswordToken: VerifyResetPasswordToken;
-  validatePassword: (password: string) => {
+  validateRawPassword: (password: string) => {
     password: string;
     isValid: boolean;
     errorMessages: string[];
   };
   getUserById: (id: string) => Promise<User | null>;
   saveUser: (u: User) => Promise<void>;
-  hashPassword: (pass: string) => Promise<string>;
+  makePassword: MakePassword;
 }
 
 interface VerifyResetPasswordToken {

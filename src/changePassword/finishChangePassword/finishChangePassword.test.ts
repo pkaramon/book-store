@@ -1,12 +1,12 @@
-import { fakeHashPassword } from "../../fakes/fakeHashing";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
 import makeCustomer from "../../fakes/makeCustomer";
+import makePassword from "../../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildFinishChangePassword from "./imp";
 import {
   CouldNotCompleteRequest,
-  InvalidResetPasswordToken,
   InvalidNewPassword,
+  InvalidResetPasswordToken,
   UserNotFound,
 } from "./interface";
 
@@ -18,11 +18,12 @@ const verifyResetPasswordToken = jest.fn(async (token: string) => {
 });
 
 const userDb = new InMemoryUserDb();
+const oldPassword = "123Aa!@#";
 beforeEach(async () => {
   userDb.clear();
   await userDb.save(
     await makeCustomer({
-      password: "Hashed - 123Aa!@#",
+      password: await makePassword({ password: oldPassword, isHashed: false }),
       email: "bob@mail.com",
       id: "1",
       firstName: "bob",
@@ -32,7 +33,7 @@ beforeEach(async () => {
   );
 });
 
-const validatePassword = (password: string) => {
+const validateRawPassword = (password: string) => {
   password = password.trim();
   const isValid = password.length >= 8;
   const errorMessages = isValid
@@ -44,19 +45,15 @@ const buildFinishChangePasswordHelper = createBuildHelper(
   buildFinishChangePassword,
   {
     verifyResetPasswordToken,
-    validatePassword,
+    validateRawPassword,
     getUserById: userDb.getById,
     saveUser: userDb.save,
-    hashPassword: fakeHashPassword,
+    makePassword,
   }
 );
 const finishChangePassword = buildFinishChangePasswordHelper({});
 
-const validData = {
-  token: "1 bob@mail.com",
-  newPassword: "Pass123$",
-};
-
+const validData = { token: "1 bob@mail.com", newPassword: "Pass123$" };
 test("verifyResetPasswordToken has a failure", async () => {
   const finishChangePassword = buildFinishChangePasswordHelper({
     verifyResetPasswordToken: jest
@@ -105,9 +102,8 @@ test("changing the password", async () => {
   const { userId } = await finishChangePassword(validData);
   expect(userId).toEqual("1");
   const bob = await userDb.getByEmail("bob@mail.com");
-  expect(bob?.info.password).toEqual(
-    await fakeHashPassword(validData.newPassword)
-  );
+  expect(await bob?.password.isEqual(validData.newPassword)).toBe(true);
+  expect(await bob?.password.isEqual(oldPassword)).toBe(false);
 });
 
 test("user does not exist, ie maybe it got deleted after calling initChangePassword", async () => {

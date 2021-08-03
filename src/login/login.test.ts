@@ -1,15 +1,14 @@
-import User from "../domain/User";
-import { fakeComparePasswords, fakeHashPassword } from "../fakes/fakeHashing";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import FakeTokenManager from "../fakes/FakeTokenManager";
+import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import makeCustomer from "../fakes/makeCustomer";
+import makePassword from "../fakes/makePassword";
+import { getThrownError } from "../__test__/fixtures";
+import buildLogin from "./imp";
 import {
   CouldNotCompleteRequest,
   Dependencies,
   InvalidLoginData,
 } from "./interface";
-import buildLogin from "./imp";
-import { getThrownError } from "../__test__/fixtures";
-import makeCustomer from "../fakes/makeCustomer";
 
 test("getUserByEmail unexpected failure", async () => {
   const login = buildLoginHelper({
@@ -21,10 +20,23 @@ test("getUserByEmail unexpected failure", async () => {
   });
 });
 
-test("comparePasswords unexpected failure", async () => {
-  const login = buildLoginHelper({
-    comparePasswords: jest.fn().mockRejectedValue(new Error("hash err")),
-  });
+test("unexpected failure when comparing passwords", async () => {
+  await userDb.save(
+    await makeCustomer({
+      id: "1",
+      email: validLoginData.email,
+      password: {
+        hashedString: () => "123",
+        isEqual: async () => {
+          throw new Error("hash err");
+        },
+      },
+      firstName: "bob",
+      lastName: "smith",
+      birthDate: new Date(2000, 1, 1),
+    })
+  );
+
   await expectToThrowCouldNotCompleteRequest(() => login(validLoginData), {
     message: "could not compare passwords",
     originalError: new Error("hash err"),
@@ -67,9 +79,7 @@ test("createToken failure", async () => {
 });
 
 const userDb = new InMemoryUserDb();
-const hashPassword = fakeHashPassword;
 const tokenManager = new FakeTokenManager();
-const comparePasswords = fakeComparePasswords;
 const login = buildLoginHelper();
 const validLoginData = {
   email: "bob@mail.com",
@@ -80,7 +90,10 @@ beforeEach(async () => {
     await makeCustomer({
       id: "1",
       email: validLoginData.email,
-      password: await hashPassword(validLoginData.password),
+      password: await makePassword({
+        password: validLoginData.password,
+        isHashed: false,
+      }),
       firstName: "bob",
       lastName: "smith",
       birthDate: new Date(2000, 1, 1),
@@ -92,7 +105,6 @@ function buildLoginHelper(newDeps?: Partial<Dependencies>) {
   return buildLogin({
     getUserByEmail: userDb.getByEmail,
     createToken: tokenManager.createTokenFor,
-    comparePasswords,
     ...newDeps,
   });
 }

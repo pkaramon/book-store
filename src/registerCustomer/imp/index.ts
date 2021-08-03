@@ -8,11 +8,11 @@ import validateData from "./validateData";
 
 export default function buildRegisterCustomer({
   saveUser,
-  hashPassword,
   userDataValidator,
   notifyUser,
   getUserByEmail,
   makeCustomer,
+  makePassword,
 }: Dependencies): RegisterCustomer {
   return async function registerCustomer(data: InputData) {
     const cleaned = await validateData(getUserByEmail, userDataValidator, data);
@@ -27,14 +27,14 @@ export default function buildRegisterCustomer({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      password: await tryToHashPassword(data.password),
+      password: await getHashedPassword(data.password),
       birthDate: data.birthDate,
     });
   }
 
-  async function tryToHashPassword(pass: string) {
+  async function getHashedPassword(password: string) {
     try {
-      return await hashPassword(pass);
+      return await makePassword({ password, isHashed: false });
     } catch (e) {
       throw new CouldNotCompleteRequest("hashing failure", e);
     }

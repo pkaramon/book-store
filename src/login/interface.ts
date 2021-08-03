@@ -25,7 +25,6 @@ export class InvalidLoginData extends Error {
 
 export interface Dependencies {
   getUserByEmail: GetUserByEmail;
-  comparePasswords: ComparePasswords;
   createToken: CreateToken;
 }
 

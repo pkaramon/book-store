@@ -15,7 +15,9 @@ export default function buildFinishChangePassword(
     const userId = await verifyResetPasswordToken(token);
     const user = await getUser(userId);
     const newPass = validateNewPassword(newPassword);
-    user.changePassword(await deps.hashPassword(newPass));
+    user.changePassword(
+      await deps.makePassword({ password: newPass, isHashed: false })
+    );
     await save(user);
     return { userId };
   }
@@ -41,7 +43,7 @@ export default function buildFinishChangePassword(
   }
 
   function validateNewPassword(pass: string) {
-    const { isValid, password, errorMessages } = deps.validatePassword(pass);
+    const { isValid, password, errorMessages } = deps.validateRawPassword(pass);
     if (!isValid) throw new InvalidNewPassword(password, errorMessages);
     return password;
   }

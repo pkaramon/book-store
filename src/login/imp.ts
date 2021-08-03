@@ -1,3 +1,4 @@
+import Password from "../domain/Password";
 import User from "../domain/User";
 import Login, {
   CouldNotCompleteRequest,
@@ -8,22 +9,13 @@ import Login, {
 
 export default function buildLogin({
   getUserByEmail,
-  comparePasswords,
   createToken,
 }: Dependencies): Login {
   return async function login(data: LoginData) {
     const user = await getUser(data.email);
-    await checkIfPasswordsMatch(user.info.password, data.password);
+    await checkIfPasswordsMatch(user.password, data.password);
     return { token: await tryToCreateToken(user) };
   };
-
-  async function tryToCreateToken(user: User) {
-    try {
-      return await createToken(user.info.id);
-    } catch (e) {
-      throw new CouldNotCompleteRequest("could not create token", e);
-    }
-  }
 
   async function getUser(email: string) {
     const u = await tryToGetUser(email);
@@ -40,22 +32,26 @@ export default function buildLogin({
   }
 
   async function checkIfPasswordsMatch(
-    usersPassword: string,
+    usersPassword: Password,
     password: string
   ) {
-    if (await arePasswordsNotEqual(usersPassword, password))
-      throw new InvalidLoginData();
+    const areEqual = await arePasswordsEqual(usersPassword, password);
+    if (!areEqual) throw new InvalidLoginData();
   }
 
-  async function arePasswordsNotEqual(usersPassword: string, password: string) {
+  async function arePasswordsEqual(usersPassword: Password, password: string) {
     try {
-      const areEqual = await comparePasswords({
-        notHashed: password,
-        hashed: usersPassword,
-      });
-      return !areEqual;
+      return await usersPassword.isEqual(password);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not compare passwords", e);
+    }
+  }
+
+  async function tryToCreateToken(user: User) {
+    try {
+      return await createToken(user.info.id);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not create token", e);
     }
   }
 }
