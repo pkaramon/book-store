@@ -1,7 +1,6 @@
-import Customer from "../domain/Customer";
 import MakeCustomer from "../domain/Customer/MakeCustomer";
 import User from "../domain/User";
-import UserDataValidator from "../domain/User/UserDataValidator";
+import RawUserDataValidator from "../domain/RawUserDataValidator";
 
 export default interface RegisterCustomer {
   (data: InputData): Promise<{ userId: string }>;
@@ -33,10 +32,10 @@ export class CouldNotCompleteRequest extends Error {
 }
 
 export interface Dependencies {
-  saveCustomer: (cus: Customer) => Promise<void>;
+  saveUser: (u: User) => Promise<void>;
   getUserByEmail: (email: string) => Promise<User | null>;
   hashPassword: (pass: string) => Promise<string>;
   notifyUser: (user: User) => Promise<void>;
-  userDataValidator: UserDataValidator;
-  makeCustomer: MakeCustomer
+  userDataValidator: RawUserDataValidator;
+  makeCustomer: MakeCustomer;
 }

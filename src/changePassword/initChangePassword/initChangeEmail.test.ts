@@ -1,4 +1,3 @@
-import User from "../../domain/User";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
 import makeCustomer from "../../fakes/makeCustomer";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";

@@ -1,5 +1,5 @@
 import Customer from "../domain/Customer";
-import UserDataValidatorImp from "../domain/UserDataValidatorImp";
+import RawUserDataValidatorImp from "../domain/RawUserDataValidatorImp";
 import FakeClock from "../fakes/FakeClock";
 import { fakeHashPassword } from "../fakes/fakeHashing";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
@@ -112,7 +112,7 @@ describe("validation", () => {
 
 test("saveCustomer throws error", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    saveCustomer: jest
+    saveUser: jest
       .fn()
       .mockRejectedValue(new Error("could not save customer")),
   });
@@ -187,9 +187,9 @@ const hashPassword = fakeHashPassword;
 const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
 const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
   hashPassword,
-  saveCustomer: userDb.save,
+  saveUser: userDb.save,
   notifyUser: jest.fn().mockResolvedValue(undefined),
-  userDataValidator: new UserDataValidatorImp(fakeClock.now),
+  userDataValidator: new RawUserDataValidatorImp(fakeClock.now),
   getUserByEmail: userDb.getByEmail,
   makeCustomer,
 });

@@ -23,6 +23,6 @@ export interface Dependencies {
   deliverResetPasswordTokenToUser: (u: User, token: string) => Promise<void>;
   createResetPasswordToken: (
     userInfo: { userId: string; email: string },
-    expiresInMiniutes: number
+    expiresInMinutes: number
   ) => Promise<string>;
 }

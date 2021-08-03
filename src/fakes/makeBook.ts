@@ -1,4 +1,4 @@
-import Book, { BookInfo, BookStatus } from "../domain/Book";
+import Book from "../domain/Book";
 import MakeBook from "../domain/Book/MakeBook";
 
 const makeBook: MakeBook = async (info) => {
@@ -10,14 +10,4 @@ const makeBook: MakeBook = async (info) => {
 
 export default makeBook;
 
-class BookImp implements Book {
-  constructor(private _info: BookInfo) {}
-
-  get info() {
-    return this._info;
-  }
-
-  publish() {
-    this._info.status = BookStatus.published;
-  }
-}
+class BookImp extends Book {}

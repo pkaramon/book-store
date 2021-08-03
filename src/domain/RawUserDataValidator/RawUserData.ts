@@ -1,9 +1,4 @@
-export default interface Admin {
-  info: AdminInfo;
-}
-
-export interface AdminInfo {
-  id: string;
+export default interface RawUserData {
   firstName: string;
   lastName: string;
   email: string;

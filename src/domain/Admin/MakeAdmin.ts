@@ -1,10 +1,7 @@
-import Admin from ".";
-import { UserData } from "../User";
+import Admin, { AdminInfo } from ".";
 
 export default interface MakeAdmin {
-  (data: AdminData): Promise<Admin> | Admin;
+  (info: AdminInfoWithOptionalId): Promise<Admin> | Admin;
 }
 
-export interface AdminData extends UserData {
-  id?: string;
-}
+export type AdminInfoWithOptionalId = Omit<AdminInfo, "id"> & { id?: string };

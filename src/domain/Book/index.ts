@@ -2,8 +2,15 @@ import BookInfo from "./BookInfo";
 import BookStatus from "./BookStatus";
 import TableOfContents from "./TableOfContents";
 
-export default interface Book {
-  readonly info: BookInfo;
-  publish(): void;
+export default abstract class Book {
+  constructor(private _info: BookInfo) {}
+
+  get info() {
+    return this._info;
+  }
+
+  publish() {
+    this._info.status = BookStatus.published;
+  }
 }
 export { BookStatus, BookInfo, TableOfContents };

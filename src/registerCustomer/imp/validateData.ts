@@ -1,12 +1,14 @@
-import UserDataValidator from "../../domain/User/UserDataValidator";
-import { Dependencies, InputData, InvalidCustomerRegisterData } from "../interface";
+import RawUserDataValidator, {
+  RawUserData,
+} from "../../domain/RawUserDataValidator";
+import { Dependencies, InvalidCustomerRegisterData } from "../interface";
 
 export default async function validateData(
   getUserByEmail: Dependencies["getUserByEmail"],
-  userDataValidator: UserDataValidator,
-  data: InputData
+  userDataValidator: RawUserDataValidator,
+  data: RawUserData
 ) {
-  const result = userDataValidator.validateUserData(data);
+  const result = userDataValidator.validateData(data);
   const u = await getUserByEmail(data.email);
   if (u !== null) {
     result.errorMessages.email.push("email is already taken");

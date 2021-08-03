@@ -7,7 +7,7 @@ import RegisterCustomer, {
 import validateData from "./validateData";
 
 export default function buildRegisterCustomer({
-  saveCustomer: saveUser,
+  saveUser,
   hashPassword,
   userDataValidator,
   notifyUser,

@@ -1,12 +1,13 @@
 export default interface User {
-  readonly info: { id: string } & UserData;
+  readonly info: UserInfo;
   changeFirstName(value: string): void;
   changeLastName(value: string): void;
   changePassword(value: string): void;
   changeBirthDate(value: Date): void;
 }
 
-export interface UserData {
+export interface UserInfo {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

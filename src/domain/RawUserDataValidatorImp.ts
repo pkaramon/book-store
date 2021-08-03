@@ -1,13 +1,13 @@
-import { UserData } from "./User";
-import UserDataValidator, {
-  UserDataValidationResult,
+import RawUserDataValidator, {
+  DataValidationResult,
   ValidationResult,
-} from "./User/UserDataValidator";
+} from "./RawUserDataValidator";
+import { RawUserData } from "./RawUserDataValidator";
 
-export default class UserDataValidatorImp implements UserDataValidator {
+export default class RawUserDataValidatorImp implements RawUserDataValidator {
   constructor(private now: () => Date) {}
 
-  validateUserData(data: UserData): UserDataValidationResult {
+  validateData(data: RawUserData): DataValidationResult {
     const validationResults = [
       this.validateProperty("firstName", data.firstName),
       this.validateProperty("lastName", data.lastName),
@@ -23,9 +23,9 @@ export default class UserDataValidatorImp implements UserDataValidator {
     };
   }
 
-  validateProperty<Key extends keyof UserData>(
+  validateProperty<Key extends keyof RawUserData>(
     key: Key,
-    value: UserData[Key]
+    value: RawUserData[Key]
   ): ValidationResult<Key> {
     switch (key) {
       case "firstName":
@@ -75,7 +75,7 @@ export default class UserDataValidatorImp implements UserDataValidator {
 
   private validateEmail(email: string): ValidationResult<"email"> {
     const data = new ValidationData("email", email.trim());
-    if (!UserDataValidatorImp.EMAIL_REGEX.test(data.value))
+    if (!RawUserDataValidatorImp.EMAIL_REGEX.test(data.value))
       data.addErrorMessage("email is invalid");
     return data.toValidationResult();
   }
@@ -177,10 +177,10 @@ export default class UserDataValidatorImp implements UserDataValidator {
   }
 }
 
-class ValidationData<Key extends keyof UserData> {
+class ValidationData<Key extends keyof RawUserData> {
   public errorMessages: string[] = [];
 
-  constructor(public key: Key, public value: UserData[Key]) {}
+  constructor(public key: Key, public value: RawUserData[Key]) {}
 
   addErrorMessage(msg: string) {
     this.errorMessages.push(msg);
