@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "testDev": "jest --runInBand --watch"
+    "testdev": "jest --runInBand --watch"
   },
   "author": "Piotr Karamon",
   "license": "MIT",

@@ -1,7 +1,7 @@
 import { BookInfo, BookStatus, TableOfContents } from "../domain/Book";
 import makeBook from "./makeBook";
 
-export default async function getFakeBook(newBookInfo: Partial<BookInfo>) {
+export default async function getFakeBook(newBookInfo?: Partial<BookInfo>) {
   return await makeBook({
     id: "1",
     status: BookStatus.notPublished,
