@@ -1,15 +1,15 @@
 import getFakeCustomer from "../fakes/FakeCustomer";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import makeCustomer from "../fakes/makeCustomer";
 import makePassword from "../fakes/makePassword";
-import { getThrownError } from "../__test__/fixtures";
-import buildLogin from "./imp";
 import {
-  CouldNotCompleteRequest,
-  Dependencies,
-  InvalidLoginData,
-} from "./interface";
+  createBuildHelper,
+  expectThrownErrorToMatch,
+  getThrownError,
+  rejectWith,
+} from "../__test__/fixtures";
+import buildLogin from "./imp";
+import { CouldNotCompleteRequest, InvalidLoginData } from "./interface";
 
 test("getUserByEmail unexpected failure", async () => {
   const login = buildLoginHelper({
@@ -21,39 +21,15 @@ test("getUserByEmail unexpected failure", async () => {
   });
 });
 
-test("unexpected failure when comparing passwords", async () => {
-  await userDb.save(
-    await getFakeCustomer({
-      password: {
-        hashedString: () => "123",
-        isEqual: async () => {
-          throw new Error("hash err");
-        },
-      },
-    })
-  );
-
-  await expectToThrowCouldNotCompleteRequest(() => login(validLoginData), {
-    message: "could not compare passwords",
-    originalError: new Error("hash err"),
-  });
-});
-
 test("email is not correct", async () => {
   await expect(
-    login({
-      email: "unknown@mail.com",
-      password: "Pass123$",
-    })
+    login({ email: "unknown@mail.com", password: "Pass123$" })
   ).rejects.toThrowError(InvalidLoginData);
 });
 
 test("email is correct but password is not", async () => {
   await expect(
-    login({
-      email: "bob@mail.com",
-      password: "wrong pass",
-    })
+    login({ email: "bob@mail.com", password: "wrong pass" })
   ).rejects.toThrowError(InvalidLoginData);
 });
 
@@ -68,15 +44,37 @@ test("createToken failure", async () => {
       throw new Error("token err");
     }),
   });
-  await expectToThrowCouldNotCompleteRequest(() => login(validLoginData), {
+  await expectThrownErrorToMatch(() => login(validLoginData), {
+    class: CouldNotCompleteRequest,
     message: "could not create token",
     originalError: new Error("token err"),
   });
 });
 
+test("unexpected failure when comparing passwords", async () => {
+  await userDb.save(
+    await getFakeCustomer({
+      password: {
+        hashedString: () => "123",
+        isEqual: rejectWith(new Error("hash err")),
+      },
+    })
+  );
+
+  await expectThrownErrorToMatch(() => login(validLoginData), {
+    message: "could not compare passwords",
+    class: CouldNotCompleteRequest,
+    originalError: new Error("hash err"),
+  });
+});
+
 const userDb = new InMemoryUserDb();
 const tokenManager = new FakeTokenManager();
-const login = buildLoginHelper();
+const buildLoginHelper = createBuildHelper(buildLogin, {
+  getUserByEmail: userDb.getByEmail,
+  createToken: tokenManager.createTokenFor,
+});
+const login = buildLoginHelper({});
 const validLoginData = {
   email: "bob@mail.com",
   password: "Pass123$",
@@ -93,14 +91,6 @@ beforeEach(async () => {
     })
   );
 });
-
-function buildLoginHelper(newDeps?: Partial<Dependencies>) {
-  return buildLogin({
-    getUserByEmail: userDb.getByEmail,
-    createToken: tokenManager.createTokenFor,
-    ...newDeps,
-  });
-}
 
 async function expectToThrowCouldNotCompleteRequest(
   fn: Function,

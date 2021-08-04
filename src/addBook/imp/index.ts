@@ -1,10 +1,13 @@
 import Book, { BookStatus } from "../../domain/Book";
 import TableOfContents from "../../domain/Book/TableOfContents";
+import BookAuthor from "../../domain/BookAuthor";
 import AddBook, {
   InputData,
   CouldNotCompleteRequest,
   Dependencies,
   BookData,
+  NotBookAuthor,
+  UserNotFound,
 } from "../interface";
 import validateBookData from "./validateBookData";
 
@@ -14,13 +17,29 @@ export default function buildAddBook({
   saveBook,
   now,
   isCorrectEbookFile,
+  getUserById,
 }: Dependencies): AddBook {
   async function addBook({ bookData, userToken }: InputData) {
     const authorId = await verifyUserToken(userToken);
+    await verifyAuthor(authorId);
     await validateBookData(bookData, { isCorrectEbookFile, now });
     const book = await createBook(authorId, bookData);
     await tryToSaveBook(book);
     return { bookId: book.info.id };
+  }
+
+  async function verifyAuthor(authorId: string) {
+    const author = await tryToGetUser(authorId);
+    if (author === null) throw new UserNotFound(authorId);
+    if (!(author instanceof BookAuthor)) throw new NotBookAuthor();
+  }
+
+  async function tryToGetUser(userId: string) {
+    try {
+      return await getUserById(userId);
+    } catch {
+      throw new CouldNotCompleteRequest("could not get user from db");
+    }
   }
 
   function createBook(authorId: string, data: BookData) {
@@ -44,7 +63,7 @@ export default function buildAddBook({
     try {
       await saveBook(book);
     } catch {
-      throw new CouldNotCompleteRequest();
+      throw new CouldNotCompleteRequest("could not save book");
     }
   }
 

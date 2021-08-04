@@ -5,15 +5,21 @@ import {
   InvalidBookData,
   CouldNotCompleteRequest,
   BookData,
+  NotBookAuthor,
+  UserNotFound,
 } from "./interface";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import FakeTokenManager from "../fakes/FakeTokenManager";
-import { getThrownError } from "../__test__/fixtures";
+import { expectThrownErrorToMatch, getThrownError } from "../__test__/fixtures";
 import { TokenVerificationError } from "../auth/VerifyToken";
 import makeBook from "../fakes/makeBook";
+import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import getFakeBookAuthor from "../fakes/FakeBookAuthor";
+import getFakePlainUser from "../fakes/FakePlainUser";
 
 const bookDb = new InMemoryBookDb();
+const userDb = new InMemoryUserDb();
 const isCorrectEbookFile = jest.fn().mockResolvedValue(true);
 const tokenManager = new FakeTokenManager();
 const dependencies = {
@@ -22,13 +28,15 @@ const dependencies = {
   makeBook,
   isCorrectEbookFile,
   verifyUserToken: tokenManager.verifyToken,
+  getUserById: userDb.getById,
 };
 const addBook = buildAddBook(dependencies);
 let validData: InputData;
-
+const bookAuthorId = "1";
+const plainUserId = "2";
 beforeEach(async () => {
   validData = {
-    userToken: await tokenManager.createTokenFor("1"),
+    userToken: await tokenManager.createTokenFor(bookAuthorId),
     bookData: {
       title: "first book",
       description: "first book desc",
@@ -52,6 +60,9 @@ beforeEach(async () => {
 
   bookDb.clear();
   isCorrectEbookFile.mockClear();
+
+  await userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
+  await userDb.save(await getFakePlainUser({ id: plainUserId }));
 });
 
 test("userToken is invalid", async () => {
@@ -60,6 +71,28 @@ test("userToken is invalid", async () => {
   );
   expect(err).toBeInstanceOf(TokenVerificationError);
   expect(err.invalidToken).toEqual("#!invalid!#");
+});
+
+test("user is not a book author", async () => {
+  await expectThrownErrorToMatch(
+    async () =>
+      addBook({
+        ...validData,
+        userToken: await tokenManager.createTokenFor(plainUserId),
+      }),
+    { class: NotBookAuthor }
+  );
+});
+
+test("user does not exist", async () => {
+  await expectThrownErrorToMatch(
+    async () =>
+      addBook({
+        ...validData,
+        userToken: await tokenManager.createTokenFor("123321"),
+      }),
+    { class: UserNotFound, userId: "123321" }
+  );
 });
 
 describe("validation", () => {
@@ -175,15 +208,31 @@ test("file system error", async () => {
   isCorrectEbookFile.mockRejectedValueOnce(
     new Error("could not check the file")
   );
-  await expectToThrowError(addBook, validData, CouldNotCompleteRequest);
+  await expectThrownErrorToMatch(() => addBook(validData), {
+    class: CouldNotCompleteRequest,
+  });
 });
 
-test("database error", async () => {
+test("saveBook error", async () => {
+  const addBook = buildAddBook({
+    ...dependencies,
+    saveBook: jest.fn().mockRejectedValue(new Error("save book err")),
+  });
+  await expectThrownErrorToMatch(() => addBook(validData), {
+    class: CouldNotCompleteRequest,
+    message: "could not save book",
+  });
+});
+
+test("getUserById error", async () => {
   const publishBook = buildAddBook({
     ...dependencies,
-    saveBook: jest.fn().mockRejectedValueOnce(new Error("could not save book")),
+    getUserById: jest.fn().mockRejectedValue(new Error("could not save book")),
   });
-  await expectToThrowError(publishBook, validData, CouldNotCompleteRequest);
+  await expectThrownErrorToMatch(() => publishBook({ ...validData }), {
+    class: CouldNotCompleteRequest,
+    message: "could not get user from db",
+  });
 });
 
 async function expectValidationToFail<Key extends keyof BookData>(
@@ -212,10 +261,6 @@ async function expectValidationToPass<Key extends keyof BookData>(
     ...validData,
     bookData: { ...validData.bookData, [key]: value },
   });
-}
-
-async function expectToThrowError(fn: Function, data: any, expectedError: any) {
-  await expect(() => fn(data)).rejects.toThrowError(expectedError);
 }
 
 function nCharString(n: number) {

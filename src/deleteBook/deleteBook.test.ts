@@ -2,7 +2,12 @@ import { TokenVerificationError } from "../auth/VerifyToken";
 import getFakeBook from "../fakes/FakeBook";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import { createBuildHelper, getThrownError } from "../__test__/fixtures";
+import {
+  createBuildHelper,
+  expectThrownErrorToMatch,
+  getThrownError,
+  rejectWith,
+} from "../__test__/fixtures";
 import buildDeleteBook from "./imp";
 import { BookNotFound, CouldNotCompleteRequest, NotAllowed } from "./interface";
 
@@ -33,41 +38,41 @@ test("book does not exist", async () => {
 });
 
 test("user is not the author of the book", async () => {
-  const err: NotAllowed = await getThrownError(async () =>
-    deleteBook({
-      userAuthToken: await tm.createTokenFor("123321"),
+  await expectThrownErrorToMatch(
+    async () =>
+      deleteBook({ userAuthToken: await tm.createTokenFor("123321"), bookId }),
+    {
+      class: NotAllowed,
+      userId: "123321",
       bookId,
-    })
+    }
   );
-  expect(err).toBeInstanceOf(NotAllowed);
-  expect(err.userId).toEqual("123321");
-  expect(err.bookId).toEqual(bookId);
 });
 
 test("getBookById throws error", async () => {
   const deleteBook = buildDeleteBookHelper({
-    getBookById: jest
-      .fn()
-      .mockRejectedValue(new Error("could not get the book")),
+    getBookById: rejectWith(new Error("could not get the book")),
   });
-  const err = await getThrownError(() =>
-    deleteBook({ userAuthToken: authorAuthToken, bookId })
+  await expectThrownErrorToMatch(
+    () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
+    {
+      class: CouldNotCompleteRequest,
+      message: "could not get the book from db",
+    }
   );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.message).toEqual("could not get the book from db");
 });
 
 test("deleteById throws error", async () => {
   const deleteBook = buildDeleteBookHelper({
-    deleteBookById: jest
-      .fn()
-      .mockRejectedValue(new Error("could not delete book")),
+    deleteBookById: rejectWith(new Error("could not delete book")),
   });
-  const err = await getThrownError(() =>
-    deleteBook({ userAuthToken: authorAuthToken, bookId })
+  await expectThrownErrorToMatch(
+    () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
+    {
+      class: CouldNotCompleteRequest,
+      message: "could not delete the book from db",
+    }
   );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.message).toEqual("could not delete the book from db");
 });
 
 test("deleting the book", async () => {
@@ -76,9 +81,8 @@ test("deleting the book", async () => {
 });
 
 test("user token is invalid", async () => {
-  const err: TokenVerificationError = await getThrownError(() =>
-    deleteBook({ userAuthToken: "#invalid#", bookId })
+  await expectThrownErrorToMatch(
+    () => deleteBook({ userAuthToken: "#invalid#", bookId }),
+    { class: TokenVerificationError, invalidToken: "#invalid#" }
   );
-  expect(err).toBeInstanceOf(TokenVerificationError);
-  expect(err.invalidToken).toEqual("#invalid#");
 });

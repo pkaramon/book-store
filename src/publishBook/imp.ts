@@ -1,3 +1,4 @@
+import Admin from "../domain/Admin";
 import Book, { BookStatus } from "../domain/Book";
 import PublishBook, {
   AdminNotFound,
@@ -6,26 +7,36 @@ import PublishBook, {
   CouldNotCompleteRequest,
   Dependencies,
   InputData,
+  UserIsNotAdmin,
 } from "./interface";
 
 export default function buildPublishBook({
   getBookById,
   saveBook,
-  getAdminById,
+  getUserById,
   verifyAdminAuthToken,
 }: Dependencies): PublishBook {
   async function publishBook(data: InputData) {
     const adminId = await verifyAdminAuthToken(data.adminAuthToken);
-    await checkIfAdminExists(adminId);
+    await validateAdmin(adminId);
     const book = checkIfBookWasFound(data.bookId, await getBook(data.bookId));
     checkIfBookWasAlreadyPublished(book);
     book.publish();
     await save(book);
   }
 
-  async function checkIfAdminExists(adminId: string) {
-    if ((await getAdminById(adminId)) === null)
-      throw new AdminNotFound(adminId);
+  async function validateAdmin(userId: string) {
+    const user = await tryToGetUser(userId);
+    if (user === null) throw new AdminNotFound(userId);
+    if (!(user instanceof Admin)) throw new UserIsNotAdmin(userId);
+  }
+
+  async function tryToGetUser(userId: string) {
+    try {
+      return await getUserById(userId);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not get user from db", e);
+    }
   }
 
   async function getBook(bookId: string) {

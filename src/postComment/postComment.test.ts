@@ -4,7 +4,11 @@ import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import makeComment from "../fakes/makeComment";
-import { createBuildHelper, getThrownError } from "../__test__/fixtures";
+import {
+  createBuildHelper,
+  expectThrownErrorToMatch,
+  getThrownError,
+} from "../__test__/fixtures";
 import buildPostComment from "./imp";
 import {
   BookNotFound,
@@ -152,23 +156,6 @@ test("saveBook failure", async () => {
     }
   );
 });
-
-async function expectThrownErrorToMatch<E extends Error>(
-  fn: Function,
-  errorData: { class: new (...args: any) => E } & Partial<E>
-) {
-  try {
-    await fn();
-    throw new Error("should have thrown");
-  } catch (e) {
-    expect(e).toBeInstanceOf(errorData.class);
-    for (const key in errorData) {
-      if (key === "class") continue;
-      if (key === undefined) continue;
-      expect(e[key]).toEqual(errorData[key as keyof typeof errorData]);
-    }
-  }
-}
 
 async function expectValidationToFail(
   newData: Partial<InputData["comment"]>,

@@ -1,5 +1,5 @@
+import getFakePlainUser from "../../fakes/FakePlainUser";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
-import makeCustomer from "../../fakes/makeCustomer";
 import makePassword from "../../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
 import buildFinishChangePassword from "./imp";
@@ -22,13 +22,10 @@ const oldPassword = "123Aa!@#";
 beforeEach(async () => {
   userDb.clear();
   await userDb.save(
-    await makeCustomer({
-      password: await makePassword({ password: oldPassword, isHashed: false }),
-      email: "bob@mail.com",
+    await getFakePlainUser({
       id: "1",
-      firstName: "bob",
-      lastName: "smith",
-      birthDate: new Date(2000, 1, 1),
+      email: "bob@mail.com",
+      password: await makePassword({ password: oldPassword, isHashed: false }),
     })
   );
 });

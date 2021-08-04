@@ -1,4 +1,4 @@
-import getFakeCustomer from "../../fakes/FakeCustomer";
+import getFakePlainUser from "../../fakes/FakePlainUser";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
 import makePassword from "../../fakes/makePassword";
 import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
@@ -31,7 +31,7 @@ beforeEach(async () => {
   createResetPasswordToken.mockClear();
   userDb.clear();
   await userDb.save(
-    await getFakeCustomer({
+    await getFakePlainUser({
       id: "1",
       email: "bob@mail.com",
       password: await makePassword({ password: "Pass123$", isHashed: false }),

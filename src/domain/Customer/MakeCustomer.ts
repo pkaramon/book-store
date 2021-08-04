@@ -1,8 +1,7 @@
-import Customer from ".";
-import { UserInfo } from "../User";
+import Customer, { CustomerInfo } from ".";
 
 export default interface MakeCustomer {
   (data: CustomerData): Promise<Customer> | Customer;
 }
 
-export type CustomerData = Omit<UserInfo, "id"> & { id?: string };
+export type CustomerData = Omit<CustomerInfo, "id"> & { id?: string };

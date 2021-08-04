@@ -2,6 +2,7 @@ import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
 import MakeBook from "../domain/Book/MakeBook";
 import { TableOfContentsData } from "../domain/Book/TableOfContents";
+import User from "../domain/User";
 
 export default interface AddBook {
   (data: InputData): Promise<{ bookId: string }>;
@@ -35,6 +36,20 @@ export class InvalidBookData extends Error {
   }
 }
 
+export class NotBookAuthor extends Error {
+  constructor() {
+    super();
+    this.name = NotBookAuthor.name;
+  }
+}
+
+export class UserNotFound extends Error {
+  constructor(public userId: string) {
+    super();
+    this.name = UserNotFound.name;
+  }
+}
+
 export class CouldNotCompleteRequest extends Error {
   constructor(message?: string) {
     super(message);
@@ -48,6 +63,7 @@ export interface Dependencies {
   makeBook: MakeBook;
   isCorrectEbookFile: IsCorrectEbookFile;
   verifyUserToken: VerifyToken;
+  getUserById: GetUserById;
 }
 
 export interface SaveBook {
@@ -60,4 +76,8 @@ export interface CreateId {
 
 export interface IsCorrectEbookFile {
   (path: string): Promise<boolean>;
+}
+
+export interface GetUserById {
+  (userId: string): Promise<User | null>;
 }
