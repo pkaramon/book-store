@@ -1,15 +1,39 @@
-export default interface Comment {
-  info: CommentInfo;
+export default abstract class Comment {
+  constructor(
+    private _metadata: CommentMetadata,
+    private _content: CommentContent
+  ) {}
+
+  get metadata() {
+    return this._metadata;
+  }
+
+  get content() {
+    return this._content;
+  }
+
+  changeTitle(title: string) {
+    this._content.title = title;
+  }
+
+  changeBody(body: string) {
+    this._content.body = body;
+  }
+
+  changeStars(stars: number) {
+    this._content.stars = stars;
+  }
 }
 
-export interface CommentInfo {
+export interface CommentMetadata {
   id: string;
   bookId: string;
   authorId: string;
-  title: string;
-  stars: Stars;
-  body: string;
-  createdAt: Date;
+  postedAt: Date;
 }
 
-export type Stars = 1 | 2 | 3 | 4 | 5;
+export interface CommentContent {
+  title: string;
+  body: string;
+  stars: number;
+}

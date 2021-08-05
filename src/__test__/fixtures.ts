@@ -19,7 +19,7 @@ export async function expectThrownErrorToMatch<E extends Error>(
 ) {
   try {
     await fn();
-    throw new Error("should have thrown");
+    throw new DidNotThrowError();
   } catch (e) {
     expect(e).toBeInstanceOf(errorData.class);
     for (const key in errorData) {
@@ -27,6 +27,13 @@ export async function expectThrownErrorToMatch<E extends Error>(
       if (key === undefined) continue;
       expect(e[key]).toEqual(errorData[key as keyof typeof errorData]);
     }
+  }
+}
+
+export class DidNotThrowError extends Error {
+  constructor() {
+    super();
+    this.name = DidNotThrowError.name;
   }
 }
 

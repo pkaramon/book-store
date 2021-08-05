@@ -1,4 +1,5 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
+import CommentContentValidatorImp from "../domain/CommentContentValidatorImp";
 import getFakeBook from "../fakes/FakeBook";
 import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
@@ -14,7 +15,7 @@ import {
   BookNotFound,
   CouldNotCompleteRequest,
   InputData,
-  InvalidCommentData,
+  InvalidCommentContent,
 } from "./interface";
 
 const tm = new FakeTokenManager();
@@ -26,6 +27,7 @@ const buildPostCommentHelper = createBuildHelper(buildPostComment, {
   now: clock.now,
   makeComment,
   saveBook: bookDb.save,
+  commentContentValidator: new CommentContentValidatorImp(),
 });
 const postComment = buildPostCommentHelper({});
 
@@ -104,14 +106,14 @@ test("creating a comment", async () => {
   const comments = await book.getAllComments();
   expect(comments).toHaveLength(1);
   const com = comments[0];
-  expect(com.info.bookId).toEqual(comment.bookId);
-  expect(com.info.title).toEqual(comment.title);
-  expect(com.info.body).toEqual(comment.body);
-  expect(com.info.stars).toEqual(comment.stars);
-  expect(com.info.createdAt).toEqual(clock.now());
-  expect(com.info.authorId).toEqual(userId);
-  expect(typeof com.info.id).toBe("string");
-  expect(createdComment).toMatchObject({ ...com.info });
+  expect(com.content.title).toEqual(comment.title);
+  expect(com.content.body).toEqual(comment.body);
+  expect(com.content.stars).toEqual(comment.stars);
+  expect(com.metadata.bookId).toEqual(comment.bookId);
+  expect(com.metadata.postedAt).toEqual(clock.now());
+  expect(com.metadata.authorId).toEqual(userId);
+  expect(typeof com.metadata.id).toBe("string");
+  expect(createdComment).toMatchObject({ ...com.metadata, ...com.content });
 });
 
 test("makeComment has unexpected failure", async () => {
@@ -161,10 +163,10 @@ async function expectValidationToFail(
   newData: Partial<InputData["comment"]>,
   expectedErrorMessages: Partial<Record<keyof InputData["comment"], string[]>>
 ) {
-  const err: InvalidCommentData = await getThrownError(() =>
+  const err: InvalidCommentContent = await getThrownError(() =>
     postComment({ userAuthToken, comment: { ...comment, ...newData } })
   );
-  expect(err).toBeInstanceOf(InvalidCommentData);
+  expect(err).toBeInstanceOf(InvalidCommentContent);
   expect(err.errorMessages).toMatchObject(expectedErrorMessages);
   expect(err.invalidProperties).toMatchObject(
     expect.arrayContaining(Reflect.ownKeys(expectedErrorMessages))

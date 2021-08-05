@@ -1,6 +1,8 @@
 import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
+import { CommentContent } from "../domain/Comment";
 import MakeComment from "../domain/Comment/MakeComment";
+import CommentContentValidator from "../domain/CommentContentValidator";
 
 export default interface PostComment {
   (data: InputData): Promise<Response>;
@@ -21,7 +23,7 @@ export interface Response {
     id: string;
     title: string;
     body: string;
-    createdAt: Date;
+    postedAt: Date;
     stars: number;
     authorId: string;
     bookId: string;
@@ -42,19 +44,15 @@ export class CouldNotCompleteRequest extends Error {
   }
 }
 
-export interface CommentData {
-  stars: number;
-  title: string;
-  body: string;
-}
-
-export class InvalidCommentData extends Error {
+export class InvalidCommentContent extends Error {
   constructor(
-    public readonly errorMessages: Partial<Record<keyof CommentData, string[]>>,
-    public readonly invalidProperties: Array<keyof CommentData>
+    public readonly errorMessages: Partial<
+      Record<keyof CommentContent, string[]>
+    >,
+    public readonly invalidProperties: Array<keyof CommentContent>
   ) {
     super();
-    this.name = InvalidCommentData.name;
+    this.name = InvalidCommentContent.name;
   }
 }
 
@@ -64,4 +62,5 @@ export interface Dependencies {
   getBookById: (bookId: string) => Promise<Book | null>;
   now: () => Date;
   saveBook: (b: Book) => Promise<void>;
+  commentContentValidator: CommentContentValidator
 }
