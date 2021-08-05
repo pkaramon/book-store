@@ -7,28 +7,44 @@ import PostComment, {
   InputData,
   Dependencies,
   InvalidCommentContent,
+  InvalidUserType,
+  UserNotFound,
 } from "../interface";
+import Customer from "../../domain/Customer";
+import User from "../../domain/User";
 
 export default function buildPostComment(deps: Dependencies): PostComment {
   async function postComment(data: InputData) {
     const userId = await deps.verifyUserAuthToken(data.userAuthToken);
+    const user = await tryToGetUser(userId);
+    validateUser(userId, user);
     const bookId = data.comment.bookId;
     const book = await getBook(bookId);
-
-    const commentContent = await validateContent(data.comment);
+    const commentContent = await validateCommentContent(data.comment);
     const comment = await tryToCreateComment({
       bookId,
       authorId: userId,
-      stars: commentContent.stars,
-      title: commentContent.title,
-      body: commentContent.body,
       postedAt: deps.now(),
+      ...commentContent,
     });
-
     book.addComment(comment);
     await save(book);
-
     return generateResponse(comment);
+  }
+
+  async function tryToGetUser(userId: string) {
+    try {
+      return await deps.getUserById(userId);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not get user from db", e);
+    }
+  }
+
+  function validateUser(userId: string, user: User | null) {
+    if (user === null) throw new UserNotFound(userId);
+    if (!(user instanceof Customer)) {
+      throw new InvalidUserType(userId);
+    }
   }
 
   async function getBook(bookId: string) {
@@ -37,7 +53,7 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     return book;
   }
 
-  async function validateContent(content: CommentContent) {
+  async function validateCommentContent(content: CommentContent) {
     const result = await deps.commentContentValidator.validateContent(content);
     if (!result.isValid)
       throw new InvalidCommentContent(

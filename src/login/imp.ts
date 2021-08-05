@@ -18,9 +18,9 @@ export default function buildLogin({
   };
 
   async function getUser(email: string) {
-    const u = await tryToGetUser(email);
-    if (u === null) throw new InvalidLoginData();
-    return u;
+    const user = await tryToGetUser(email);
+    if (user === null) throw new InvalidLoginData();
+    return user;
   }
 
   async function tryToGetUser(email: string) {

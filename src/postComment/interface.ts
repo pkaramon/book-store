@@ -3,6 +3,7 @@ import Book from "../domain/Book";
 import { CommentContent } from "../domain/Comment";
 import MakeComment from "../domain/Comment/MakeComment";
 import CommentContentValidator from "../domain/CommentContentValidator";
+import User from "../domain/User";
 
 export default interface PostComment {
   (data: InputData): Promise<Response>;
@@ -37,6 +38,20 @@ export class BookNotFound extends Error {
   }
 }
 
+export class InvalidUserType extends Error {
+  constructor(public userId: string) {
+    super();
+    this.name = InvalidUserType.name;
+  }
+}
+
+export class UserNotFound extends Error {
+  constructor(public userId: string) {
+    super();
+    this.name = UserNotFound.name;
+  }
+}
+
 export class CouldNotCompleteRequest extends Error {
   constructor(message: string, public originalError: any) {
     super(message);
@@ -60,7 +75,8 @@ export interface Dependencies {
   verifyUserAuthToken: VerifyToken;
   makeComment: MakeComment;
   getBookById: (bookId: string) => Promise<Book | null>;
+  getUserById: (userId: string) => Promise<User | null>;
   now: () => Date;
   saveBook: (b: Book) => Promise<void>;
-  commentContentValidator: CommentContentValidator
+  commentContentValidator: CommentContentValidator;
 }

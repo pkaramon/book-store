@@ -1,9 +1,12 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import CommentContentValidatorImp from "../domain/CommentContentValidatorImp";
 import getFakeBook from "../fakes/FakeBook";
+import getFakeBookAuthor from "../fakes/FakeBookAuthor";
 import FakeClock from "../fakes/FakeClock";
+import getFakeCustomer from "../fakes/FakeCustomer";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
+import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeComment from "../fakes/makeComment";
 import {
   createBuildHelper,
@@ -16,22 +19,27 @@ import {
   CouldNotCompleteRequest,
   InputData,
   InvalidCommentContent,
+  InvalidUserType,
+  UserNotFound,
 } from "./interface";
 
 const tm = new FakeTokenManager();
 const clock = new FakeClock({ now: new Date(2020, 1, 1) });
 const bookDb = new InMemoryBookDb();
+const userDb = new InMemoryUserDb();
 const buildPostCommentHelper = createBuildHelper(buildPostComment, {
   getBookById: bookDb.getById,
   verifyUserAuthToken: tm.verifyToken,
   now: clock.now,
+  getUserById: userDb.getById,
   makeComment,
   saveBook: bookDb.save,
   commentContentValidator: new CommentContentValidatorImp(),
 });
 const postComment = buildPostCommentHelper({});
 
-const userId = "101";
+const commentorId = "101";
+const bookAuthorId = "102";
 let userAuthToken: string;
 const bookId = "1";
 const comment = {
@@ -43,8 +51,11 @@ const comment = {
 
 beforeEach(async () => {
   bookDb.clear();
-  bookDb.save(await getFakeBook({ id: bookId }));
-  userAuthToken = await tm.createTokenFor(userId);
+  userDb.clear();
+  bookDb.save(await getFakeBook({ id: bookId, authorId: bookAuthorId }));
+  userDb.save(await getFakeCustomer({ id: commentorId }));
+  userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
+  userAuthToken = await tm.createTokenFor(commentorId);
 });
 
 test("userAuthToken is invalid", async () => {
@@ -53,6 +64,28 @@ test("userAuthToken is invalid", async () => {
   );
   expect(err).toBeInstanceOf(TokenVerificationError);
   expect(err.invalidToken).toBe("!invalid token");
+});
+
+test("only customers can add comments", async () => {
+  await expectThrownErrorToMatch(
+    async () =>
+      postComment({
+        userAuthToken: await tm.createTokenFor(bookAuthorId),
+        comment,
+      }),
+    { class: InvalidUserType, userId: bookAuthorId }
+  );
+});
+
+test("user does not exist", async () => {
+  await expectThrownErrorToMatch(
+    async () =>
+      postComment({
+        userAuthToken: await tm.createTokenFor("123321"),
+        comment,
+      }),
+    { class: UserNotFound, userId: "123321" }
+  );
 });
 
 test("book does not exist", async () => {
@@ -111,7 +144,7 @@ test("creating a comment", async () => {
   expect(com.content.stars).toEqual(comment.stars);
   expect(com.metadata.bookId).toEqual(comment.bookId);
   expect(com.metadata.postedAt).toEqual(clock.now());
-  expect(com.metadata.authorId).toEqual(userId);
+  expect(com.metadata.authorId).toEqual(commentorId);
   expect(typeof com.metadata.id).toBe("string");
   expect(createdComment).toMatchObject({ ...com.metadata, ...com.content });
 });
@@ -155,6 +188,20 @@ test("saveBook failure", async () => {
       class: CouldNotCompleteRequest,
       message: "could not save book to db",
       originalError: new Error("save err"),
+    }
+  );
+});
+
+test("getUserByIdfailure", async () => {
+  const postComment = buildPostCommentHelper({
+    getUserById: jest.fn().mockRejectedValue(new Error("db err")),
+  });
+  await expectThrownErrorToMatch(
+    () => postComment({ comment, userAuthToken }),
+    {
+      class: CouldNotCompleteRequest,
+      message: "could not get user from db",
+      originalError: new Error("db err"),
     }
   );
 });
