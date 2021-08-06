@@ -1,6 +1,6 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import { UserInfo } from "../domain/User";
-import RawUserDataValidatorImp from "../domain/RawUserDataValidatorImp";
+import PlainUserDataValidator from "../domain/PlainUserDataValidator";
 import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
@@ -163,7 +163,7 @@ test("saveUser failure", async () => {
 const tm = new FakeTokenManager();
 const userDb = new InMemoryUserDb();
 const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
-const userDataValidator = new RawUserDataValidatorImp(now);
+const userDataValidator = new PlainUserDataValidator(now);
 const buildEditProfileDetailsHelper = createBuildHelper(
   buildEditProfileDetails,
   {

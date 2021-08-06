@@ -1,6 +1,6 @@
 import MakeCustomer from "../domain/Customer/MakeCustomer";
 import User from "../domain/User";
-import RawUserDataValidator from "../domain/RawUserDataValidator";
+import UserDataValidator from "../domain/UserDataValidator";
 import MakePassword from "../domain/Password/MakePassword";
 
 export default interface RegisterCustomer {
@@ -42,7 +42,7 @@ export interface Dependencies {
   saveUser: (u: User) => Promise<void>;
   getUserByEmail: (email: string) => Promise<User | null>;
   notifyUser: (user: User) => Promise<void>;
-  userDataValidator: RawUserDataValidator;
+  userDataValidator: UserDataValidator;
   makeCustomer: MakeCustomer;
   makePassword: MakePassword;
 }

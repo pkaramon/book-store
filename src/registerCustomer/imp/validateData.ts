@@ -1,6 +1,6 @@
-import RawUserDataValidator, {
+import UserDataValidator, {
   RawUserData,
-} from "../../domain/RawUserDataValidator";
+} from "../../domain/UserDataValidator";
 import {
   Dependencies,
   EmailAlreadyTaken,
@@ -9,7 +9,7 @@ import {
 
 export default async function validateData(
   getUserByEmail: Dependencies["getUserByEmail"],
-  userDataValidator: RawUserDataValidator,
+  userDataValidator: UserDataValidator,
   data: RawUserData
 ) {
   await checkIfEmailIsAlreadyTaken(getUserByEmail, data.email);

@@ -1,5 +1,5 @@
 import Customer from "../domain/Customer";
-import RawUserDataValidatorImp from "../domain/RawUserDataValidatorImp";
+import PlainUserDataValidator from "../domain/PlainUserDataValidator";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeCustomer from "../fakes/makeCustomer";
@@ -190,7 +190,7 @@ const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
 const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
   saveUser: userDb.save,
   notifyUser: jest.fn().mockResolvedValue(undefined),
-  userDataValidator: new RawUserDataValidatorImp(fakeClock.now),
+  userDataValidator: new PlainUserDataValidator(fakeClock.now),
   getUserByEmail: userDb.getByEmail,
   makeCustomer,
   makePassword,

@@ -1,6 +1,6 @@
 import VerifyToken from "../auth/VerifyToken";
 import User from "../domain/User";
-import RawUserDataValidator from "../domain/RawUserDataValidator";
+import UserDataValidator from "../domain/UserDataValidator";
 
 export default interface EditProfileDetails {
   (data: InputData): Promise<void>;
@@ -51,7 +51,7 @@ export class InvalidEditProfileData extends Error {
 export interface Dependencies {
   getUserById: GetUserById;
   saveUser: SaveUser;
-  userDataValidator: RawUserDataValidator;
+  userDataValidator: UserDataValidator;
   verifyUserAuthToken: VerifyToken;
 }
 
