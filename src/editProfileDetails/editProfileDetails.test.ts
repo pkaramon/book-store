@@ -1,6 +1,5 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import { UserInfo } from "../domain/User";
-import PlainUserDataValidator from "../domain/PlainUserDataValidator";
 import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
@@ -16,6 +15,8 @@ import {
 } from "./interface";
 import makePassword from "../fakes/makePassword";
 import getFakePlainUser from "../fakes/FakePlainUser";
+import UserDataValidator from "../domain/UserDataValidator";
+import buildPlainUserSchema from "../domain/PlainUserSchema";
 
 test("user does not exist", async () => {
   const err: UserNotFound = await getThrownError(async () =>
@@ -163,7 +164,7 @@ test("saveUser failure", async () => {
 const tm = new FakeTokenManager();
 const userDb = new InMemoryUserDb();
 const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
-const userDataValidator = new PlainUserDataValidator(now);
+const userDataValidator = new UserDataValidator(buildPlainUserSchema(now));
 const buildEditProfileDetailsHelper = createBuildHelper(
   buildEditProfileDetails,
   {

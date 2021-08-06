@@ -12,6 +12,7 @@ export default async function getFakeBookAuthor(
     lastName: "smith",
     birthDate: new Date(2000, 1, 1),
     password: await makePassword({ password: "Pass123$", isHashed: false }),
+    bio: "My story begins...",
     ...newData,
   });
 }

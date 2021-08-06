@@ -1,4 +1,5 @@
 import VerifyToken from "../auth/VerifyToken";
+import { UserData } from "../domain/PlainUserSchema";
 import User from "../domain/User";
 import UserDataValidator from "../domain/UserDataValidator";
 
@@ -51,7 +52,7 @@ export class InvalidEditProfileData extends Error {
 export interface Dependencies {
   getUserById: GetUserById;
   saveUser: SaveUser;
-  userDataValidator: UserDataValidator;
+  userDataValidator: UserDataValidator<UserData>;
   verifyUserAuthToken: VerifyToken;
 }
 

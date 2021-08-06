@@ -17,12 +17,10 @@ export interface InputData {
 
 export class InvalidCustomerRegisterData extends Error {
   constructor(
-    public errorMessages: Partial<Record<keyof InputData, string[]>>
+    public readonly errorMessages: Partial<Record<keyof InputData, string[]>>,
+    public readonly invalidProperties: (keyof InputData)[]
   ) {
     super();
-  }
-  get invalidProperties() {
-    return Reflect.ownKeys(this.errorMessages);
   }
 }
 
@@ -42,7 +40,7 @@ export interface Dependencies {
   saveUser: (u: User) => Promise<void>;
   getUserByEmail: (email: string) => Promise<User | null>;
   notifyUser: (user: User) => Promise<void>;
-  userDataValidator: UserDataValidator;
+  userDataValidator: UserDataValidator<InputData>;
   makeCustomer: MakeCustomer;
   makePassword: MakePassword;
 }

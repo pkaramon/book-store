@@ -1,8 +1,14 @@
-import UserData from "./UserData";
+import DataValidationResult from "./DataValidationResult";
+import Schema from "./Schema";
+import ValidationResult from "./ValidationResult";
 
-export default abstract class UserDataValidator {
-  validateData(data: UserData): DataValidationResult {
-    const validationResults = this.getAllKeysFromData().map((k) =>
+export default class UserDataValidator<UD extends Record<string, any>> {
+  constructor(private schema: Schema<UD>) {}
+
+  private allDataKeys = Reflect.ownKeys(this.schema) as (keyof UD)[];
+
+  public validateData(data: UD): DataValidationResult<UD> {
+    const validationResults = this.allDataKeys.map((k) =>
       this.validateProperty(k, data[k])
     );
     return {
@@ -12,48 +18,30 @@ export default abstract class UserDataValidator {
     };
   }
 
-  protected abstract getAllKeysFromData(): (keyof UserData)[];
-
-  abstract validateProperty<Key extends keyof UserData>(
+  public validateProperty<Key extends keyof UD>(
     key: Key,
-    value: UserData[Key]
-  ): ValidationResult<Key>;
+    value: UD[Key]
+  ): ValidationResult<Key, UD[Key]> {
+    return this.schema[key](value);
+  }
 
-  private computeIsValid(results: ValidationResult<any>[]) {
+  private computeIsValid(results: ValidationResult[]) {
     return results.every((r) => r.isValid);
   }
 
-  private constructErrorMessages(results: ValidationResult<any>[]) {
+  private constructErrorMessages(results: ValidationResult[]) {
     const errorMessages = {} as any;
-    for (const r of results) errorMessages[r.key] = r.errorMessages;
+    for (const r of results) {
+      if (!r.isValid) errorMessages[r.key] = r.errorMessages;
+    }
     return errorMessages;
   }
 
-  private constructCleanedData(results: ValidationResult<any>[]) {
+  private constructCleanedData(results: ValidationResult[]) {
     const cleanedData = {} as any;
     for (const r of results) cleanedData[r.key] = r.value;
     return cleanedData;
   }
 }
 
-export interface DataValidationResult {
-  isValid: boolean;
-  value: UserData;
-  errorMessages: Record<keyof UserData, string[]>;
-}
-
-export class ValidationResult<Key extends keyof UserData> {
-  public errorMessages: string[] = [];
-
-  constructor(public readonly key: Key, public value: UserData[Key]) {}
-
-  get isValid() {
-    return this.errorMessages.length === 0;
-  }
-
-  addErrorMessage(msg: string) {
-    this.errorMessages.push(msg);
-  }
-}
-
-export { UserData as RawUserData };
+export { Schema, ValidationResult, DataValidationResult };

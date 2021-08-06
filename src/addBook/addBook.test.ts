@@ -17,6 +17,7 @@ import makeBook from "../fakes/makeBook";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import getFakeBookAuthor from "../fakes/FakeBookAuthor";
 import getFakePlainUser from "../fakes/FakePlainUser";
+import nCharString from "../__test__/nCharString";
 
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();
@@ -263,10 +264,3 @@ async function expectValidationToPass<Key extends keyof BookData>(
   });
 }
 
-function nCharString(n: number) {
-  const str: string[] = [];
-  for (let i = 0; i < n; i++) {
-    str.push("x");
-  }
-  return str.join("");
-}

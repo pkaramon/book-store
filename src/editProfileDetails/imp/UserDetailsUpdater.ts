@@ -6,13 +6,14 @@ import {
   ToUpdate,
 } from "../interface";
 import CustomUser from "../../domain/CustomUser";
+import { UserData } from "../../domain/PlainUserSchema";
 
 export default class UserDetailsUpdater {
   public errorMessages: EditProfileDetailsErrorMessages = {};
   public container = new ErrorMessagesContainer<ToUpdate>();
   constructor(
     private user: CustomUser,
-    private userDataValidator: UserDataValidator,
+    private userDataValidator: UserDataValidator<UserData>,
     private data: ToUpdate
   ) {}
 

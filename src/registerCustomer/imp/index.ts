@@ -1,10 +1,12 @@
 import User from "../../domain/User";
+import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
 import RegisterCustomer, {
   InputData,
   Dependencies,
   CouldNotCompleteRequest,
+  InvalidCustomerRegisterData,
+  EmailAlreadyTaken,
 } from "../interface";
-import validateData from "./validateData";
 
 export default function buildRegisterCustomer({
   saveUser,
@@ -14,45 +16,71 @@ export default function buildRegisterCustomer({
   makeCustomer,
   makePassword,
 }: Dependencies): RegisterCustomer {
-  return async function registerCustomer(data: InputData) {
-    const cleaned = await validateData(getUserByEmail, userDataValidator, data);
-    const customer = await createCustomer(cleaned);
-    await tryToSaveCustomer(customer);
-    await tryToNotifyUser(customer);
-    return { userId: customer.info.id };
-  };
+  async function registerCustomer(data: InputData) {
+    const user = await CustomerRegistrator.instance.registerUser(data);
+    return { userId: user.info.id };
+  }
 
-  async function createCustomer(data: InputData) {
-    return makeCustomer({
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      password: await getHashedPassword(data.password),
-      birthDate: data.birthDate,
+  class CustomerRegistrator extends UserRegistrator<InputData> {
+    public static instance = new CustomerRegistrator({
+      saveUser,
+      getUserByEmail,
+      notifyUser,
+      makePassword,
     });
-  }
 
-  async function getHashedPassword(password: string) {
-    try {
-      return await makePassword({ password, isHashed: false });
-    } catch (e) {
-      throw new CouldNotCompleteRequest("hashing failure", e);
+    protected async createUser(data: InputData): Promise<User> {
+      return await makeCustomer({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: await this.createPassword(data.password),
+        birthDate: data.birthDate,
+      });
+    }
+
+    protected validateUserData(data: InputData) {
+      const res = userDataValidator.validateData(data);
+      const errorMessages = this.removePropertiesWithNoErrors(
+        res.errorMessages
+      ) as any;
+      return {
+        cleaned: res.value,
+        errorMessages,
+        invalidProperties: Reflect.ownKeys(errorMessages) as any,
+        isValid: res.isValid,
+      };
+    }
+
+    private removePropertiesWithNoErrors(
+      errorMessages: Record<string, string[]>
+    ) {
+      const result = {} as any;
+      for (const key in errorMessages)
+        if (errorMessages[key].length > 0) result[key] = errorMessages[key];
+      return result;
+    }
+
+    protected createUnexpectedFailureError(
+      message: string,
+      originalError: any
+    ): Error {
+      throw new CouldNotCompleteRequest(message, originalError);
+    }
+
+    protected createFailedValidationError(
+      result: ValidationResult<InputData>
+    ): Error {
+      throw new InvalidCustomerRegisterData(
+        result.errorMessages,
+        result.invalidProperties
+      );
+    }
+
+    protected createEmailAlreadyTakenError(email: string): Error {
+      return new EmailAlreadyTaken(email);
     }
   }
 
-  async function tryToSaveCustomer(u: User) {
-    try {
-      await saveUser(u);
-    } catch (e) {
-      throw new CouldNotCompleteRequest("could not save the user", e);
-    }
-  }
-
-  async function tryToNotifyUser(u: User) {
-    try {
-      await notifyUser(u);
-    } catch {
-      // silencing errors is desired in this case
-    }
-  }
+  return registerCustomer;
 }
