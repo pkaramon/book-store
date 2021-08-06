@@ -4,10 +4,15 @@ import FakeClock from "../fakes/FakeClock";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeCustomer from "../fakes/makeCustomer";
 import makePassword from "../fakes/makePassword";
-import { createBuildHelper, getThrownError } from "../__test__/fixtures";
+import {
+  createBuildHelper,
+  expectThrownErrorToMatch,
+  getThrownError,
+} from "../__test__/fixtures";
 import buildRegisterCustomer from "./imp";
 import {
   CouldNotCompleteRequest,
+  EmailAlreadyTaken,
   InputData,
   InvalidCustomerRegisterData,
 } from "./interface";
@@ -123,25 +128,24 @@ test("saving customer to db", async () => {
 
 test("email must be unique", async () => {
   await registerCustomer({ ...validData });
-  const err: InvalidCustomerRegisterData = await getThrownError(() =>
-    registerCustomer({
-      firstName: "Tom",
-      lastName: "Smith",
-      email: validData.email,
-      password: "Pass123$",
-      birthDate: new Date(1992, 1, 3),
-    })
+  await expectThrownErrorToMatch(
+    () =>
+      registerCustomer({
+        firstName: "Tom",
+        lastName: "Smith",
+        email: validData.email,
+        password: "Pass123$",
+        birthDate: new Date(1992, 1, 3),
+      }),
+    { class: EmailAlreadyTaken, email: validData.email }
   );
-  expect(err).toBeInstanceOf(InvalidCustomerRegisterData);
-  expect(err.errorMessages.email).toEqual(["email is already taken"]);
-  expect(err.invalidProperties).toEqual(["email"]);
 });
 
 test("hashing passwords", async () => {
   const { userId } = await registerCustomer({ ...validData });
-  const u = await userDb.getById(userId);
-  const pass = u?.password;
-  expect(await pass?.isEqual(validData.password)).toBe(true);
+  const u = (await userDb.getById(userId))!;
+  const pass = u.password;
+  expect(await pass.isEqual(validData.password)).toBe(true);
 });
 
 test("customer should receive a notification when successfully registered", async () => {

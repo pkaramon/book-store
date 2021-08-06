@@ -1,25 +1,32 @@
 import RawUserDataValidator, {
   RawUserData,
 } from "../../domain/RawUserDataValidator";
-import { Dependencies, InvalidCustomerRegisterData } from "../interface";
+import {
+  Dependencies,
+  EmailAlreadyTaken,
+  InvalidCustomerRegisterData,
+} from "../interface";
 
 export default async function validateData(
   getUserByEmail: Dependencies["getUserByEmail"],
   userDataValidator: RawUserDataValidator,
   data: RawUserData
 ) {
-  const result = userDataValidator.validateData(data);
-  const u = await getUserByEmail(data.email);
-  if (u !== null) {
-    result.errorMessages.email.push("email is already taken");
-    result.isValid = false;
-  }
-
-  if (!result.isValid)
+  await checkIfEmailIsAlreadyTaken(getUserByEmail, data.email);
+  const validationResult = userDataValidator.validateData(data);
+  if (!validationResult.isValid)
     throw new InvalidCustomerRegisterData(
-      removePropertiesWithNoErrors(result.errorMessages)
+      removePropertiesWithNoErrors(validationResult.errorMessages)
     );
-  return result.value;
+  return validationResult.value;
+}
+
+async function checkIfEmailIsAlreadyTaken(
+  getUserByEmail: Dependencies["getUserByEmail"],
+  email: string
+) {
+  const user = await getUserByEmail(email);
+  if (user !== null) throw new EmailAlreadyTaken(email);
 }
 
 function removePropertiesWithNoErrors(errorMessages: Record<string, string[]>) {

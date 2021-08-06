@@ -1,8 +1,6 @@
 import MakeCustomer from "../domain/Customer/MakeCustomer";
-import User, { UserInfo } from "../domain/User";
-import RawUserDataValidator, {
-  RawUserData,
-} from "../domain/RawUserDataValidator";
+import User from "../domain/User";
+import RawUserDataValidator from "../domain/RawUserDataValidator";
 import MakePassword from "../domain/Password/MakePassword";
 
 export default interface RegisterCustomer {
@@ -25,6 +23,12 @@ export class InvalidCustomerRegisterData extends Error {
   }
   get invalidProperties() {
     return Reflect.ownKeys(this.errorMessages);
+  }
+}
+
+export class EmailAlreadyTaken extends Error {
+  constructor(public readonly email: string) {
+    super();
   }
 }
 
