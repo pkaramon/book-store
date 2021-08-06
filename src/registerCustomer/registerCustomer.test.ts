@@ -110,17 +110,6 @@ describe("validation", () => {
   });
 });
 
-test("saveCustomer throws error", async () => {
-  const registerCustomer = buildRegisterCustomerHelper({
-    saveUser: jest.fn().mockRejectedValue(new Error("could not save customer")),
-  });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    registerCustomer({ ...validData })
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("could not save customer"));
-});
-
 test("saving customer to db", async () => {
   const { userId } = await registerCustomer({ ...validData });
   expect(typeof userId).toBe("string");
@@ -179,6 +168,17 @@ test("hashing failure", async () => {
   );
   expect(err).toBeInstanceOf(CouldNotCompleteRequest);
   expect(err.originalError).toEqual(new Error("hashing failure"));
+});
+
+test("saveCustomer throws error", async () => {
+  const registerCustomer = buildRegisterCustomerHelper({
+    saveUser: jest.fn().mockRejectedValue(new Error("could not save customer")),
+  });
+  const err: CouldNotCompleteRequest = await getThrownError(() =>
+    registerCustomer({ ...validData })
+  );
+  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
+  expect(err.originalError).toEqual(new Error("could not save customer"));
 });
 
 const userDb = new InMemoryUserDb();

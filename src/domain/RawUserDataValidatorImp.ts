@@ -8,19 +8,18 @@ export default class RawUserDataValidatorImp implements RawUserDataValidator {
   constructor(private now: () => Date) {}
 
   validateData(data: RawUserData): DataValidationResult {
-    const validationResults = [
-      this.validateProperty("firstName", data.firstName),
-      this.validateProperty("lastName", data.lastName),
-      this.validateProperty("email", data.email),
-      this.validateProperty("password", data.password),
-      this.validateProperty("birthDate", data.birthDate),
-    ];
-
+    const validationResults = this.getAllKeysFromData().map((k) =>
+      this.validateProperty(k, data[k])
+    );
     return {
       isValid: this.computeIsValid(validationResults),
       value: this.constructCleanedData(validationResults),
       errorMessages: this.constructErrorMessages(validationResults),
     };
+  }
+
+  private getAllKeysFromData(): (keyof RawUserData)[] {
+    return ["firstName", "lastName", "email", "password", "birthDate"];
   }
 
   validateProperty<Key extends keyof RawUserData>(

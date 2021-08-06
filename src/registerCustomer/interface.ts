@@ -1,6 +1,8 @@
 import MakeCustomer from "../domain/Customer/MakeCustomer";
-import User from "../domain/User";
-import RawUserDataValidator from "../domain/RawUserDataValidator";
+import User, { UserInfo } from "../domain/User";
+import RawUserDataValidator, {
+  RawUserData,
+} from "../domain/RawUserDataValidator";
 import MakePassword from "../domain/Password/MakePassword";
 
 export default interface RegisterCustomer {
