@@ -1,6 +1,6 @@
 import BookAuthor from "../domain/BookAuthor";
 import buildBookAuthorSchema from "../domain/BookAuthorSchema";
-import UserDataValidator from "../domain/UserDataValidator";
+import SchemaValidator from "../domain/SchemaValidator";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeBookAuthor from "../fakes/makeBookAuthor";
 import makePassword from "../fakes/makePassword";
@@ -22,7 +22,7 @@ const dependencies = {
   makePassword: makePassword,
   makeBookAuthor: makeBookAuthor,
   getUserByEmail: userDb.getByEmail,
-  userDataValidator: new UserDataValidator(buildBookAuthorSchema()) as any,
+  userDataValidator: new SchemaValidator(buildBookAuthorSchema()) as any,
 };
 const registerBookAuthor = buildRegisterBookAuthor(dependencies);
 beforeEach(() => {

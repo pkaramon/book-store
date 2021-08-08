@@ -15,7 +15,7 @@ import {
 } from "./interface";
 import makePassword from "../fakes/makePassword";
 import getFakePlainUser from "../fakes/FakePlainUser";
-import UserDataValidator from "../domain/UserDataValidator";
+import SchemaValidator from "../domain/SchemaValidator";
 import buildPlainUserSchema from "../domain/PlainUserSchema";
 
 test("user does not exist", async () => {
@@ -164,7 +164,7 @@ test("saveUser failure", async () => {
 const tm = new FakeTokenManager();
 const userDb = new InMemoryUserDb();
 const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
-const userDataValidator = new UserDataValidator(buildPlainUserSchema(now));
+const userDataValidator = new SchemaValidator(buildPlainUserSchema(now));
 const buildEditProfileDetailsHelper = createBuildHelper(
   buildEditProfileDetails,
   {

@@ -1,4 +1,4 @@
-import { Schema, ValidationResult } from "./UserDataValidator";
+import { Schema, ValidationResult } from "./SchemaValidator";
 
 export interface UserData {
   firstName: string;

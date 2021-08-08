@@ -1,7 +1,7 @@
 import MakeBookAuthor from "../domain/BookAuthor/MakeBookAuthor";
 import MakePassword from "../domain/Password/MakePassword";
 import User from "../domain/User";
-import UserDataValidator from "../domain/UserDataValidator";
+import SchemaValidator from "../domain/SchemaValidator";
 
 export interface InputData {
   firstName: string;
@@ -41,6 +41,6 @@ export interface Dependencies {
   getUserByEmail: (email: string) => Promise<User | null>;
   notifyUser: (u: User) => Promise<void>;
   makePassword: MakePassword;
-  userDataValidator: UserDataValidator<InputData>;
+  userDataValidator: SchemaValidator<InputData>;
   makeBookAuthor: MakeBookAuthor;
 }

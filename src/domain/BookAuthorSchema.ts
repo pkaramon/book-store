@@ -1,5 +1,5 @@
 import buildPlainUserSchema, { UserData } from "./PlainUserSchema";
-import { Schema, ValidationResult } from "./UserDataValidator";
+import { Schema, ValidationResult } from "./SchemaValidator";
 
 export interface BookAuthorData extends UserData {
   bio: string;

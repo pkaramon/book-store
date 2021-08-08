@@ -1,6 +1,6 @@
 import MakeCustomer from "../domain/Customer/MakeCustomer";
 import User from "../domain/User";
-import UserDataValidator from "../domain/UserDataValidator";
+import SchemaValidator from "../domain/SchemaValidator";
 import MakePassword from "../domain/Password/MakePassword";
 
 export default interface RegisterCustomer {
@@ -40,7 +40,7 @@ export interface Dependencies {
   saveUser: (u: User) => Promise<void>;
   getUserByEmail: (email: string) => Promise<User | null>;
   notifyUser: (user: User) => Promise<void>;
-  userDataValidator: UserDataValidator<InputData>;
+  userDataValidator: SchemaValidator<InputData>;
   makeCustomer: MakeCustomer;
   makePassword: MakePassword;
 }

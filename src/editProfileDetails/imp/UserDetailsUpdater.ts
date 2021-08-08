@@ -1,4 +1,4 @@
-import UserDataValidator from "../../domain/UserDataValidator";
+import SchemaValidator from "../../domain/SchemaValidator";
 import ErrorMessagesContainer from "../../utils/ErrorMessagesContainer";
 import {
   EditProfileDetailsErrorMessages,
@@ -13,7 +13,7 @@ export default class UserDetailsUpdater {
   public container = new ErrorMessagesContainer<ToUpdate>();
   constructor(
     private user: CustomUser,
-    private userDataValidator: UserDataValidator<UserData>,
+    private userDataValidator: SchemaValidator<UserData>,
     private data: ToUpdate
   ) {}
 

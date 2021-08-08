@@ -2,12 +2,12 @@ import DataValidationResult from "./DataValidationResult";
 import Schema from "./Schema";
 import ValidationResult from "./ValidationResult";
 
-export default class UserDataValidator<UD extends Record<string, any>> {
-  constructor(private schema: Schema<UD>) {}
+export default class SchemaValidator<DataStruct extends Record<string, any>> {
+  constructor(private schema: Schema<DataStruct>) {}
 
-  private allDataKeys = Reflect.ownKeys(this.schema) as (keyof UD)[];
+  private allDataKeys = Reflect.ownKeys(this.schema) as (keyof DataStruct)[];
 
-  public validateData(data: UD): DataValidationResult<UD> {
+  public validateData(data: DataStruct): DataValidationResult<DataStruct> {
     const validationResults = this.allDataKeys.map((k) =>
       this.validateProperty(k, data[k])
     );
@@ -18,10 +18,10 @@ export default class UserDataValidator<UD extends Record<string, any>> {
     };
   }
 
-  public validateProperty<Key extends keyof UD>(
+  public validateProperty<Key extends keyof DataStruct>(
     key: Key,
-    value: UD[Key]
-  ): ValidationResult<Key, UD[Key]> {
+    value: DataStruct[Key]
+  ): ValidationResult<Key, DataStruct[Key]> {
     return this.schema[key](value);
   }
 
