@@ -17,7 +17,7 @@ export interface BookData {
   title: string;
   description: string;
   tableOfContents?: TableOfContentsData;
-  price: number;
+  price: { currency: string; cents: number };
   whenCreated: Date;
   numberOfPages: number;
   sampleFilePath?: string;

@@ -1,5 +1,6 @@
 import TableOfContents from "./TableOfContents";
 import BookStatus from "./BookStatus";
+import Price from "../Price";
 
 export default interface BookInfo {
   id: string;
@@ -8,10 +9,9 @@ export default interface BookInfo {
   title: string;
   description: string;
   tableOfContents: TableOfContents;
-  price: number;
+  price: Price;
   whenCreated: Date;
   numberOfPages: number;
   sampleFilePath: string | null;
   filePath: string;
 }
-

@@ -6,7 +6,7 @@ import {
   BookData,
 } from "../interface";
 
-export default async function validateBookData(
+export default function validateBookData(
   data: BookData,
   tools: { now: () => Date; isCorrectEbookFile: IsCorrectEbookFile }
 ) {
@@ -15,7 +15,7 @@ export default async function validateBookData(
     tools.now,
     tools.isCorrectEbookFile
   );
-  await validator.validate();
+  return validator.validate();
 }
 
 class BookDataValidator {
@@ -26,64 +26,91 @@ class BookDataValidator {
     private isCorrectEbookFile: IsCorrectEbookFile
   ) {}
 
-  async validate() {
-    this.validateTitle();
-    this.validateDescription();
-    this.validatePrice();
-    this.validateNumberOfPages();
-    this.validateWhenCreated();
-    await this.validateSampleFilePath();
-    await this.validateFilePath();
+  async validate(): Promise<BookData> {
+    const title = this.validateTitle();
+    const description = this.validateDescription();
+    const price = this.validatePrice();
+    const numberOfPages = this.validateNumberOfPages();
+    const whenCreated = this.validateWhenCreated();
+    const sampleFilePath = await this.validateSampleFilePath();
+    const filePath = await this.validateFilePath();
     if (this.container.hasAny())
       throw new InvalidBookData(this.container.getErrorMessages());
+    return {
+      title,
+      description,
+      price,
+      numberOfPages,
+      whenCreated,
+      sampleFilePath,
+      filePath: filePath!,
+      tableOfContents: this.data.tableOfContents,
+    };
   }
 
   private validateTitle() {
-    if (this.data.title.trim().length === 0)
+    const title = this.data.title.trim();
+    if (title.trim().length === 0)
       this.container.add("title", "title cannot be empty");
+    return title;
   }
 
   private validateDescription() {
-    if (this.data.description.trim().length === 0)
+    const desc = this.data.description.trim();
+    if (desc.length === 0)
       this.container.add("description", "description cannot be empty");
-    if (this.data.description.trim().length > 1000)
+    if (desc.length > 1000)
       this.container.add(
         "description",
         "description cannot be more than 1000 characters long"
       );
+    return desc;
   }
 
   private validatePrice() {
-    if (this.data.price <= 0)
-      this.container.add("price", "price must be positive");
+    const currency = this.data.price.currency.trim();
+    const cents = this.data.price.cents;
+    if (cents <= 0) this.container.add("price", "price.cents must be positive");
+    if (!Number.isSafeInteger(cents))
+      this.container.add("price", "price.cents must be an integer");
+    if (currency !== "USD")
+      this.container.add("price", "price.currency can be USD only");
+    return { currency, cents };
   }
 
   private validateNumberOfPages() {
-    if (this.data.numberOfPages <= 0)
+    const { numberOfPages } = this.data;
+    if (numberOfPages <= 0)
       this.container.add("numberOfPages", "numberOfPages must be positive");
+    return numberOfPages;
   }
 
   private validateWhenCreated() {
-    if (this.data.whenCreated.getTime() > this.now().getTime())
+    const { whenCreated } = this.data;
+    if (whenCreated.getTime() > this.now().getTime())
       this.container.add("whenCreated", "whenCreated cannot be in the future");
+    return whenCreated;
   }
 
   private async validateSampleFilePath() {
-    await this.validateBookFilePath("sampleFilePath");
+    return await this.validateBookFilePath("sampleFilePath");
   }
 
   private async validateFilePath() {
-    await this.validateBookFilePath("filePath");
+    return await this.validateBookFilePath("filePath");
   }
 
   private async validateBookFilePath(pathName: "sampleFilePath" | "filePath") {
     try {
       const path = this.data[pathName];
-      if (path !== undefined && !(await this.isCorrectEbookFile(path)))
+      if (path !== undefined && !(await this.isCorrectEbookFile(path.trim()))) {
         this.container.add(pathName, `${pathName} is invalid`);
+      }
+
+      if (path === undefined) return path;
+      else return path.trim();
     } catch {
       throw new CouldNotCompleteRequest();
     }
   }
 }
-

@@ -18,6 +18,7 @@ import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import getFakeBookAuthor from "../fakes/FakeBookAuthor";
 import getFakePlainUser from "../fakes/FakePlainUser";
 import nCharString from "../__test_helpers__/nCharString";
+import DidNotThrowError from "../__test_helpers__/DidNotThrow";
 
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();
@@ -51,7 +52,7 @@ beforeEach(async () => {
         },
         { title: "2. chapter" },
       ],
-      price: 5.0,
+      price: { currency: "USD", cents: 350 },
       whenCreated: new Date("2018-02-18"),
       numberOfPages: 123,
       filePath: "books/first book.pdf",
@@ -118,10 +119,32 @@ describe("validation", () => {
     );
   });
 
-  test("price must be positive", async () => {
-    const errorMessage = "price must be positive";
-    await expectValidationToFail("price", -1, errorMessage);
-    await expectValidationToFail("price", 0, errorMessage);
+  test("price.currency can only be USD", async () => {
+    await expectValidationToFail(
+      "price",
+      { currency: "EURO", cents: 400 },
+      "price.currency can be USD only"
+    );
+  });
+
+  test("price.cents must be positive", async () => {
+    const errorMessage = "price.cents must be positive";
+    for (const cents of [-1, 0])
+      await expectValidationToFail(
+        "price",
+        { currency: "USD", cents },
+        errorMessage
+      );
+  });
+
+  test("price.cents can only be an integer", async () => {
+    const errorMessage = "price.cents must be an integer";
+    for (const cents of [1.2, 2.31])
+      await expectValidationToFail(
+        "price",
+        { currency: "USD", cents },
+        errorMessage
+      );
   });
 
   test("numberOfPages must be positive", async () => {
@@ -143,15 +166,15 @@ describe("validation", () => {
     try {
       await addBook({
         userToken: validData.userToken,
-        bookData: { ...validData.bookData, title: "", price: -1 },
+        bookData: { ...validData.bookData, title: "", description: "" },
       });
       throw "should have thrown";
     } catch (e) {
       expect(e).toBeInstanceOf(InvalidBookData);
       expect(e.errors.title).not.toBeUndefined();
-      expect(e.errors.price).not.toBeUndefined();
+      expect(e.errors.description).not.toBeUndefined();
       expect(e.invalidProperties).toContain("title");
-      expect(e.invalidProperties).toContain("price");
+      expect(e.invalidProperties).toContain("description");
     }
   });
 
@@ -196,7 +219,8 @@ test("creating a book", async () => {
   );
   const { bookData } = validData;
   expect(savedBook.info.title).toEqual(bookData.title);
-  expect(savedBook.info.price).toEqual(bookData.price);
+  expect(savedBook.info.price.currency).toEqual(bookData.price.currency);
+  expect(savedBook.info.price.cents).toEqual(bookData.price.cents);
   expect(savedBook.info.whenCreated).toEqual(bookData.whenCreated);
   expect(savedBook.info.numberOfPages).toEqual(bookData.numberOfPages);
   expect(savedBook.info.tableOfContents.data).toEqual(bookData.tableOfContents);
@@ -246,7 +270,7 @@ async function expectValidationToFail<Key extends keyof BookData>(
       ...validData,
       bookData: { ...validData.bookData, [key]: value },
     });
-    throw "should have thrown";
+    throw new DidNotThrowError();
   } catch (e) {
     expect(e).toBeInstanceOf(InvalidBookData);
     expect(e.errors).toEqual({ [key]: expectedErrorMessages });
@@ -263,4 +287,3 @@ async function expectValidationToPass<Key extends keyof BookData>(
     bookData: { ...validData.bookData, [key]: value },
   });
 }
-

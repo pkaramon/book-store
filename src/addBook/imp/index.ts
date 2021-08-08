@@ -1,6 +1,7 @@
 import Book, { BookStatus } from "../../domain/Book";
 import TableOfContents from "../../domain/Book/TableOfContents";
 import BookAuthor from "../../domain/BookAuthor";
+import Price from "../../domain/Price";
 import AddBook, {
   InputData,
   CouldNotCompleteRequest,
@@ -22,8 +23,11 @@ export default function buildAddBook({
   async function addBook({ bookData, userToken }: InputData) {
     const authorId = await verifyUserToken(userToken);
     await verifyAuthor(authorId);
-    await validateBookData(bookData, { isCorrectEbookFile, now });
-    const book = await createBook(authorId, bookData);
+    const cleanedBookData = await validateBookData(bookData, {
+      isCorrectEbookFile,
+      now,
+    });
+    const book = await createBook(authorId, cleanedBookData);
     await tryToSaveBook(book);
     return { bookId: book.info.id };
   }
@@ -49,7 +53,7 @@ export default function buildAddBook({
       title: data.title,
       whenCreated: data.whenCreated,
       numberOfPages: data.numberOfPages,
-      price: data.price,
+      price: new Price(data.price.currency, data.price.cents),
       description: data.description,
       filePath: data.filePath,
       sampleFilePath: data.sampleFilePath ?? null,
