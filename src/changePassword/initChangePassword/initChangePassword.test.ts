@@ -1,7 +1,7 @@
 import getFakePlainUser from "../../fakes/FakePlainUser";
 import InMemoryUserDb from "../../fakes/InMemoryUserDb";
 import makePassword from "../../fakes/makePassword";
-import { createBuildHelper, getThrownError } from "../../__test__/fixtures";
+import { createBuildHelper, getThrownError } from "../../__test_helpers__";
 import buildInitChangePassword from "./imp";
 import {
   CouldNotCompleteRequest,

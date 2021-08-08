@@ -11,13 +11,13 @@ import {
 import FakeClock from "../fakes/FakeClock";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import FakeTokenManager from "../fakes/FakeTokenManager";
-import { expectThrownErrorToMatch, getThrownError } from "../__test__/fixtures";
+import { expectThrownErrorToMatch, getThrownError } from "../__test_helpers__";
 import { TokenVerificationError } from "../auth/VerifyToken";
 import makeBook from "../fakes/makeBook";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import getFakeBookAuthor from "../fakes/FakeBookAuthor";
 import getFakePlainUser from "../fakes/FakePlainUser";
-import nCharString from "../__test__/nCharString";
+import nCharString from "../__test_helpers__/nCharString";
 
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();

@@ -7,7 +7,7 @@ import {
   expectThrownErrorToMatch,
   getThrownError,
   rejectWith,
-} from "../__test__/fixtures";
+} from "../__test_helpers__";
 import buildLogin from "./imp";
 import { CouldNotCompleteRequest, InvalidLoginData } from "./interface";
 

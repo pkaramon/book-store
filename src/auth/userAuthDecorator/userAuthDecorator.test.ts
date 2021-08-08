@@ -1,5 +1,5 @@
 import FakeTokenManager from "../../fakes/FakeTokenManager";
-import { getThrownError } from "../../__test__/fixtures";
+import { getThrownError } from "../../__test_helpers__";
 import { TokenVerificationError } from "../VerifyToken";
 import userAuthDecorator from ".";
 

@@ -4,7 +4,7 @@ import FakeClock from "../fakes/FakeClock";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeCustomer from "../fakes/makeCustomer";
-import { createBuildHelper, getThrownError } from "../__test__/fixtures";
+import { createBuildHelper, getThrownError } from "../__test_helpers__";
 import buildEditProfileDetails from "./imp";
 import {
   UserNotFound,

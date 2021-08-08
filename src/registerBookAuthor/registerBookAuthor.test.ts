@@ -4,8 +4,8 @@ import UserDataValidator from "../domain/UserDataValidator";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeBookAuthor from "../fakes/makeBookAuthor";
 import makePassword from "../fakes/makePassword";
-import { expectThrownErrorToMatch, rejectWith } from "../__test__/fixtures";
-import nCharString from "../__test__/nCharString";
+import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
+import nCharString from "../__test_helpers__/nCharString";
 import buildRegisterBookAuthor from "./imp";
 import {
   CouldNotCompleteRequest,

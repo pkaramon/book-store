@@ -10,7 +10,7 @@ import {
   createBuildHelper,
   expectThrownErrorToMatch,
   rejectWith,
-} from "../__test__/fixtures";
+} from "../__test_helpers__";
 import buildEditComment from "./imp";
 import {
   CommentNotFound,
@@ -89,6 +89,7 @@ describe("data validation", () => {
     const errorMessages = { title: ["title cannot be empty"] };
     await expectValidationToFail({ title: "" }, errorMessages);
     await expectValidationToFail({ title: "  " }, errorMessages);
+
     await expectValidationToPass({ title: "new title" });
     await expectValidationToPass({ title: undefined });
   });
@@ -97,6 +98,7 @@ describe("data validation", () => {
     const errorMessages = { body: ["body cannot be empty"] };
     await expectValidationToFail({ body: "" }, errorMessages);
     await expectValidationToFail({ body: "  " }, errorMessages);
+
     await expectValidationToPass({ body: "new title" });
     await expectValidationToPass({ body: undefined });
   });
@@ -109,6 +111,7 @@ describe("data validation", () => {
     await expectValidationToFail({ stars: 0 }, errorMessages);
     await expectValidationToFail({ stars: 2.5 }, errorMessages);
     await expectValidationToFail({ stars: 6 }, errorMessages);
+
     await expectValidationToPass({ stars: 1 });
     await expectValidationToPass({ stars: 3 });
   });

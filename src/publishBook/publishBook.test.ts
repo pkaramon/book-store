@@ -9,7 +9,7 @@ import {
   createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
-} from "../__test__/fixtures";
+} from "../__test_helpers__";
 import buildPublishBook from "./imp";
 import {
   AdminNotFound,
