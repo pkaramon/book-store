@@ -9,6 +9,7 @@ import {
   createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
+  rejectWith,
 } from "../__test_helpers__";
 import buildRegisterCustomer from "./imp";
 import {
@@ -158,7 +159,7 @@ test("customer should receive a notification when successfully registered", asyn
 
 test("errors thrown from notifyUser are silenced, they do not impact the result of the transaction", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    notifyUser: jest.fn().mockRejectedValue(new Error("email server error")),
+    notifyUser: rejectWith(new Error("email server error")),
   });
   const { userId } = await registerCustomer({ ...validData });
   expect(await userDb.getById(userId)).not.toBeNull();
@@ -166,24 +167,34 @@ test("errors thrown from notifyUser are silenced, they do not impact the result 
 
 test("hashing failure", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    makePassword: jest.fn().mockRejectedValue(new Error("hashing failure")),
+    makePassword: rejectWith(new Error("hashing failure")),
   });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    registerCustomer({ ...validData })
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("hashing failure"));
+
+  await expectThrownErrorToMatch(() => registerCustomer({ ...validData }), {
+    class: CouldNotCompleteRequest,
+    originalError: new Error("hashing failure"),
+  });
 });
 
 test("saveCustomer throws error", async () => {
   const registerCustomer = buildRegisterCustomerHelper({
-    saveUser: jest.fn().mockRejectedValue(new Error("could not save customer")),
+    saveUser: rejectWith(new Error("could not save customer")),
   });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    registerCustomer({ ...validData })
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("could not save customer"));
+
+  await expectThrownErrorToMatch(() => registerCustomer({ ...validData }), {
+    class: CouldNotCompleteRequest,
+    originalError: new Error("could not save customer"),
+  });
+});
+
+test("getUserByEmail throws error", async () => {
+  const registerCustomer = buildRegisterCustomerHelper({
+    getUserByEmail: rejectWith(new Error("db err")),
+  });
+  await expectThrownErrorToMatch(() => registerCustomer({ ...validData }), {
+    class: CouldNotCompleteRequest,
+    originalError: new Error("db err"),
+  });
 });
 
 const userDb = new InMemoryUserDb();
