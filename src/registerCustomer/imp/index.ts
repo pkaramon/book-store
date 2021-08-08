@@ -41,24 +41,13 @@ export default function buildRegisterCustomer({
 
     protected validateUserData(data: InputData) {
       const res = userDataValidator.validateData(data);
-      const errorMessages = this.removePropertiesWithNoErrors(
-        res.errorMessages
-      ) as any;
+      const errorMessages = res.errorMessages
       return {
         cleaned: res.value,
         errorMessages,
         invalidProperties: Reflect.ownKeys(errorMessages) as any,
         isValid: res.isValid,
       };
-    }
-
-    private removePropertiesWithNoErrors(
-      errorMessages: Record<string, string[]>
-    ) {
-      const result = {} as any;
-      for (const key in errorMessages)
-        if (errorMessages[key].length > 0) result[key] = errorMessages[key];
-      return result;
     }
 
     protected createUnexpectedFailureError(

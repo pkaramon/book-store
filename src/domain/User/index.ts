@@ -7,6 +7,7 @@ export default abstract class User {
   get password() {
     return this.info.password;
   }
+
   abstract changePassword(value: Password): void;
 }
 

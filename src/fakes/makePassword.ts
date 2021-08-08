@@ -1,10 +1,6 @@
 import Password from "../domain/Password";
 import MakePassword from "../domain/Password/MakePassword";
 
-export function fakeHashPassword(pass: string) {
-  return `###${pass}###`;
-}
-
 const makePassword: MakePassword = async ({ isHashed, password }) => {
   if (isHashed) {
     return new PasswordImp(password);
@@ -27,6 +23,6 @@ class PasswordImp implements Password {
   }
 
   async isEqual(notHashed: string): Promise<boolean> {
-    return (await PasswordImp.hash(notHashed)) === this.hashedString();
+    return PasswordImp.hash(notHashed) === this.hashedString();
   }
 }

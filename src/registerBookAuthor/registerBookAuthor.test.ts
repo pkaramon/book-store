@@ -4,10 +4,11 @@ import UserDataValidator from "../domain/UserDataValidator";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeBookAuthor from "../fakes/makeBookAuthor";
 import makePassword from "../fakes/makePassword";
-import { expectThrownErrorToMatch } from "../__test__/fixtures";
+import { expectThrownErrorToMatch, rejectWith } from "../__test__/fixtures";
 import nCharString from "../__test__/nCharString";
 import buildRegisterBookAuthor from "./imp";
 import {
+  CouldNotCompleteRequest,
   EmailAlreadyTaken,
   InputData,
   InvalidBookAuthorRegisterData,
@@ -15,14 +16,15 @@ import {
 
 const userDb = new InMemoryUserDb();
 const notifyUser = jest.fn().mockResolvedValue(undefined);
-const registerBookAuthor = buildRegisterBookAuthor({
+const dependencies = {
   notifyUser,
   saveUser: userDb.save,
   makePassword: makePassword,
   makeBookAuthor: makeBookAuthor,
   getUserByEmail: userDb.getByEmail,
   userDataValidator: new UserDataValidator(buildBookAuthorSchema()) as any,
-});
+};
+const registerBookAuthor = buildRegisterBookAuthor(dependencies);
 beforeEach(() => {
   userDb.clear();
   notifyUser.mockClear();
@@ -108,4 +110,17 @@ test("email must be unique", async () => {
 test("bookAuthor should receive notification when successfully registered", async () => {
   const { userId } = await registerBookAuthor({ ...validData });
   expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
+});
+
+test("db failure", async () => {
+  const registerBookAuthor = buildRegisterBookAuthor({
+    ...dependencies,
+    saveUser: rejectWith(new Error("db err")),
+  });
+
+  await expectThrownErrorToMatch(() => registerBookAuthor(validData), {
+    class: CouldNotCompleteRequest,
+    originalError: new Error("db err"),
+    message: "could not save user",
+  });
 });

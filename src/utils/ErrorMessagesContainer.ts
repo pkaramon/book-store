@@ -1,37 +1,29 @@
 export default class ErrorMessagesContainer<
   DataStruct extends Record<string, any>
 > {
-  private errorMessages: Partial<Record<keyof DataStruct, string[]>> = {};
+  private errorMessages = new Map<keyof DataStruct, string[]>();
 
   set(key: keyof DataStruct, errorMessages: string[]) {
-    this.saveErrorMessagesFor(key, errorMessages);
+    this.errorMessages.set(key, errorMessages);
   }
 
   add(key: keyof DataStruct, errorMessage: string) {
-    const errorMessages = this.getErrorMessagesFor(key);
+    const errorMessages = this.errorMessages.get(key) ?? [];
     errorMessages.push(errorMessage);
-    this.saveErrorMessagesFor(key, errorMessages);
+    this.errorMessages.set(key, errorMessages);
   }
 
   hasAny() {
-    return Reflect.ownKeys(this.errorMessages).length > 0;
+    return this.errorMessages.size > 0;
   }
 
   getErrorMessages() {
-    return this.errorMessages;
+    const errMsgs: Partial<Record<keyof DataStruct, string[]>> = {};
+    for (const [k, v] of this.errorMessages.entries()) errMsgs[k] = v;
+    return errMsgs;
   }
 
   getInavlidProperties(): (keyof DataStruct)[] {
-    return Reflect.ownKeys(this.errorMessages) as any;
-  }
-
-  private getErrorMessagesFor(key: keyof DataStruct): string[] {
-    return this.errorMessages[key] === undefined
-      ? []
-      : this.errorMessages[key]!;
-  }
-
-  private saveErrorMessagesFor(key: keyof DataStruct, errorMessages: string[]) {
-    this.errorMessages[key] = errorMessages;
+    return Array.from(this.errorMessages.keys());
   }
 }
