@@ -1,7 +1,14 @@
 import ValidationResult from "./ValidationResult";
 
-type Schema<UD extends Record<string, any>> = {
-  [key in keyof UD]: (value: UD[key]) => ValidationResult<key, UD[key]>;
+type Schema<Data extends Record<string, any>> = {
+  [key in keyof Required<Data>]: PropertyValidator<key, Data[key]>;
 };
+
+export interface PropertyValidator<
+  Key extends string | number | symbol,
+  Value
+> {
+  (value: Value): ValidationResult<Key, Value>;
+}
 
 export default Schema;

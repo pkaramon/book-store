@@ -1,4 +1,5 @@
 import VerifyToken from "../auth/VerifyToken";
+import AsyncSchemaValidator from "../domain/AsyncSchemaValidator";
 import Book from "../domain/Book";
 import MakeBook from "../domain/Book/MakeBook";
 import { TableOfContentsData } from "../domain/Book/TableOfContents";
@@ -37,7 +38,7 @@ export class InvalidBookData extends Error {
 }
 
 export class NotBookAuthor extends Error {
-  constructor() {
+  constructor(public userId: string) {
     super();
     this.name = NotBookAuthor.name;
   }
@@ -58,10 +59,9 @@ export class CouldNotCompleteRequest extends Error {
 }
 
 export interface Dependencies {
-  now: () => Date;
   saveBook: SaveBook;
   makeBook: MakeBook;
-  isCorrectEbookFile: IsCorrectEbookFile;
+  bookDataValidator: AsyncSchemaValidator<BookData>;
   verifyUserToken: VerifyToken;
   getUserById: GetUserById;
 }

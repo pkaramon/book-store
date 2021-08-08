@@ -7,30 +7,41 @@ import {
   BookData,
   NotBookAuthor,
   UserNotFound,
+  Dependencies,
 } from "./interface";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
 import FakeTokenManager from "../fakes/FakeTokenManager";
-import { expectThrownErrorToMatch, getThrownError } from "../__test_helpers__";
 import { TokenVerificationError } from "../auth/VerifyToken";
 import makeBook from "../fakes/makeBook";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import getFakeBookAuthor from "../fakes/FakeBookAuthor";
 import getFakePlainUser from "../fakes/FakePlainUser";
-import nCharString from "../__test_helpers__/nCharString";
-import DidNotThrowError from "../__test_helpers__/DidNotThrow";
+import AsyncSchemaValidator from "../domain/AsyncSchemaValidator";
+import buildBookSchema from "../domain/Book/BookSchema";
+import {
+  getThrownError,
+  expectThrownErrorToMatch,
+  nCharString,
+  DidNotThrowError,
+} from "../__test_helpers__";
 
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();
-const isCorrectEbookFile = jest.fn().mockResolvedValue(true);
+const isCorrectEbookFile = jest.fn(async (filePath: string) =>
+  filePath.startsWith("books/")
+);
+
+const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
 const tokenManager = new FakeTokenManager();
-const dependencies = {
-  now: new FakeClock({ now: new Date(2020, 1, 1) }).now,
+const dependencies: Dependencies = {
   saveBook: bookDb.save,
   makeBook,
-  isCorrectEbookFile,
   verifyUserToken: tokenManager.verifyToken,
   getUserById: userDb.getById,
+  bookDataValidator: new AsyncSchemaValidator(
+    buildBookSchema({ isCorrectEbookFile, now })
+  ),
 };
 const addBook = buildAddBook(dependencies);
 let validData: InputData;
@@ -82,7 +93,7 @@ test("user is not a book author", async () => {
         ...validData,
         userToken: await tokenManager.createTokenFor(plainUserId),
       }),
-    { class: NotBookAuthor }
+    { class: NotBookAuthor, userId: plainUserId }
   );
 });
 
@@ -154,7 +165,7 @@ describe("validation", () => {
   });
 
   test("whenCreated cannot be in the future", async () => {
-    await expectValidationToPass("whenCreated", dependencies.now());
+    await expectValidationToPass("whenCreated", now());
     await expectValidationToFail(
       "whenCreated",
       new Date(2020, 1, 2),
@@ -184,27 +195,23 @@ describe("validation", () => {
 
   test("sampleFilePath is provided, but the path itself is invalid", async () => {
     await expectValidationToPass("sampleFilePath", undefined);
-    isCorrectEbookFile.mockResolvedValueOnce(false);
     await expectValidationToFail(
       "sampleFilePath",
-      "books/INVALID",
+      "INVALID_FOLDER/sample.pdf",
       "sampleFilePath is invalid"
     );
-    expect(isCorrectEbookFile).toHaveBeenCalledWith("books/INVALID");
+    expect(isCorrectEbookFile).toHaveBeenCalledWith(
+      "INVALID_FOLDER/sample.pdf"
+    );
   });
 
   test("filePath is invalid", async () => {
-    const impl = async (path: string) =>
-      path === "books/INVALID_FILE_PATH" ? false : true;
-    isCorrectEbookFile
-      .mockImplementationOnce(impl)
-      .mockImplementationOnce(impl);
     await expectValidationToFail(
       "filePath",
-      "books/INVALID_FILE_PATH",
+      "INVALID_FOLDER/book.pdf",
       "filePath is invalid"
     );
-    expect(isCorrectEbookFile).toHaveBeenCalledWith("books/INVALID_FILE_PATH");
+    expect(isCorrectEbookFile).toHaveBeenCalledWith("INVALID_FOLDER/book.pdf");
   });
 });
 
@@ -250,11 +257,11 @@ test("saveBook error", async () => {
 });
 
 test("getUserById error", async () => {
-  const publishBook = buildAddBook({
+  const addBook = buildAddBook({
     ...dependencies,
     getUserById: jest.fn().mockRejectedValue(new Error("could not save book")),
   });
-  await expectThrownErrorToMatch(() => publishBook({ ...validData }), {
+  await expectThrownErrorToMatch(() => addBook({ ...validData }), {
     class: CouldNotCompleteRequest,
     message: "could not get user from db",
   });

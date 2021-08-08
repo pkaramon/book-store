@@ -1,5 +1,5 @@
 import createBuildHelper from "./createBuildHelper";
-import DidNotThrow from "./DidNotThrow";
+import DidNotThrowError from "./DidNotThrowError";
 import expectThrownErrorToMatch from "./expectThrownErrorToMatch";
 import getThrownError from "./getThrownError";
 import nCharString from "./nCharString";
@@ -12,6 +12,6 @@ export {
   getThrownError,
   throws,
   createBuildHelper,
-  DidNotThrow,
-  nCharString
+  DidNotThrowError,
+  nCharString,
 };

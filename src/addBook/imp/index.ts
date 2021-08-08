@@ -9,24 +9,20 @@ import AddBook, {
   BookData,
   NotBookAuthor,
   UserNotFound,
+  InvalidBookData,
 } from "../interface";
-import validateBookData from "./validateBookData";
 
 export default function buildAddBook({
   verifyUserToken,
   makeBook,
   saveBook,
-  now,
-  isCorrectEbookFile,
   getUserById,
+  bookDataValidator,
 }: Dependencies): AddBook {
   async function addBook({ bookData, userToken }: InputData) {
     const authorId = await verifyUserToken(userToken);
     await verifyAuthor(authorId);
-    const cleanedBookData = await validateBookData(bookData, {
-      isCorrectEbookFile,
-      now,
-    });
+    const cleanedBookData = await validateBookData(bookData);
     const book = await createBook(authorId, cleanedBookData);
     await tryToSaveBook(book);
     return { bookId: book.info.id };
@@ -35,7 +31,23 @@ export default function buildAddBook({
   async function verifyAuthor(authorId: string) {
     const author = await tryToGetUser(authorId);
     if (author === null) throw new UserNotFound(authorId);
-    if (!(author instanceof BookAuthor)) throw new NotBookAuthor();
+    if (!(author instanceof BookAuthor)) throw new NotBookAuthor(authorId);
+  }
+
+  async function validateBookData(bookData: BookData) {
+    const { isValid, errorMessages, value } = await tryToValidateBookData(
+      bookData
+    );
+    if (!isValid) throw new InvalidBookData(errorMessages);
+    return value;
+  }
+
+  async function tryToValidateBookData(bookData: BookData) {
+    try {
+      return await bookDataValidator.validateData(bookData);
+    } catch {
+      throw new CouldNotCompleteRequest();
+    }
   }
 
   async function tryToGetUser(userId: string) {

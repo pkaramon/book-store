@@ -1,5 +1,5 @@
 import BookAuthor from "../domain/BookAuthor";
-import buildBookAuthorSchema from "../domain/BookAuthorSchema";
+import buildBookAuthorSchema from "../domain/BookAuthor/BookAuthorSchema";
 import SchemaValidator from "../domain/SchemaValidator";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeBookAuthor from "../fakes/makeBookAuthor";

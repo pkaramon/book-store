@@ -1,4 +1,4 @@
-import DidNotThrowError from "./DidNotThrow";
+import DidNotThrowError from "./DidNotThrowError";
 
 export default async function getThrownError(fn: Function) {
   try {
