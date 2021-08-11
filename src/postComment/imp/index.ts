@@ -1,4 +1,3 @@
-import Book from "../../domain/Book";
 import { CommentInfoWithOptionalId } from "../../domain/Comment/MakeComment";
 import Comment, { CommentContent } from "../../domain/Comment";
 import PostComment, {
@@ -16,10 +15,9 @@ import User from "../../domain/User";
 export default function buildPostComment(deps: Dependencies): PostComment {
   async function postComment(data: InputData) {
     const userId = await deps.verifyUserAuthToken(data.userAuthToken);
-    const user = await tryToGetUser(userId);
-    validateUser(userId, user);
+    await verifyUser(userId);
     const bookId = data.comment.bookId;
-    const book = await getBook(bookId);
+    await checkIfBookExists(bookId);
     const commentContent = await validateCommentContent(data.comment);
     const comment = await tryToCreateComment({
       bookId,
@@ -27,9 +25,16 @@ export default function buildPostComment(deps: Dependencies): PostComment {
       postedAt: deps.now(),
       ...commentContent,
     });
-    book.addComment(comment);
-    await save(book);
+    await save(comment);
     return generateResponse(comment);
+  }
+
+  async function verifyUser(userId: string) {
+    const user = await tryToGetUser(userId);
+    if (user === null) throw new UserNotFound(userId);
+    if (!(user instanceof Customer)) {
+      throw new InvalidUserType(userId);
+    }
   }
 
   async function tryToGetUser(userId: string) {
@@ -40,17 +45,17 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     }
   }
 
-  function validateUser(userId: string, user: User | null) {
-    if (user === null) throw new UserNotFound(userId);
-    if (!(user instanceof Customer)) {
-      throw new InvalidUserType(userId);
-    }
-  }
-
-  async function getBook(bookId: string) {
+  async function checkIfBookExists(bookId: string) {
     const book = await tryToGetBook(bookId);
     if (book === null) throw new BookNotFound(bookId);
-    return book;
+  }
+
+  async function tryToGetBook(bookId: string) {
+    try {
+      return await deps.getBookById(bookId);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not get book from db", e);
+    }
   }
 
   async function validateCommentContent(content: CommentContent) {
@@ -63,14 +68,6 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     return result.content;
   }
 
-  async function tryToGetBook(bookId: string) {
-    try {
-      return await deps.getBookById(bookId);
-    } catch (e) {
-      throw new CouldNotCompleteRequest("could not get book from db", e);
-    }
-  }
-
   async function tryToCreateComment(info: CommentInfoWithOptionalId) {
     try {
       return await deps.makeComment(info);
@@ -79,11 +76,11 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     }
   }
 
-  async function save(book: Book) {
+  async function save(comment: Comment) {
     try {
-      await deps.saveBook(book);
+      await deps.saveComment(comment);
     } catch (e) {
-      throw new CouldNotCompleteRequest("could not save book to db", e);
+      throw new CouldNotCompleteRequest("could not save comment to db", e);
     }
   }
 

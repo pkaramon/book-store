@@ -1,3 +1,8 @@
+import CommentContent from "./CommentContent";
+import CommentMetadata from "./CommentMetadata";
+
+export { CommentContent, CommentMetadata };
+
 export default abstract class Comment {
   constructor(
     private _metadata: CommentMetadata,
@@ -23,17 +28,4 @@ export default abstract class Comment {
   changeStars(stars: number) {
     this._content.stars = stars;
   }
-}
-
-export interface CommentMetadata {
-  id: string;
-  bookId: string;
-  authorId: string;
-  postedAt: Date;
-}
-
-export interface CommentContent {
-  title: string;
-  body: string;
-  stars: number;
 }

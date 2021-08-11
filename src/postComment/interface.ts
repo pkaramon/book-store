@@ -4,6 +4,7 @@ import { CommentContent } from "../domain/Comment";
 import MakeComment from "../domain/Comment/MakeComment";
 import CommentContentValidator from "../domain/CommentContentValidator";
 import User from "../domain/User";
+import Comment from "../domain/Comment";
 
 export default interface PostComment {
   (data: InputData): Promise<Response>;
@@ -77,6 +78,6 @@ export interface Dependencies {
   getBookById: (bookId: string) => Promise<Book | null>;
   getUserById: (userId: string) => Promise<User | null>;
   now: () => Date;
-  saveBook: (b: Book) => Promise<void>;
+  saveComment: (c: Comment) => Promise<void>;
   commentContentValidator: CommentContentValidator;
 }

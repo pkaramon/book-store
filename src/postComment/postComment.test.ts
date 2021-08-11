@@ -6,6 +6,7 @@ import FakeClock from "../fakes/FakeClock";
 import getFakeCustomer from "../fakes/FakeCustomer";
 import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
+import InMemoryCommentDb from "../fakes/InMemoryCommentDb";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeComment from "../fakes/makeComment";
 import {
@@ -27,6 +28,7 @@ const tm = new FakeTokenManager();
 const clock = new FakeClock({ now: new Date(2020, 1, 1) });
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();
+const commentDb = new InMemoryCommentDb();
 const buildPostCommentHelper = createBuildHelper(buildPostComment, {
   getBookById: bookDb.getById,
   verifyUserAuthToken: tm.verifyToken,
@@ -34,6 +36,7 @@ const buildPostCommentHelper = createBuildHelper(buildPostComment, {
   getUserById: userDb.getById,
   makeComment,
   saveBook: bookDb.save,
+  saveComment: commentDb.save,
   commentContentValidator: new CommentContentValidatorImp(),
 });
 const postComment = buildPostCommentHelper({});
@@ -52,6 +55,7 @@ const comment = {
 beforeEach(async () => {
   bookDb.clear();
   userDb.clear();
+  commentDb.clear();
   bookDb.save(await getFakeBook({ id: bookId, authorId: bookAuthorId }));
   userDb.save(await getFakeCustomer({ id: commentorId }));
   userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
@@ -119,14 +123,11 @@ describe("data validation", () => {
   });
 
   test("body cannot be empty", async () => {
-    await expectValidationToFail(
-      { body: "" },
-      { body: ["body cannot be empty"] }
-    );
-    await expectValidationToFail(
-      { body: " " },
-      { body: ["body cannot be empty"] }
-    );
+    for (const body of ["", " "])
+      await expectValidationToFail(
+        { body },
+        { body: ["body cannot be empty"] }
+      );
   });
 });
 
@@ -135,10 +136,7 @@ test("creating a comment", async () => {
     comment,
     userAuthToken,
   });
-  const book = (await bookDb.getById(bookId))!;
-  const comments = await book.getAllComments();
-  expect(comments).toHaveLength(1);
-  const com = comments[0];
+  const com = (await commentDb.getById(createdComment.id))!;
   expect(com.content.title).toEqual(comment.title);
   expect(com.content.body).toEqual(comment.body);
   expect(com.content.stars).toEqual(comment.stars);
@@ -178,15 +176,14 @@ test("getBookById failure", async () => {
   );
 });
 
-test("saveBook failure", async () => {
+test("saveComment failure", async () => {
   const postComment = buildPostCommentHelper({
-    saveBook: jest.fn().mockRejectedValue(new Error("save err")),
+    saveComment: jest.fn().mockRejectedValue(new Error("save err")),
   });
   await expectThrownErrorToMatch(
     () => postComment({ comment, userAuthToken }),
     {
       class: CouldNotCompleteRequest,
-      message: "could not save book to db",
       originalError: new Error("save err"),
     }
   );
