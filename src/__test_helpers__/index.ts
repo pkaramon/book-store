@@ -1,3 +1,4 @@
+import checkIfItHandlesUnexpectedFailures from "./checkIfItHandlesUnexpectedFailures";
 import createBuildHelper from "./createBuildHelper";
 import DidNotThrowError from "./DidNotThrowError";
 import expectThrownErrorToMatch from "./expectThrownErrorToMatch";
@@ -14,4 +15,5 @@ export {
   createBuildHelper,
   DidNotThrowError,
   nCharString,
+  checkIfItHandlesUnexpectedFailures
 };

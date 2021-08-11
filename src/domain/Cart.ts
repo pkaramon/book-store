@@ -12,6 +12,18 @@ export default class Cart {
   add(bookId: string) {
     this._info.bookIds.push(bookId);
   }
+
+  has(bookId: string) {
+    return this._info.bookIds.includes(bookId);
+  }
+
+  remove(bookId: string) {
+    this._info.bookIds = this._info.bookIds.filter((id) => id !== bookId);
+  }
+
+  clear() {
+    this._info.bookIds = [];
+  }
 }
 
 export interface CartInfo {

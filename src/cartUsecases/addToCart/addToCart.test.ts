@@ -1,14 +1,17 @@
-import VerifyToken, { TokenVerificationError } from "../auth/VerifyToken";
-import Book from "../domain/Book";
-import BookAuthor from "../domain/BookAuthor";
-import getFakeBook from "../fakes/FakeBook";
-import getFakeBookAuthor from "../fakes/FakeBookAuthor";
-import getFakeCustomer from "../fakes/FakeCustomer";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import InMemoryCartDb from "../fakes/InMemoryCartDb";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
+import VerifyToken, { TokenVerificationError } from "../../auth/VerifyToken";
+import Book from "../../domain/Book";
+import BookAuthor from "../../domain/BookAuthor";
+import getFakeBook from "../../fakes/FakeBook";
+import getFakeBookAuthor from "../../fakes/FakeBookAuthor";
+import getFakeCustomer from "../../fakes/FakeCustomer";
+import FakeTokenManager from "../../fakes/FakeTokenManager";
+import InMemoryBookDb from "../../fakes/InMemoryBookDb";
+import InMemoryCartDb from "../../fakes/InMemoryCartDb";
+import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import {
+  expectThrownErrorToMatch,
+  checkIfItHandlesUnexpectedFailures,
+} from "../../__test_helpers__";
 import buildAddToCart from "./imp";
 import {
   UserNotFound,
@@ -20,17 +23,6 @@ import {
 
 const userDb = new InMemoryUserDb();
 
-const getBooksWithAuthors = async (booksIds: string[]) => {
-  const books = await Promise.all(booksIds.map((id) => bookDb.getById(id)));
-  const withoutNulls = books.filter((b) => b !== null) as Book[];
-  return await Promise.all(
-    withoutNulls.map(async (book) => {
-      const author = (await userDb.getById(book.info.authorId)) as BookAuthor;
-      return { book, author };
-    })
-  );
-};
-
 const bookDb = new InMemoryBookDb();
 const cartDb = new InMemoryCartDb();
 const tm = new FakeTokenManager();
@@ -39,7 +31,8 @@ const dependencies = {
   db: {
     getUserById: userDb.getById,
     getBookById: bookDb.getById,
-    getBooksWithAuthors,
+    getBooksWithAuthors: (ids: string[]) =>
+      bookDb.getBooksWithAuthors(userDb.getById, ids),
     getCartFor: cartDb.getCartFor,
     saveCart: cartDb.saveCart,
   },
@@ -130,26 +123,6 @@ test("book info returned from usecase", async () => {
   expect(cartItem.author.firstName).toEqual(author.info.firstName);
   expect(cartItem.author.lastName).toEqual(author.info.lastName);
 });
-
-async function checkIfItHandlesUnexpectedFailures<Deps>(data: {
-  buildFunction: (deps: Deps) => (...args: any) => any;
-  defaultDependencies: Deps;
-  dependenciesToTest: (keyof Deps)[];
-  validInputData: Parameters<ReturnType<typeof data.buildFunction>>;
-  expectedErrorClass: new (...args: any) => any;
-}) {
-  for (const dependencyName of data.dependenciesToTest) {
-    const usecase = data.buildFunction({
-      ...data.defaultDependencies,
-      [dependencyName]: rejectWith(new Error("err")),
-    });
-
-    await expectThrownErrorToMatch(() => usecase(...data.validInputData), {
-      class: data.expectedErrorClass,
-      originalError: new Error("err"),
-    });
-  }
-}
 
 test("dependency failures", async () => {
   await checkIfItHandlesUnexpectedFailures({

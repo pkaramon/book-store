@@ -1,8 +1,13 @@
-import VerifyToken from "../auth/VerifyToken";
-import Book from "../domain/Book";
-import BookAuthor from "../domain/BookAuthor";
-import Cart from "../domain/Cart";
-import User from "../domain/User";
+import VerifyToken from "../../auth/VerifyToken";
+import {
+  CouldNotCompleteRequest,
+  InvalidUserType,
+  UserNotFound,
+} from "../CartRelatedAction";
+import Book from "../../domain/Book";
+import BookAuthor from "../../domain/BookAuthor";
+import Cart from "../../domain/Cart";
+import User from "../../domain/User";
 
 export default interface AddToCart {
   (data: InputData): Promise<Response>;
@@ -30,20 +35,6 @@ export interface CartItemOutput {
   };
 }
 
-export class UserNotFound extends Error {
-  constructor(public readonly userId: string) {
-    super();
-    this.name = UserNotFound.name;
-  }
-}
-
-export class CouldNotCompleteRequest extends Error {
-  constructor(message: string, public readonly originalError: any) {
-    super(message);
-    this.name = CouldNotCompleteRequest.name;
-  }
-}
-
 export class BookNotFound extends Error {
   constructor(public readonly bookId: string) {
     super();
@@ -51,12 +42,7 @@ export class BookNotFound extends Error {
   }
 }
 
-export class InvalidUserType extends Error {
-  constructor(public wanted: string, public received: string) {
-    super(`invalid user type wanted: ${wanted} but received ${received}`);
-    this.name = InvalidUserType.name;
-  }
-}
+export { UserNotFound, InvalidUserType, CouldNotCompleteRequest };
 
 export interface Dependencies {
   verifyUserToken: VerifyToken;
