@@ -10,7 +10,6 @@ import PostComment, {
   UserNotFound,
 } from "../interface";
 import Customer from "../../domain/Customer";
-import User from "../../domain/User";
 
 export default function buildPostComment(deps: Dependencies): PostComment {
   async function postComment(data: InputData) {
