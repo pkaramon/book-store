@@ -3,23 +3,13 @@ import FakeTokenManager from "../fakes/FakeTokenManager";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makePassword from "../fakes/makePassword";
 import {
+  checkIfItHandlesUnexpectedFailures,
   createBuildHelper,
   expectThrownErrorToMatch,
-  getThrownError,
   rejectWith,
 } from "../__test_helpers__";
 import buildLogin from "./imp";
 import { CouldNotCompleteRequest, InvalidLoginData } from "./interface";
-
-test("getUserByEmail unexpected failure", async () => {
-  const login = buildLoginHelper({
-    getUserByEmail: jest.fn().mockRejectedValue(new Error("userDb err")),
-  });
-  await expectToThrowCouldNotCompleteRequest(() => login(validLoginData), {
-    message: "could not talk to db",
-    originalError: new Error("userDb err"),
-  });
-});
 
 test("email is not correct", async () => {
   await expect(
@@ -38,16 +28,13 @@ test("email and password are correct", async () => {
   expect(() => tokenManager.verifyToken(token)).not.toThrow();
 });
 
-test("createToken failure", async () => {
-  const login = buildLoginHelper({
-    createToken: jest.fn(() => {
-      throw new Error("token err");
-    }),
-  });
-  await expectThrownErrorToMatch(() => login(validLoginData), {
-    class: CouldNotCompleteRequest,
-    message: "could not create token",
-    originalError: new Error("token err"),
+test("dependencies failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildLogin,
+    defaultDependencies: dependencies,
+    validInputData: [validLoginData],
+    dependenciesToTest: ["createToken", "getUserByEmail"],
+    expectedErrorClass: CouldNotCompleteRequest,
   });
 });
 
@@ -70,10 +57,11 @@ test("unexpected failure when comparing passwords", async () => {
 
 const userDb = new InMemoryUserDb();
 const tokenManager = new FakeTokenManager();
-const buildLoginHelper = createBuildHelper(buildLogin, {
+const dependencies = {
   getUserByEmail: userDb.getByEmail,
   createToken: tokenManager.createTokenFor,
-});
+};
+const buildLoginHelper = createBuildHelper(buildLogin, dependencies);
 const login = buildLoginHelper({});
 const validLoginData = {
   email: "bob@mail.com",
@@ -91,13 +79,3 @@ beforeEach(async () => {
     })
   );
 });
-
-async function expectToThrowCouldNotCompleteRequest(
-  fn: Function,
-  expectedData: { message: string; originalError: any }
-) {
-  const err: CouldNotCompleteRequest = await getThrownError(fn);
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(expectedData.originalError);
-  expect(err.message).toEqual(expectedData.message);
-}

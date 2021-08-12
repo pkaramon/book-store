@@ -46,7 +46,6 @@ const dependencies: Dependencies = {
 const addBook = buildAddBook(dependencies);
 let validData: InputData;
 const bookAuthorId = "1";
-const plainUserId = "2";
 beforeEach(async () => {
   validData = {
     userToken: await tokenManager.createTokenFor(bookAuthorId),
@@ -75,7 +74,6 @@ beforeEach(async () => {
   isCorrectEbookFile.mockClear();
 
   await userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
-  await userDb.save(await getFakePlainUser({ id: plainUserId }));
 });
 
 test("userToken is invalid", async () => {
@@ -87,6 +85,8 @@ test("userToken is invalid", async () => {
 });
 
 test("user is not a book author", async () => {
+  const plainUserId = Math.random().toString();
+  await userDb.save(await getFakePlainUser({ id: plainUserId }));
   await expectThrownErrorToMatch(
     async () =>
       addBook({

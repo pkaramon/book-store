@@ -41,11 +41,7 @@ test("user is not the author of the book", async () => {
   await expectThrownErrorToMatch(
     async () =>
       deleteBook({ userAuthToken: await tm.createTokenFor("123321"), bookId }),
-    {
-      class: NotAllowed,
-      userId: "123321",
-      bookId,
-    }
+    { class: NotAllowed, userId: "123321", bookId }
   );
 });
 
@@ -55,10 +51,7 @@ test("getBookById throws error", async () => {
   });
   await expectThrownErrorToMatch(
     () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
-    {
-      class: CouldNotCompleteRequest,
-      message: "could not get the book from db",
-    }
+    { class: CouldNotCompleteRequest }
   );
 });
 
@@ -68,10 +61,7 @@ test("deleteById throws error", async () => {
   });
   await expectThrownErrorToMatch(
     () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
-    {
-      class: CouldNotCompleteRequest,
-      message: "could not delete the book from db",
-    }
+    { class: CouldNotCompleteRequest }
   );
 });
 

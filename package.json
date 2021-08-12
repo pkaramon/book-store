@@ -11,8 +11,12 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^26.0.24",
+    "@types/jsonwebtoken": "^8.5.4",
     "jest": "^27.0.6",
     "ts-jest": "^27.0.4",
     "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1"
   }
 }
