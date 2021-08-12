@@ -4,7 +4,7 @@ import BookAuthor from "../../domain/BookAuthor";
 import Cart from "../../domain/Cart";
 import Customer from "../../domain/Customer";
 import User from "../../domain/User";
-import CartItemOutput from "./CartItemOutput";
+import CartItemOutput from "../CartItemOutput";
 import Database from "./Database";
 import {
   UserNotFound,
@@ -13,7 +13,6 @@ import {
 } from "./errors";
 
 export {
-  CartItemOutput,
   UserNotFound,
   InvalidUserType,
   CouldNotCompleteRequest,
@@ -34,7 +33,7 @@ export default abstract class CartRelatedAction<
   /*final*/ async execute(data: InputData) {
     const userId = await this._verifyUserToken(data.userAuthToken);
     const customer = await this.getCustomer(userId);
-    const cart = await this.getCart(customer);
+    const cart = await this.getCartFor(customer);
     await this.modifyCart(data, customer, cart);
     await this.tryToSaveCart(cart);
     return await this.produceResult(data, customer, cart);
@@ -47,7 +46,7 @@ export default abstract class CartRelatedAction<
     return user as Customer;
   }
 
-  private async getCart(customer: Customer) {
+  private async getCartFor(customer: Customer) {
     try {
       return await this._db.getCartFor(customer.info.id);
     } catch (e) {

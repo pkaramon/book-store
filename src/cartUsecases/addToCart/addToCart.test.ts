@@ -22,10 +22,10 @@ import {
 } from "./interface";
 
 const userDb = new InMemoryUserDb();
-
 const bookDb = new InMemoryBookDb();
 const cartDb = new InMemoryCartDb();
 const tm = new FakeTokenManager();
+
 const dependencies = {
   verifyUserToken: tm.verifyToken,
   db: {
@@ -135,6 +135,7 @@ test("dependency failures", async () => {
       "getBookById",
       "saveCart",
       "getBooksWithAuthors",
+      "getCartFor",
     ],
     validInputData: [{ bookId, userAuthToken }],
     expectedErrorClass: CouldNotCompleteRequest,
