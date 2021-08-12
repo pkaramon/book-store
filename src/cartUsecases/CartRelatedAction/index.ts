@@ -12,11 +12,7 @@ import {
   CouldNotCompleteRequest,
 } from "./errors";
 
-export {
-  UserNotFound,
-  InvalidUserType,
-  CouldNotCompleteRequest,
-};
+export { UserNotFound, InvalidUserType, CouldNotCompleteRequest };
 
 export default abstract class CartRelatedAction<
   InputData extends { userAuthToken: string },
@@ -30,14 +26,14 @@ export default abstract class CartRelatedAction<
     cart: Cart
   ): Promise<void> | void;
 
-  /*final*/ async execute(data: InputData) {
+  /*final*/ execute = async (data: InputData) => {
     const userId = await this._verifyUserToken(data.userAuthToken);
     const customer = await this.getCustomer(userId);
     const cart = await this.getCartFor(customer);
     await this.modifyCart(data, customer, cart);
     await this.tryToSaveCart(cart);
     return await this.produceResult(data, customer, cart);
-  }
+  };
 
   private async getCustomer(userId: string) {
     const user = await this.tryToGetUser(userId);

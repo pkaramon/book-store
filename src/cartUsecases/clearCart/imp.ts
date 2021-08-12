@@ -25,5 +25,5 @@ export default function buildClearCart(deps: Dependencies): ClearCart {
   }
 
   const CLEAR_CART = new ClearCart(deps.verifyUserToken, deps);
-  return CLEAR_CART.execute.bind(CLEAR_CART);
+  return CLEAR_CART.execute;
 }

@@ -11,13 +11,7 @@ import {
 import Dependencies, { Database } from "./Dependencies";
 
 export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
-  async function addToCart(data: InputData) {
-    return await AddToCart.instance.execute(data);
-  }
-
   class AddToCart extends CartRelatedAction<InputData, Promise<Response>> {
-    public static instance = new AddToCart(verifyUserToken, db);
-
     constructor(verifyUserToken: VerifyToken, private db: Database) {
       super(verifyUserToken, db);
     }
@@ -42,5 +36,6 @@ export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
     }
   }
 
-  return addToCart;
+  const ADD_TO_CART = new AddToCart(verifyUserToken, db);
+  return ADD_TO_CART.execute;
 }

@@ -5,22 +5,13 @@ import { InputData, BookNotInCart, Response } from "../interface";
 import Dependencies from "./Dependencies";
 
 export default function buildRemoveFromCart(deps: Dependencies) {
-  async function removeFromCart(data: InputData) {
-    return await RemoveFromCart.instance.execute(data);
-  }
-
   class RemoveFromCart extends CartRelatedAction<InputData, Promise<Response>> {
-    public static instance = new RemoveFromCart(deps.verifyUserToken, deps);
-
-    protected modifyCart(
-      { bookId }: InputData,
-      _: Customer,
-      cart: Cart
-    ): void | Promise<void> {
+    protected modifyCart({ bookId }: InputData, _: Customer, cart: Cart) {
       if (!cart.has(bookId)) throw new BookNotInCart(bookId);
       cart.remove(bookId);
     }
   }
 
-  return removeFromCart;
+  const REMOVE_FROM_CART = new RemoveFromCart(deps.verifyUserToken, deps);
+  return REMOVE_FROM_CART.execute;
 }
