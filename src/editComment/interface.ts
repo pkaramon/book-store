@@ -1,6 +1,4 @@
-import VerifyToken from "../auth/VerifyToken";
-import Comment, { CommentContent } from "../domain/Comment";
-import CommentContentValidator from "../domain/CommentContentValidator";
+import { CommentContent } from "../domain/Comment";
 
 export default interface EditComment {
   (data: InputData): Promise<Response>;
@@ -21,7 +19,7 @@ export interface Response {
     stars: number;
     authorId: string;
     bookId: string;
-  }
+  };
 }
 
 export class CommentNotFound extends Error {
@@ -58,11 +56,4 @@ export class InvalidNewCommentContent extends Error {
     super();
     this.name = InvalidNewCommentContent.name;
   }
-}
-
-export interface Dependencies {
-  verifyUserAuthToken: VerifyToken;
-  getCommentById: (comId: string) => Promise<Comment | null>;
-  commentContentValidator: CommentContentValidator;
-  saveComment: (comment: Comment) => Promise<void>;
 }

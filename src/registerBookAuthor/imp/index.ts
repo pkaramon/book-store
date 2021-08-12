@@ -1,13 +1,15 @@
-import UserRegistrator, { ValidationResult } from "../UserRegistrator";
-import {
-  CouldNotCompleteRequest,
-  Dependencies,
-  EmailAlreadyTaken,
+import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
+import RegisterBookAuthor, {
   InputData,
+  CouldNotCompleteRequest,
   InvalidBookAuthorRegisterData,
-} from "./interface";
+  EmailAlreadyTaken,
+} from "../interface";
+import Dependencies from "./Dependencies";
 
-export default function buildRegisterBookAuthor(deps: Dependencies) {
+export default function buildRegisterBookAuthor(
+  deps: Dependencies
+): RegisterBookAuthor {
   async function registerBookAuthor(data: InputData) {
     const user = await BookAuthorRegistrator.instance.registerUser(data);
     return { userId: user.info.id };

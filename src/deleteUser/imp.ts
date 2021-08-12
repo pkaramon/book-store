@@ -1,9 +1,15 @@
+import VerifyToken from "../auth/VerifyToken";
 import DeleteUser, {
   CouldNotCompleteRequest,
-  Dependencies,
   InputData,
   UserAlreadyDeleted,
 } from "./interface";
+
+
+export interface Dependencies {
+  verifyUserToken: VerifyToken;
+  deleteUserById: (userId: string) => Promise<{ wasDeleted: boolean }>;
+}
 
 export default function buildDeleteUser(deps: Dependencies): DeleteUser {
   async function deleteUser({ userAuthToken }: InputData) {

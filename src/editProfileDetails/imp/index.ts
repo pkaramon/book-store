@@ -1,12 +1,12 @@
 import CustomUser from "../../domain/CustomUser";
 import User from "../../domain/User";
 import EditProfileDetails, {
-  Dependencies,
   InputData,
   CouldNotCompleteRequest,
   UserNotFound,
   InvalidUserType,
 } from "../interface";
+import Dependencies from "./Dependencies";
 import UserDetailsUpdater from "./UserDetailsUpdater";
 
 export default function buildEditProfileDetails({

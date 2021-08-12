@@ -12,10 +12,10 @@ import {
   rejectWith,
 } from "../__test_helpers__";
 import buildEditComment from "./imp";
+import Dependencies from "./imp/Dependencies";
 import {
   CommentNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
   InvalidNewCommentContent,
   NotCommentAuthor,
 } from "./interface";

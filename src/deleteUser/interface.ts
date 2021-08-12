@@ -1,5 +1,3 @@
-import VerifyToken from "../auth/VerifyToken";
-
 export default interface DeleteUser {
   (data: InputData): Promise<{ userId: string }>;
 }
@@ -20,9 +18,4 @@ export class CouldNotCompleteRequest extends Error {
     super(message);
     this.name = CouldNotCompleteRequest.name;
   }
-}
-
-export interface Dependencies {
-  verifyUserToken: VerifyToken;
-  deleteUserById: (userId: string) => Promise<{ wasDeleted: boolean }>;
 }

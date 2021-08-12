@@ -1,11 +1,24 @@
+import CreateToken from "../auth/CreateToken";
 import Password from "../domain/Password";
 import User from "../domain/User";
 import Login, {
   CouldNotCompleteRequest,
-  Dependencies,
   InvalidLoginData,
   LoginData,
 } from "./interface";
+
+export interface Dependencies {
+  getUserByEmail: GetUserByEmail;
+  createToken: CreateToken;
+}
+
+export interface GetUserByEmail {
+  (email: string): Promise<User | null>;
+}
+
+export interface ComparePasswords {
+  (passwords: { hashed: string; notHashed: string }): Promise<boolean>;
+}
 
 export default function buildLogin({
   getUserByEmail,

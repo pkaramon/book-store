@@ -1,8 +1,3 @@
-import MakeCustomer from "../domain/Customer/MakeCustomer";
-import User from "../domain/User";
-import SchemaValidator from "../domain/SchemaValidator";
-import MakePassword from "../domain/Password/MakePassword";
-
 export default interface RegisterCustomer {
   (data: InputData): Promise<{ userId: string }>;
 }
@@ -34,13 +29,4 @@ export class CouldNotCompleteRequest extends Error {
   constructor(reason: string, public originalError: any) {
     super(reason);
   }
-}
-
-export interface Dependencies {
-  saveUser: (u: User) => Promise<void>;
-  getUserByEmail: (email: string) => Promise<User | null>;
-  notifyUser: (user: User) => Promise<void>;
-  userDataValidator: SchemaValidator<InputData>;
-  makeCustomer: MakeCustomer;
-  makePassword: MakePassword;
 }

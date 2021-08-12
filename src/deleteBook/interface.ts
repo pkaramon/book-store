@@ -1,6 +1,3 @@
-import VerifyToken from "../auth/VerifyToken";
-import Book from "../domain/Book";
-
 export default interface DeleteBook {
   (data: InputData): Promise<void>;
 }
@@ -29,10 +26,4 @@ export class CouldNotCompleteRequest extends Error {
     super(reason);
     this.name = CouldNotCompleteRequest.name;
   }
-}
-
-export interface Dependencies {
-  deleteBookById: (bookId: string) => Promise<void>;
-  getBookById: (bookId: string) => Promise<Book | null>;
-  verifyUserAuthToken: VerifyToken;
 }

@@ -7,7 +7,6 @@ import {
   BookData,
   NotBookAuthor,
   UserNotFound,
-  Dependencies,
 } from "./interface";
 import FakeClock from "../fakes/FakeClock";
 import InMemoryBookDb from "../fakes/InMemoryBookDb";
@@ -25,6 +24,7 @@ import {
   nCharString,
   DidNotThrowError,
 } from "../__test_helpers__";
+import Dependencies from "./imp/Dependencies";
 
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();

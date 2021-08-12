@@ -1,14 +1,22 @@
+import VerifyToken from "../auth/VerifyToken";
 import Admin from "../domain/Admin";
 import Book, { BookStatus } from "../domain/Book";
+import User from "../domain/User";
 import PublishBook, {
   AdminNotFound,
   AlreadyPublished,
   BookNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
   InputData,
   UserIsNotAdmin,
 } from "./interface";
+
+export interface Dependencies {
+  getBookById: (id: string) => Promise<Book | null>;
+  saveBook: (b: Book) => Promise<void>;
+  getUserById: (id: string) => Promise<User | null>;
+  verifyAdminAuthToken: VerifyToken;
+}
 
 export default function buildPublishBook({
   getBookById,

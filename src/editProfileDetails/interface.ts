@@ -1,8 +1,3 @@
-import VerifyToken from "../auth/VerifyToken";
-import { UserData } from "../domain/PlainUserSchema";
-import User from "../domain/User";
-import SchemaValidator from "../domain/SchemaValidator";
-
 export default interface EditProfileDetails {
   (data: InputData): Promise<void>;
 }
@@ -47,19 +42,4 @@ export class InvalidEditProfileData extends Error {
     super();
     this.name = InvalidEditProfileData.name;
   }
-}
-
-export interface Dependencies {
-  getUserById: GetUserById;
-  saveUser: SaveUser;
-  userDataValidator: SchemaValidator<UserData>;
-  verifyUserAuthToken: VerifyToken;
-}
-
-export interface GetUserById {
-  (id: string): Promise<User | null>;
-}
-
-export interface SaveUser {
-  (u: User): Promise<void>;
 }

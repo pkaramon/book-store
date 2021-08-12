@@ -13,11 +13,11 @@ import {
   checkIfItHandlesUnexpectedFailures,
 } from "../../__test_helpers__";
 import buildAddToCart from "./imp";
+import { Database } from "./imp/Dependencies";
 import {
   UserNotFound,
   InvalidUserType,
   BookNotFound,
-  Database,
   CouldNotCompleteRequest,
 } from "./interface";
 

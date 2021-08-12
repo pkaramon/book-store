@@ -2,11 +2,11 @@ import User from "../../domain/User";
 import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
 import RegisterCustomer, {
   InputData,
-  Dependencies,
   CouldNotCompleteRequest,
   InvalidCustomerRegisterData,
   EmailAlreadyTaken,
 } from "../interface";
+import Dependencies from "./Dependencies";
 
 export default function buildRegisterCustomer({
   saveUser,
@@ -41,7 +41,7 @@ export default function buildRegisterCustomer({
 
     protected validateUserData(data: InputData) {
       const res = userDataValidator.validateData(data);
-      const errorMessages = res.errorMessages
+      const errorMessages = res.errorMessages;
       return {
         cleaned: res.value,
         errorMessages,

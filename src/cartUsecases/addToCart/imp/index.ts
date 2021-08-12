@@ -1,15 +1,14 @@
-import VerifyToken from "../../auth/VerifyToken";
-import CartRelatedAction from "../CartRelatedAction";
-import Cart from "../../domain/Cart";
-import Customer from "../../domain/Customer";
+import VerifyToken from "../../../auth/VerifyToken";
+import Cart from "../../../domain/Cart";
+import Customer from "../../../domain/Customer";
+import CartRelatedAction from "../../CartRelatedAction";
 import {
+  Response,
+  InputData,
   BookNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
-  InputData,
-  Response,
-  Database,
-} from "./interface";
+} from "../interface";
+import Dependencies, { Database } from "./Dependencies";
 
 export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
   async function addToCart(data: InputData) {

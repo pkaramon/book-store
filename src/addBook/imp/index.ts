@@ -5,12 +5,12 @@ import Price from "../../domain/Price";
 import AddBook, {
   InputData,
   CouldNotCompleteRequest,
-  Dependencies,
   BookData,
   NotBookAuthor,
   UserNotFound,
   InvalidBookData,
 } from "../interface";
+import Dependencies from "./Dependencies";
 
 export default function buildAddBook({
   verifyUserToken,

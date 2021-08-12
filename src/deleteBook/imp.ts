@@ -1,11 +1,17 @@
+import VerifyToken from "../auth/VerifyToken";
 import Book from "../domain/Book";
 import DeleteBook, {
   BookNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
   InputData,
   NotAllowed,
 } from "./interface";
+
+export interface Dependencies {
+  deleteBookById: (bookId: string) => Promise<void>;
+  getBookById: (bookId: string) => Promise<Book | null>;
+  verifyUserAuthToken: VerifyToken;
+}
 
 export default function buildDeleteBook({
   deleteBookById,

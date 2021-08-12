@@ -4,12 +4,12 @@ import PostComment, {
   BookNotFound,
   CouldNotCompleteRequest,
   InputData,
-  Dependencies,
   InvalidCommentContent,
   InvalidUserType,
   UserNotFound,
 } from "../interface";
 import Customer from "../../domain/Customer";
+import Dependencies from "./Dependencies";
 
 export default function buildPostComment(deps: Dependencies): PostComment {
   async function postComment(data: InputData) {

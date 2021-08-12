@@ -10,13 +10,12 @@ import {
   expectThrownErrorToMatch,
   getThrownError,
 } from "../__test_helpers__";
-import buildPublishBook from "./imp";
+import buildPublishBook, { Dependencies } from "./imp";
 import {
   AdminNotFound,
   AlreadyPublished,
   BookNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
   UserIsNotAdmin,
 } from "./interface";
 

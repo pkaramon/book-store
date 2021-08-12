@@ -1,6 +1,3 @@
-import CreateToken from "../auth/CreateToken";
-import User from "../domain/User";
-
 export default interface Login {
   (data: LoginData): Promise<{ token: string }>;
 }
@@ -21,17 +18,4 @@ export class InvalidLoginData extends Error {
     super();
     this.name = InvalidLoginData.name;
   }
-}
-
-export interface Dependencies {
-  getUserByEmail: GetUserByEmail;
-  createToken: CreateToken;
-}
-
-export interface GetUserByEmail {
-  (email: string): Promise<User | null>;
-}
-
-export interface ComparePasswords {
-  (passwords: { hashed: string; notHashed: string }): Promise<boolean>;
 }

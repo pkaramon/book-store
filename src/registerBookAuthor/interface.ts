@@ -1,7 +1,6 @@
-import MakeBookAuthor from "../domain/BookAuthor/MakeBookAuthor";
-import MakePassword from "../domain/Password/MakePassword";
-import User from "../domain/User";
-import SchemaValidator from "../domain/SchemaValidator";
+export default interface RegisterBookAuthor {
+  (data: InputData): Promise<{ userId: string }>;
+}
 
 export interface InputData {
   firstName: string;
@@ -34,13 +33,4 @@ export class InvalidBookAuthorRegisterData extends Error {
     super();
     this.name = InvalidBookAuthorRegisterData.name;
   }
-}
-
-export interface Dependencies {
-  saveUser: (u: User) => Promise<void>;
-  getUserByEmail: (email: string) => Promise<User | null>;
-  notifyUser: (u: User) => Promise<void>;
-  makePassword: MakePassword;
-  userDataValidator: SchemaValidator<InputData>;
-  makeBookAuthor: MakeBookAuthor;
 }

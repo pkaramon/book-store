@@ -1,10 +1,10 @@
-import User from "../../domain/User";
+import User from "../../../domain/User";
 import InitChangePassword, {
-  CouldNotCompleteRequest,
-  Dependencies,
-  TokenCouldNotBeDeliver,
   UnknownEmail,
-} from "./interface";
+  CouldNotCompleteRequest,
+  TokenCouldNotBeDeliver,
+} from "../interface";
+import Dependencies from "./Dependencies";
 
 export default function buildInitChangePassword({
   getUserByEmail,

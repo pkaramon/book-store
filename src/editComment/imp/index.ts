@@ -2,11 +2,11 @@ import Comment, { CommentContent } from "../../domain/Comment";
 import EditComment, {
   CommentNotFound,
   CouldNotCompleteRequest,
-  Dependencies,
   InputData,
   NotCommentAuthor,
 } from "../interface";
 import CommentContentUpdater from "./CommentContentUpdater";
+import Dependencies from "./Dependencies";
 
 export default function buildEditComment(deps: Dependencies): EditComment {
   async function editComment(data: InputData) {

@@ -1,12 +1,12 @@
-import User from "../../domain/User";
+import User from "../../../domain/User";
 import FinishChangePassword, {
-  CouldNotCompleteRequest,
-  Dependencies,
   InputData,
-  InvalidNewPassword,
   InvalidResetPasswordToken,
+  CouldNotCompleteRequest,
   UserNotFound,
-} from "./interface";
+  InvalidNewPassword,
+} from "../interface";
+import Dependencies from "./Dependencies";
 
 export default function buildFinishChangePassword(
   deps: Dependencies

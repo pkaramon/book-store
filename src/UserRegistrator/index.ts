@@ -1,3 +1,4 @@
+import Password from "../domain/Password";
 import User from "../domain/User";
 import Tools from "./Tools";
 import ValidationResult, { ErrorMessages } from "./ValidationResult";
@@ -48,7 +49,7 @@ export default abstract class UserRegistrator<
     }
   }
 
-  protected async createPassword(password: string) {
+  protected async createPassword(password: string): Promise<Password> {
     try {
       return await this.tools.makePassword({ password, isHashed: false });
     } catch (e) {

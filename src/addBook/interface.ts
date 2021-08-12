@@ -1,9 +1,4 @@
-import VerifyToken from "../auth/VerifyToken";
-import AsyncSchemaValidator from "../domain/AsyncSchemaValidator";
-import Book from "../domain/Book";
-import MakeBook from "../domain/Book/MakeBook";
 import { TableOfContentsData } from "../domain/Book/TableOfContents";
-import User from "../domain/User";
 
 export default interface AddBook {
   (data: InputData): Promise<{ bookId: string }>;
@@ -56,28 +51,4 @@ export class CouldNotCompleteRequest extends Error {
     super(message);
     this.name = CouldNotCompleteRequest.name;
   }
-}
-
-export interface Dependencies {
-  saveBook: SaveBook;
-  makeBook: MakeBook;
-  bookDataValidator: AsyncSchemaValidator<BookData>;
-  verifyUserToken: VerifyToken;
-  getUserById: GetUserById;
-}
-
-export interface SaveBook {
-  (book: Book): Promise<void>;
-}
-
-export interface CreateId {
-  (): string;
-}
-
-export interface IsCorrectEbookFile {
-  (path: string): Promise<boolean>;
-}
-
-export interface GetUserById {
-  (userId: string): Promise<User | null>;
 }

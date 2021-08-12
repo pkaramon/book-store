@@ -1,6 +1,3 @@
-import MakePassword from "../../domain/Password/MakePassword";
-import User from "../../domain/User";
-
 export default interface FinishChangePassword {
   (data: InputData): Promise<{ userId: string }>;
 }
@@ -34,22 +31,4 @@ export class InvalidNewPassword extends Error {
   ) {
     super(`invalid password: ${password}`);
   }
-}
-
-export interface Dependencies {
-  verifyResetPasswordToken: VerifyResetPasswordToken;
-  validateRawPassword: (password: string) => {
-    password: string;
-    isValid: boolean;
-    errorMessages: string[];
-  };
-  getUserById: (id: string) => Promise<User | null>;
-  saveUser: (u: User) => Promise<void>;
-  makePassword: MakePassword;
-}
-
-interface VerifyResetPasswordToken {
-  (token: string): Promise<
-    { isValid: true; userId: string } | { isValid: false }
-  >;
 }
