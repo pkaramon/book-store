@@ -1,6 +1,6 @@
 import Password from "../domain/Password";
 import User from "../domain/User";
-import Tools from "./Tools";
+import Dependencies from "./Tools";
 import ValidationResult, { ErrorMessages } from "./ValidationResult";
 
 export { ValidationResult, ErrorMessages };
@@ -8,7 +8,7 @@ export { ValidationResult, ErrorMessages };
 export default abstract class UserRegistrator<
   UserData extends { email: string }
 > {
-  constructor(private tools: Tools) {}
+  constructor(private deps: Dependencies) {}
 
   async registerUser(data: UserData) {
     await this.checkIfEmailIsAlreadyTaken(data.email);
@@ -27,7 +27,7 @@ export default abstract class UserRegistrator<
 
   private async tryToGetUserByEmail(email: string) {
     try {
-      return await this.tools.getUserByEmail(email);
+      return await this.deps.getUserByEmail(email);
     } catch (e) {
       throw this.createUnexpectedFailureError("could not get user by email", e);
     }
@@ -35,7 +35,7 @@ export default abstract class UserRegistrator<
 
   private async save(u: User) {
     try {
-      await this.tools.saveUser(u);
+      await this.deps.saveUser(u);
     } catch (e) {
       throw this.createUnexpectedFailureError("could not save user", e);
     }
@@ -43,7 +43,7 @@ export default abstract class UserRegistrator<
 
   private async tryToNotifyUser(u: User) {
     try {
-      await this.tools.notifyUser(u);
+      await this.deps.notifyUser(u);
     } catch {
       // silencing errors is desired in this case
     }
@@ -51,7 +51,7 @@ export default abstract class UserRegistrator<
 
   protected async createPassword(password: string): Promise<Password> {
     try {
-      return await this.tools.makePassword({ password, isHashed: false });
+      return await this.deps.makePassword({ password, isHashed: false });
     } catch (e) {
       throw this.createUnexpectedFailureError("could not hash password", e);
     }

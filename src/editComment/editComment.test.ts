@@ -13,7 +13,7 @@ import {
 } from "../__test_helpers__";
 import buildEditComment from "./imp";
 import Dependencies from "./imp/Dependencies";
-import {
+import EditComment, {
   CommentNotFound,
   CouldNotCompleteRequest,
   InvalidNewCommentContent,
@@ -23,12 +23,15 @@ import {
 const userDb = new InMemoryUserDb();
 const commentDb = new InMemoryCommentDb();
 const tm = new FakeTokenManager();
-const buildEditCommentHelper = createBuildHelper(buildEditComment, {
-  verifyUserAuthToken: tm.verifyToken,
-  commentContentValidator: new CommentContentValidatorImp(),
-  getCommentById: commentDb.getById,
-  saveComment: commentDb.save,
-});
+const buildEditCommentHelper = createBuildHelper<Dependencies, EditComment>(
+  buildEditComment,
+  {
+    verifyUserAuthToken: tm.verifyToken,
+    commentContentValidator: new CommentContentValidatorImp(),
+    getCommentById: commentDb.getById,
+    saveComment: commentDb.save,
+  }
+);
 const editComment = buildEditCommentHelper({});
 
 const authorId = "101";
@@ -219,9 +222,7 @@ async function expectToThrowCouldNotCompleteRequestGivenDeps(
   deps: Partial<Dependencies>,
   errorData: { message: string; originalError: any }
 ) {
-  const editComment = buildEditCommentHelper({
-    ...deps,
-  });
+  const editComment = buildEditCommentHelper(deps);
   await expectThrownErrorToMatch(
     () => editComment({ userAuthToken, commentId, commentContent: {} }),
     {

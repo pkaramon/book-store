@@ -1,17 +1,16 @@
 import CommentContentValidator, {
-  MaybePromise,
   ValidationResult,
 } from "./CommentContentValidator";
 
 export default class CommentContentValidatorImp extends CommentContentValidator {
-  validateTitle(title: string): MaybePromise<ValidationResult<string>> {
+  validateTitle(title: string): ValidationResult<string> {
     title = title.trim();
     const helper = new ValidationHelper(title);
     if (title.length === 0) helper.addErrorMessage("title cannot be empty");
     return helper.toValidationResult();
   }
 
-  validateBody(body: string): MaybePromise<ValidationResult<string>> {
+  validateBody(body: string): ValidationResult<string> {
     body = body.trim();
     const helper = new ValidationHelper(body);
     if (body.length === 0) helper.addErrorMessage("body cannot be empty");
@@ -19,7 +18,7 @@ export default class CommentContentValidatorImp extends CommentContentValidator 
   }
 
   private static STARS = new Set([1, 2, 3, 4, 5]);
-  validateStars(stars: number): MaybePromise<ValidationResult<number>> {
+  validateStars(stars: number): ValidationResult<number> {
     const helper = new ValidationHelper(stars);
     if (!CommentContentValidatorImp.STARS.has(stars))
       helper.addErrorMessage("stars must be an integer between 1 and 5");
