@@ -36,7 +36,9 @@ let adminAuthToken: string;
 beforeEach(async () => {
   bookDb.clear();
   userDb.clear();
-  await bookDb.save(await getFakeBook({ id: bookId }));
+  await bookDb.save(
+    await getFakeBook({ id: bookId, status: BookStatus.notPublished })
+  );
   await userDb.save(await getFakeAdmin({ id: adminId }));
   await userDb.save(await getFakePlainUser({ id: plainUserId }));
   adminAuthToken = await tm.createTokenFor(adminId);

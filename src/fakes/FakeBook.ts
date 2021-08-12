@@ -5,7 +5,7 @@ import makeBook from "./makeBook";
 export default async function getFakeBook(newBookInfo?: Partial<BookInfo>) {
   return await makeBook({
     id: "1",
-    status: BookStatus.notPublished,
+    status: BookStatus.published,
     price: new Price("USD", 300),
     title: "t",
     description: "d",
