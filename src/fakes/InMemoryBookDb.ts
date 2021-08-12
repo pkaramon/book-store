@@ -10,6 +10,8 @@ export default class InMemoryBookDb {
     this.deleteById = this.deleteById.bind(this);
     this.getById = this.getById.bind(this);
     this.getBooksWithAuthors = this.getBooksWithAuthors.bind(this);
+    this.getBooksAndAuthorsWithMatchingTitle =
+      this.getBooksAndAuthorsWithMatchingTitle.bind(this);
   }
 
   async save(book: Book) {
@@ -35,6 +37,20 @@ export default class InMemoryBookDb {
         const author = (await getUserById(book.info.authorId)) as BookAuthor;
         return { book, author };
       })
+    );
+  }
+
+  async getBooksAndAuthorsWithMatchingTitle(
+    getUserById: (userId: string) => Promise<User | null>,
+    titleRegex: RegExp
+  ) {
+    const books = Array.from(this.books.values());
+    const searched = books.filter((b) => titleRegex.test(b.info.title));
+    return Promise.all(
+      searched.map(async (b) => ({
+        book: b,
+        author: (await getUserById(b.info.authorId)) as BookAuthor,
+      }))
     );
   }
 
