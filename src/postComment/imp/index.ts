@@ -2,6 +2,7 @@ import { CommentInfoWithOptionalId } from "../../domain/Comment/MakeComment";
 import Comment, { CommentContent } from "../../domain/Comment";
 import PostComment, {
   BookNotFound,
+  BookNotPublished,
   CouldNotCompleteRequest,
   InputData,
   InvalidCommentContent,
@@ -10,20 +11,17 @@ import PostComment, {
 } from "../interface";
 import Customer from "../../domain/Customer";
 import Dependencies from "./Dependencies";
+import Book, { BookStatus } from "../../domain/Book";
 
 export default function buildPostComment(deps: Dependencies): PostComment {
   async function postComment(data: InputData) {
     const userId = await deps.verifyUserAuthToken(data.userAuthToken);
     await verifyUser(userId);
     const bookId = data.comment.bookId;
-    await checkIfBookExists(bookId);
+    const book = await getBook(bookId);
+    checkIfBookIsPublished(book);
     const commentContent = await validateCommentContent(data.comment);
-    const comment = await tryToCreateComment({
-      bookId,
-      authorId: userId,
-      postedAt: deps.now(),
-      ...commentContent,
-    });
+    const comment = await createComment({ bookId, userId, commentContent });
     await save(comment);
     return generateResponse(comment);
   }
@@ -44,9 +42,15 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     }
   }
 
-  async function checkIfBookExists(bookId: string) {
+  async function getBook(bookId: string) {
     const book = await tryToGetBook(bookId);
     if (book === null) throw new BookNotFound(bookId);
+    return book;
+  }
+
+  function checkIfBookIsPublished(book: Book) {
+    if (book.info.status === BookStatus.notPublished)
+      throw new BookNotPublished(book.info.id);
   }
 
   async function tryToGetBook(bookId: string) {
@@ -65,6 +69,19 @@ export default function buildPostComment(deps: Dependencies): PostComment {
         result.invalidProperties
       );
     return result.content;
+  }
+
+  async function createComment(data: {
+    bookId: string;
+    userId: string;
+    commentContent: CommentContent;
+  }) {
+    return await tryToCreateComment({
+      bookId: data.bookId,
+      authorId: data.userId,
+      postedAt: deps.now(),
+      ...data.commentContent,
+    });
   }
 
   async function tryToCreateComment(info: CommentInfoWithOptionalId) {

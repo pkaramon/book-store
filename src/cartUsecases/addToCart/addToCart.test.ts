@@ -1,5 +1,5 @@
 import VerifyToken, { TokenVerificationError } from "../../auth/VerifyToken";
-import Book from "../../domain/Book";
+import Book, { BookStatus } from "../../domain/Book";
 import BookAuthor from "../../domain/BookAuthor";
 import getFakeBook from "../../fakes/FakeBook";
 import getFakeBookAuthor from "../../fakes/FakeBookAuthor";
@@ -19,6 +19,7 @@ import {
   InvalidUserType,
   BookNotFound,
   CouldNotCompleteRequest,
+  BookWasNotPublished,
 } from "./interface";
 
 const userDb = new InMemoryUserDb();
@@ -88,6 +89,18 @@ test("book does not exist", async () => {
     () => addToCart({ userAuthToken, bookId: "123321" }),
     { class: BookNotFound, bookId: "123321" }
   );
+});
+
+test("book is not published", async () => {
+  const bookId = Math.random().toString();
+  await bookDb.save(
+    await getFakeBook({ id: bookId, status: BookStatus.notPublished })
+  );
+
+  await expectThrownErrorToMatch(() => addToCart({ userAuthToken, bookId }), {
+    class: BookWasNotPublished,
+    bookId,
+  });
 });
 
 test("adding book to cart", async () => {

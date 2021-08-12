@@ -37,4 +37,11 @@ export class BookNotFound extends Error {
   }
 }
 
+export class BookWasNotPublished extends Error {
+  constructor(public readonly bookId: string) {
+    super();
+    this.name = BookWasNotPublished.name;
+  }
+}
+
 export { UserNotFound, InvalidUserType, CouldNotCompleteRequest };

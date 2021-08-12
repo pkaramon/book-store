@@ -1,4 +1,5 @@
 import VerifyToken from "../../../auth/VerifyToken";
+import Book, { BookStatus } from "../../../domain/Book";
 import Cart from "../../../domain/Cart";
 import Customer from "../../../domain/Customer";
 import CartRelatedAction from "../../CartRelatedAction";
@@ -7,6 +8,7 @@ import {
   InputData,
   BookNotFound,
   CouldNotCompleteRequest,
+  BookWasNotPublished,
 } from "../interface";
 import Dependencies, { Database } from "./Dependencies";
 
@@ -17,22 +19,33 @@ export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
     }
 
     protected async modifyCart(data: InputData, _: Customer, cart: Cart) {
-      await this.checkIfBookExists(data.bookId);
+      const book = await this.getBook(data.bookId);
+      this.checkIfBookWasPublished(book);
       cart.add(data.bookId);
     }
 
-    async checkIfBookExists(bookId: string) {
+    async getBook(bookId: string) {
       const book = await this.tryToGetBook(bookId);
-      if (book === null) throw new BookNotFound(bookId);
-      return book;
+      this.checkIfBookWasFound(bookId, book);
+      return book!;
     }
 
-    async tryToGetBook(bookId: string) {
+    private async tryToGetBook(bookId: string) {
       try {
         return await this.db.getBookById(bookId);
       } catch (e) {
         throw new CouldNotCompleteRequest("could not get book from db", e);
       }
+    }
+
+    private checkIfBookWasFound(bookId: string, book: Book | null) {
+      if (book === null) throw new BookNotFound(bookId);
+    }
+
+    private checkIfBookWasPublished(book: Book) {
+      if (book.info.status === BookStatus.notPublished)
+        throw new BookWasNotPublished(book.info.id);
+      return book;
     }
   }
 

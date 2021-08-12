@@ -1,10 +1,13 @@
 import { expectThrownErrorToMatch, rejectWith } from ".";
 
-export default async function checkIfItHandlesUnexpectedFailures<Deps>(data: {
-  buildFunction: (deps: Deps) => (...args: any) => any;
+export default async function checkIfItHandlesUnexpectedFailures<
+  Deps,
+  BuildFunction extends (deps: Deps) => (...args: any) => any
+>(data: {
+  buildFunction: BuildFunction;
   defaultDependencies: Deps;
   dependenciesToTest: (keyof Deps)[];
-  validInputData: Parameters<ReturnType<typeof data.buildFunction>>;
+  validInputData: Parameters<ReturnType<BuildFunction>>;
   expectedErrorClass: new (...args: any) => any;
   beforeEach?: Function;
 }) {
@@ -14,10 +17,12 @@ export default async function checkIfItHandlesUnexpectedFailures<Deps>(data: {
       ...data.defaultDependencies,
       [dependencyName]: rejectWith(new Error("err")),
     });
-
-    await expectThrownErrorToMatch(() => usecase(...data.validInputData), {
-      class: data.expectedErrorClass,
-      originalError: new Error("err"),
-    });
+    await expectThrownErrorToMatch(
+      () => usecase(...(data.validInputData as any)),
+      {
+        class: data.expectedErrorClass,
+        originalError: new Error("err"),
+      }
+    );
   }
 }

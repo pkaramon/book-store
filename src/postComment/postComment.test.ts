@@ -1,4 +1,5 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
+import { BookStatus } from "../domain/Book";
 import CommentContentValidatorImp from "../domain/CommentContentValidatorImp";
 import getFakeBook from "../fakes/FakeBook";
 import getFakeBookAuthor from "../fakes/FakeBookAuthor";
@@ -10,6 +11,7 @@ import InMemoryCommentDb from "../fakes/InMemoryCommentDb";
 import InMemoryUserDb from "../fakes/InMemoryUserDb";
 import makeComment from "../fakes/makeComment";
 import {
+  checkIfItHandlesUnexpectedFailures,
   createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
@@ -17,6 +19,7 @@ import {
 import buildPostComment from "./imp";
 import {
   BookNotFound,
+  BookNotPublished,
   CouldNotCompleteRequest,
   InputData,
   InvalidCommentContent,
@@ -29,16 +32,19 @@ const clock = new FakeClock({ now: new Date(2020, 1, 1) });
 const bookDb = new InMemoryBookDb();
 const userDb = new InMemoryUserDb();
 const commentDb = new InMemoryCommentDb();
-const buildPostCommentHelper = createBuildHelper(buildPostComment, {
+const dependencies = {
   getBookById: bookDb.getById,
   verifyUserAuthToken: tm.verifyToken,
   now: clock.now,
   getUserById: userDb.getById,
   makeComment,
-  saveBook: bookDb.save,
   saveComment: commentDb.save,
   commentContentValidator: new CommentContentValidatorImp(),
-});
+};
+const buildPostCommentHelper = createBuildHelper(
+  buildPostComment,
+  dependencies
+);
 const postComment = buildPostCommentHelper({});
 
 const commentorId = "101";
@@ -93,11 +99,22 @@ test("user does not exist", async () => {
 });
 
 test("book does not exist", async () => {
-  const err: BookNotFound = await getThrownError(() =>
-    postComment({ userAuthToken, comment: { ...comment, bookId: "123321" } })
+  await expectThrownErrorToMatch(
+    () =>
+      postComment({ userAuthToken, comment: { ...comment, bookId: "123321" } }),
+    { class: BookNotFound, bookId: "123321" }
   );
-  expect(err).toBeInstanceOf(BookNotFound);
-  expect(err.bookId).toBe("123321");
+});
+
+test("book is not published", async () => {
+  const bookId = Math.random().toString();
+  await bookDb.save(
+    await getFakeBook({ id: bookId, status: BookStatus.notPublished })
+  );
+  await expectThrownErrorToMatch(
+    () => postComment({ userAuthToken, comment: { ...comment, bookId } }),
+    { class: BookNotPublished, bookId: bookId }
+  );
 });
 
 describe("data validation", () => {
@@ -147,60 +164,19 @@ test("creating a comment", async () => {
   expect(createdComment).toMatchObject({ ...com.metadata, ...com.content });
 });
 
-test("makeComment has unexpected failure", async () => {
-  const commentError = new Error("comment err");
-  const postComment = buildPostCommentHelper({
-    makeComment: jest.fn().mockRejectedValue(commentError),
+test("unexpected failures from dependencies", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildPostComment,
+    dependenciesToTest: [
+      "makeComment",
+      "getBookById",
+      "saveComment",
+      "getUserById",
+    ],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
+    validInputData: [{ comment, userAuthToken }],
   });
-  await expectThrownErrorToMatch(
-    () => postComment({ comment, userAuthToken }),
-    {
-      class: CouldNotCompleteRequest,
-      message: "could not create comment",
-      originalError: commentError,
-    }
-  );
-});
-
-test("getBookById failure", async () => {
-  const postComment = buildPostCommentHelper({
-    getBookById: jest.fn().mockRejectedValue(new Error("db err")),
-  });
-  await expectThrownErrorToMatch(
-    () => postComment({ comment, userAuthToken }),
-    {
-      class: CouldNotCompleteRequest,
-      message: "could not get book from db",
-      originalError: new Error("db err"),
-    }
-  );
-});
-
-test("saveComment failure", async () => {
-  const postComment = buildPostCommentHelper({
-    saveComment: jest.fn().mockRejectedValue(new Error("save err")),
-  });
-  await expectThrownErrorToMatch(
-    () => postComment({ comment, userAuthToken }),
-    {
-      class: CouldNotCompleteRequest,
-      originalError: new Error("save err"),
-    }
-  );
-});
-
-test("getUserByIdfailure", async () => {
-  const postComment = buildPostCommentHelper({
-    getUserById: jest.fn().mockRejectedValue(new Error("db err")),
-  });
-  await expectThrownErrorToMatch(
-    () => postComment({ comment, userAuthToken }),
-    {
-      class: CouldNotCompleteRequest,
-      message: "could not get user from db",
-      originalError: new Error("db err"),
-    }
-  );
 });
 
 async function expectValidationToFail(

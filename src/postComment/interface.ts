@@ -33,6 +33,13 @@ export class BookNotFound extends Error {
   }
 }
 
+export class BookNotPublished extends Error {
+  constructor(public bookId: string) {
+    super();
+    this.name = BookNotPublished.name;
+  }
+}
+
 export class InvalidUserType extends Error {
   constructor(public userId: string) {
     super();
