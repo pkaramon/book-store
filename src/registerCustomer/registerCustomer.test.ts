@@ -1,10 +1,10 @@
 import Customer from "../domain/Customer";
 import buildPlainUserSchema from "../domain/PlainUserSchema";
 import SchemaValidator from "../domain/SchemaValidator";
-import FakeClock from "../fakes/FakeClock";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import makeCustomer from "../fakes/makeCustomer";
-import makePassword from "../fakes/makePassword";
+import clock from "../testObjects/clock";
+import makeCustomer from "../testObjects/makeCustomer";
+import makePassword from "../testObjects/makePassword";
+import userDb from "../testObjects/userDb";
 import {
   createBuildHelper,
   expectThrownErrorToMatch,
@@ -108,10 +108,11 @@ describe("validation", () => {
   });
 
   test("birthDate cannot be in the future", async () => {
-    await expectValidationToPass("birthDate", fakeClock.now());
+    clock.setCurrentTime(new Date(2020, 1, 1));
+    await expectValidationToPass("birthDate", clock.now());
     await expectValidationToFail(
       "birthDate",
-      new Date("2020-01-02"),
+      new Date(2020, 1, 2),
       "birthDate cannot be in the future"
     );
   });
@@ -121,11 +122,11 @@ test("saving customer to db", async () => {
   const { userId } = await registerCustomer({ ...validData });
   expect(typeof userId).toBe("string");
   const u = (await userDb.getById(userId)) as Customer;
-  expect(u?.info.id).toEqual(userId);
-  expect(u?.info.firstName).toEqual(validData.firstName);
-  expect(u?.info.lastName).toEqual(validData.lastName);
-  expect(u?.info.email).toEqual(validData.email);
-  expect(u?.info.birthDate).toEqual(validData.birthDate);
+  expect(u.info.id).toEqual(userId);
+  expect(u.info.firstName).toEqual(validData.firstName);
+  expect(u.info.lastName).toEqual(validData.lastName);
+  expect(u.info.email).toEqual(validData.email);
+  expect(u.info.birthDate).toEqual(validData.birthDate);
 });
 
 test("email must be unique", async () => {
@@ -197,12 +198,10 @@ test("getUserByEmail throws error", async () => {
   });
 });
 
-const userDb = new InMemoryUserDb();
-const fakeClock = new FakeClock({ now: new Date("2020-01-1") });
 const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
   saveUser: userDb.save,
   notifyUser: jest.fn().mockResolvedValue(undefined),
-  userDataValidator: new SchemaValidator(buildPlainUserSchema(fakeClock.now)),
+  userDataValidator: new SchemaValidator(buildPlainUserSchema(clock)),
   getUserByEmail: userDb.getByEmail,
   makeCustomer,
   makePassword,
@@ -217,7 +216,8 @@ const validData: InputData = {
 };
 
 beforeEach(() => {
-  userDb.clear();
+  clock.resetClock();
+  userDb.TEST_ONLY_clear();
 });
 
 async function expectValidationToFail<K extends keyof InputData>(
@@ -239,5 +239,5 @@ async function expectValidationToPass<K extends keyof InputData>(
   value: InputData[K]
 ) {
   await registerCustomer({ ...validData, [key]: value });
-  userDb.clear();
+  userDb.TEST_ONLY_clear();
 }

@@ -1,6 +1,6 @@
-import getFakePlainUser from "../../fakes/FakePlainUser";
-import InMemoryUserDb from "../../fakes/InMemoryUserDb";
-import makePassword from "../../fakes/makePassword";
+import getFakePlainUser from "../../testObjects/FakePlainUser";
+import makePassword from "../../testObjects/makePassword";
+import userDb from "../../testObjects/userDb";
 import { createBuildHelper, getThrownError } from "../../__test_helpers__";
 import buildFinishChangePassword from "./imp";
 import {
@@ -17,10 +17,9 @@ const verifyResetPasswordToken = jest.fn(async (token: string) => {
   return { isValid: false as false };
 });
 
-const userDb = new InMemoryUserDb();
 const oldPassword = "123Aa!@#";
 beforeEach(async () => {
-  userDb.clear();
+  userDb.TEST_ONLY_clear();
   await userDb.save(
     await getFakePlainUser({
       id: "1",

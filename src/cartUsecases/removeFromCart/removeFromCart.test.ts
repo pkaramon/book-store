@@ -1,13 +1,13 @@
 import { TokenVerificationError } from "../../auth/VerifyToken";
 import BookAuthor from "../../domain/BookAuthor";
-import getFakeAdmin from "../../fakes/FakeAdmin";
-import getFakeBook from "../../fakes/FakeBook";
-import getFakeBookAuthor from "../../fakes/FakeBookAuthor";
-import getFakeCustomer from "../../fakes/FakeCustomer";
-import FakeTokenManager from "../../fakes/FakeTokenManager";
-import InMemoryBookDb from "../../fakes/InMemoryBookDb";
-import InMemoryCartDb from "../../fakes/InMemoryCartDb";
-import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import bookDb from "../../testObjects/bookDb";
+import cartDb from "../../testObjects/cartDb";
+import getFakeAdmin from "../../testObjects/FakeAdmin";
+import getFakeBook from "../../testObjects/FakeBook";
+import getFakeBookAuthor from "../../testObjects/FakeBookAuthor";
+import getFakeCustomer from "../../testObjects/FakeCustomer";
+import tokenManager from "../../testObjects/tokenManager";
+import userDb from "../../testObjects/userDb";
 import {
   checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
@@ -20,18 +20,12 @@ import {
   UserNotFound,
 } from "./interface";
 
-const cartDb = new InMemoryCartDb();
-const tm = new FakeTokenManager();
-const userDb = new InMemoryUserDb();
-const bookDb = new InMemoryBookDb();
-
 const dependencies = {
-  verifyUserToken: tm.verifyToken,
-  saveCart: cartDb.saveCart,
+  verifyUserToken: tokenManager.verifyToken,
+  saveCart: cartDb.save,
   getUserById: userDb.getById,
   getCartFor: cartDb.getCartFor,
-  getBooksWithAuthors: (ids: string[]) =>
-    bookDb.getBooksWithAuthors(userDb.getById, ids),
+  getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
 };
 const removeFromCart = buildRemoveFromCart(dependencies);
 
@@ -40,11 +34,11 @@ const bookId = "101";
 const bookAuthorId = "2";
 let userAuthToken: string;
 beforeEach(async () => {
-  cartDb.clear();
-  bookDb.clear();
-  userDb.clear();
+  await cartDb.TEST_ONLY_clear();
+  await bookDb.TEST_ONLY_clear();
+  await userDb.TEST_ONLY_clear();
 
-  userAuthToken = await tm.createTokenFor(customerId);
+  userAuthToken = await tokenManager.createTokenFor(customerId);
 
   await userDb.save(await getFakeCustomer({ id: customerId }));
   await userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
@@ -53,7 +47,7 @@ beforeEach(async () => {
 
   const cart = await cartDb.getCartFor(customerId);
   cart.add(bookId);
-  await cartDb.saveCart(cart);
+  await cartDb.save(cart);
 });
 
 test("user auth token is invalid", async () => {
@@ -66,7 +60,10 @@ test("user auth token is invalid", async () => {
 test("user does not exist", async () => {
   await expectThrownErrorToMatch(
     async () =>
-      removeFromCart({ bookId, userAuthToken: await tm.createTokenFor("123") }),
+      removeFromCart({
+        bookId,
+        userAuthToken: await tokenManager.createTokenFor("123"),
+      }),
     { class: UserNotFound, userId: "123" }
   );
 });
@@ -78,7 +75,7 @@ test("user is not a customer", async () => {
     async () =>
       removeFromCart({
         bookId,
-        userAuthToken: await tm.createTokenFor(adminId),
+        userAuthToken: await tokenManager.createTokenFor(adminId),
       }),
     { class: InvalidUserType, wanted: "Customer", received: "Admin" }
   );
@@ -100,7 +97,7 @@ test("dependency failures", async () => {
       const cart = await cartDb.getCartFor(customerId);
       cart.clear();
       cart.add(bookId);
-      await cartDb.saveCart(cart);
+      await cartDb.save(cart);
     },
   });
 });
@@ -131,7 +128,7 @@ test("usecase output", async () => {
   cart.clear();
   cart.add(book.info.id);
   cart.add(secondBook.info.id);
-  await cartDb.saveCart(cart);
+  await cartDb.save(cart);
 
   const response = await removeFromCart({
     bookId: book.info.id,

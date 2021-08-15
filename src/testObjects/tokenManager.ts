@@ -1,6 +1,12 @@
-import { TokenVerificationError } from "../auth/VerifyToken";
+import {TokenVerificationError} from "../auth/VerifyToken";
 
-export default class FakeTokenManager {
+interface TokenManager {
+  createTokenFor(userId: string): Promise<string>;
+  verifyToken(token: string): Promise<string>;
+}
+
+// token format ***<userId>***
+class FakeTokenManager {
   constructor() {
     this.createTokenFor = this.createTokenFor.bind(this);
     this.verifyToken = this.verifyToken.bind(this);
@@ -26,3 +32,6 @@ export default class FakeTokenManager {
     return token.replace(/\*/g, "");
   }
 }
+
+const tokenManager: TokenManager = new FakeTokenManager()
+export default tokenManager

@@ -1,6 +1,6 @@
-import getFakePlainUser from "../../fakes/FakePlainUser";
-import InMemoryUserDb from "../../fakes/InMemoryUserDb";
-import makePassword from "../../fakes/makePassword";
+import getFakePlainUser from "../../testObjects/FakePlainUser";
+import makePassword from "../../testObjects/makePassword";
+import userDb from "../../testObjects/userDb";
 import { createBuildHelper, getThrownError } from "../../__test_helpers__";
 import buildInitChangePassword from "./imp";
 import {
@@ -9,7 +9,6 @@ import {
   TokenCouldNotBeDeliver,
 } from "./interface";
 
-const userDb = new InMemoryUserDb();
 const deliverResetPasswordTokenToUser = jest.fn().mockResolvedValue(undefined);
 const createResetPasswordToken = jest.fn(
   async (userData: { email: string; userId: string }) => {
@@ -29,7 +28,7 @@ const initChangePassword = buildInitChangePasswordHelper({});
 beforeEach(async () => {
   deliverResetPasswordTokenToUser.mockClear();
   createResetPasswordToken.mockClear();
-  userDb.clear();
+  userDb.TEST_ONLY_clear();
   await userDb.save(
     await getFakePlainUser({
       id: "1",

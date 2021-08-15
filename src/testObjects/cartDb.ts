@@ -1,11 +1,17 @@
 import Cart from "../domain/Cart";
 
-export default class InMemoryCartDb {
+interface CartDb {
+  getCartFor(customerId: string): Promise<Cart>;
+  save(cart: Cart): Promise<void>;
+  TEST_ONLY_clear(): Promise<void>;
+}
+
+class InMemoryCartDb {
   private carts = new Map<string, Cart>();
 
   constructor() {
     this.getCartFor = this.getCartFor.bind(this);
-    this.saveCart = this.saveCart.bind(this);
+    this.save = this.save.bind(this);
   }
 
   async getCartFor(customerId: string): Promise<Cart> {
@@ -15,11 +21,14 @@ export default class InMemoryCartDb {
     return cart;
   }
 
-  async saveCart(cart: Cart): Promise<void> {
+  async save(cart: Cart): Promise<void> {
     this.carts.set(cart.info.customerId, cart);
   }
 
-  clear() {
+  async TEST_ONLY_clear() {
     this.carts.clear();
   }
 }
+
+const cartDb: CartDb = new InMemoryCartDb();
+export default cartDb;

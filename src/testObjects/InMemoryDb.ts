@@ -5,7 +5,7 @@ export default abstract class InMemoryDb<T> {
     this.save = this.save.bind(this);
     this.deleteById = this.deleteById.bind(this);
     this.getById = this.getById.bind(this);
-    this.clear = this.clear.bind(this);
+    this.TEST_ONLY_clear = this.TEST_ONLY_clear.bind(this);
   }
 
   async save(item: T) {
@@ -22,7 +22,7 @@ export default abstract class InMemoryDb<T> {
 
   protected abstract getId(item: T): string;
 
-  clear() {
+  async TEST_ONLY_clear() {
     this.items = new Map();
   }
 }

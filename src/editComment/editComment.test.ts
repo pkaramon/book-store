@@ -1,11 +1,11 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import { CommentContent } from "../domain/Comment";
 import CommentContentValidatorImp from "../domain/CommentContentValidatorImp";
-import getFakeComment from "../fakes/FakeComment";
-import getFakeCustomer from "../fakes/FakeCustomer";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryCommentDb from "../fakes/InMemoryCommentDb";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import commentDb from "../testObjects/commentDb";
+import getFakeComment from "../testObjects/FakeComment";
+import getFakeCustomer from "../testObjects/FakeCustomer";
+import tokenManager from "../testObjects/tokenManager";
+import userDb from "../testObjects/userDb";
 import {
   createBuildHelper,
   expectThrownErrorToMatch,
@@ -20,13 +20,10 @@ import EditComment, {
   NotCommentAuthor,
 } from "./interface";
 
-const userDb = new InMemoryUserDb();
-const commentDb = new InMemoryCommentDb();
-const tm = new FakeTokenManager();
 const buildEditCommentHelper = createBuildHelper<Dependencies, EditComment>(
   buildEditComment,
   {
-    verifyUserAuthToken: tm.verifyToken,
+    verifyUserAuthToken: tokenManager.verifyToken,
     commentContentValidator: new CommentContentValidatorImp(),
     getCommentById: commentDb.getById,
     saveComment: commentDb.save,
@@ -39,12 +36,12 @@ const ordinaryUserId = "2";
 const commentId = "10001";
 let userAuthToken: string;
 beforeEach(async () => {
-  userDb.clear();
-  commentDb.clear();
+  await userDb.TEST_ONLY_clear();
+  await commentDb.TEST_ONLY_clear();
   await userDb.save(await getFakeCustomer({ id: authorId }));
   await userDb.save(await getFakeCustomer({ id: ordinaryUserId }));
   await commentDb.save(await getFakeComment({ id: commentId, authorId }));
-  userAuthToken = await tm.createTokenFor(authorId);
+  userAuthToken = await tokenManager.createTokenFor(authorId);
 });
 
 test("userAuthToken is invalid", async () => {
@@ -75,7 +72,7 @@ test("user exists but is not the author of the comment", async () => {
   await expectThrownErrorToMatch(
     async () =>
       editComment({
-        userAuthToken: await tm.createTokenFor(ordinaryUserId),
+        userAuthToken: await tokenManager.createTokenFor(ordinaryUserId),
         commentId,
         commentContent: {},
       }),

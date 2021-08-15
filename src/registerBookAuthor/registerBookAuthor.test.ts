@@ -1,9 +1,10 @@
 import BookAuthor from "../domain/BookAuthor";
 import buildBookAuthorSchema from "../domain/BookAuthor/BookAuthorSchema";
 import SchemaValidator from "../domain/SchemaValidator";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import makeBookAuthor from "../fakes/makeBookAuthor";
-import makePassword from "../fakes/makePassword";
+import clock from "../testObjects/clock";
+import makeBookAuthor from "../testObjects/makeBookAuthor";
+import makePassword from "../testObjects/makePassword";
+import userDb from "../testObjects/userDb";
 import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
 import nCharString from "../__test_helpers__/nCharString";
 import buildRegisterBookAuthor from "./imp";
@@ -14,7 +15,6 @@ import {
   InvalidBookAuthorRegisterData,
 } from "./interface";
 
-const userDb = new InMemoryUserDb();
 const notifyUser = jest.fn().mockResolvedValue(undefined);
 const dependencies = {
   notifyUser,
@@ -22,11 +22,11 @@ const dependencies = {
   makePassword: makePassword,
   makeBookAuthor: makeBookAuthor,
   getUserByEmail: userDb.getByEmail,
-  userDataValidator: new SchemaValidator(buildBookAuthorSchema()) as any,
+  userDataValidator: new SchemaValidator(buildBookAuthorSchema(clock)),
 };
 const registerBookAuthor = buildRegisterBookAuthor(dependencies);
 beforeEach(() => {
-  userDb.clear();
+  userDb.TEST_ONLY_clear();
   notifyUser.mockClear();
 });
 const validData: InputData = {

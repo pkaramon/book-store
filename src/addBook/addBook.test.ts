@@ -8,14 +8,10 @@ import {
   NotBookAuthor,
   UserNotFound,
 } from "./interface";
-import FakeClock from "../fakes/FakeClock";
-import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import FakeTokenManager from "../fakes/FakeTokenManager";
 import { TokenVerificationError } from "../auth/VerifyToken";
-import makeBook from "../fakes/makeBook";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import getFakeBookAuthor from "../fakes/FakeBookAuthor";
-import getFakePlainUser from "../fakes/FakePlainUser";
+import makeBook from "../testObjects/makeBook";
+import getFakeBookAuthor from "../testObjects/FakeBookAuthor";
+import getFakePlainUser from "../testObjects/FakePlainUser";
 import AsyncSchemaValidator from "../domain/AsyncSchemaValidator";
 import buildBookSchema from "../domain/Book/BookSchema";
 import {
@@ -25,22 +21,22 @@ import {
   DidNotThrowError,
 } from "../__test_helpers__";
 import Dependencies from "./imp/Dependencies";
+import clock from "../testObjects/clock";
+import userDb from "../testObjects/userDb";
+import bookDb from "../testObjects/bookDb";
+import tokenManager from "../testObjects/tokenManager";
 
-const bookDb = new InMemoryBookDb();
-const userDb = new InMemoryUserDb();
 const isCorrectEbookFile = jest.fn(async (filePath: string) =>
   filePath.startsWith("books/")
 );
 
-const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
-const tokenManager = new FakeTokenManager();
 const dependencies: Dependencies = {
   saveBook: bookDb.save,
   makeBook,
   verifyUserToken: tokenManager.verifyToken,
   getUserById: userDb.getById,
   bookDataValidator: new AsyncSchemaValidator(
-    buildBookSchema({ isCorrectEbookFile, now })
+    buildBookSchema({ isCorrectEbookFile, clock })
   ),
 };
 const addBook = buildAddBook(dependencies);
@@ -70,9 +66,9 @@ beforeEach(async () => {
     },
   };
 
-  bookDb.clear();
+  await bookDb.TEST_ONLY_clear();
+  clock.resetClock();
   isCorrectEbookFile.mockClear();
-
   await userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
 });
 
@@ -165,7 +161,8 @@ describe("validation", () => {
   });
 
   test("whenCreated cannot be in the future", async () => {
-    await expectValidationToPass("whenCreated", now());
+    clock.setCurrentTime(new Date(2020, 1, 1));
+    await expectValidationToPass("whenCreated", clock.now());
     await expectValidationToFail(
       "whenCreated",
       new Date(2020, 1, 2),

@@ -79,7 +79,7 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     return await tryToCreateComment({
       bookId: data.bookId,
       authorId: data.userId,
-      postedAt: deps.now(),
+      postedAt: deps.clock.now(),
       ...data.commentContent,
     });
   }

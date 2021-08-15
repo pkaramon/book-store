@@ -1,7 +1,7 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import getFakeBook from "../fakes/FakeBook";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryBookDb from "../fakes/InMemoryBookDb";
+import bookDb from "../testObjects/bookDb";
+import getFakeBook from "../testObjects/FakeBook";
+import tokenManager from "../testObjects/tokenManager";
 import {
   createBuildHelper,
   expectThrownErrorToMatch,
@@ -11,12 +11,10 @@ import {
 import buildDeleteBook from "./imp";
 import { BookNotFound, CouldNotCompleteRequest, NotAllowed } from "./interface";
 
-const db = new InMemoryBookDb();
-const tm = new FakeTokenManager();
 const buildDeleteBookHelper = createBuildHelper(buildDeleteBook, {
-  getBookById: db.getById,
-  deleteBookById: db.deleteById,
-  verifyUserAuthToken: tm.verifyToken,
+  getBookById: bookDb.getById,
+  deleteBookById: bookDb.deleteById,
+  verifyUserAuthToken: tokenManager.verifyToken,
 });
 const deleteBook = buildDeleteBookHelper({});
 
@@ -24,9 +22,9 @@ const authorId = "100";
 let authorAuthToken: string;
 const bookId = "1";
 beforeEach(async () => {
-  authorAuthToken = await tm.createTokenFor(authorId);
-  db.clear();
-  await db.save(await getFakeBook({ id: bookId, authorId }));
+  authorAuthToken = await tokenManager.createTokenFor(authorId);
+  await bookDb.TEST_ONLY_clear();
+  await bookDb.save(await getFakeBook({ id: bookId, authorId }));
 });
 
 test("book does not exist", async () => {
@@ -40,7 +38,7 @@ test("book does not exist", async () => {
 test("user is not the author of the book", async () => {
   await expectThrownErrorToMatch(
     async () =>
-      deleteBook({ userAuthToken: await tm.createTokenFor("123321"), bookId }),
+      deleteBook({ userAuthToken: await tokenManager.createTokenFor("123321"), bookId }),
     { class: NotAllowed, userId: "123321", bookId }
   );
 });
@@ -67,7 +65,7 @@ test("deleteById throws error", async () => {
 
 test("deleting the book", async () => {
   await deleteBook({ userAuthToken: authorAuthToken, bookId });
-  expect(await db.getById(bookId)).toBeNull();
+  expect(await bookDb.getById(bookId)).toBeNull();
 });
 
 test("user token is invalid", async () => {

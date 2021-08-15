@@ -1,15 +1,13 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import getFakeAdmin from "../fakes/FakeAdmin";
-import getFakeBookAuthor from "../fakes/FakeBookAuthor";
-import getFakeCustomer from "../fakes/FakeCustomer";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import getFakeAdmin from "../testObjects/FakeAdmin";
+import getFakeBookAuthor from "../testObjects/FakeBookAuthor";
+import getFakeCustomer from "../testObjects/FakeCustomer";
+import tokenManager from "../testObjects/tokenManager";
+import userDb from "../testObjects/userDb";
 import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
 import buildDeleteUser from "./imp";
 import { UserAlreadyDeleted, CouldNotCompleteRequest } from "./interface";
 
-const tm = new FakeTokenManager();
-const userDb = new InMemoryUserDb();
 const deleteUserById = async (userId: string) => {
   const exists = (await userDb.getById(userId)) !== null;
   if (!exists) return { wasDeleted: false };
@@ -18,12 +16,12 @@ const deleteUserById = async (userId: string) => {
 };
 
 const deleteUser = buildDeleteUser({
-  verifyUserToken: tm.verifyToken,
+  verifyUserToken: tokenManager.verifyToken,
   deleteUserById,
 });
 
 beforeEach(async () => {
-  userDb.clear();
+  userDb.TEST_ONLY_clear();
   userDb.save(await getFakeAdmin({ id: "1" }));
   userDb.save(await getFakeCustomer({ id: "2" }));
   userDb.save(await getFakeBookAuthor({ id: "3" }));
@@ -38,7 +36,7 @@ test("user auth token is invalid", async () => {
 
 test("user does not exist", async () => {
   await expectThrownErrorToMatch(
-    async () => deleteUser({ userAuthToken: await tm.createTokenFor("100") }),
+    async () => deleteUser({ userAuthToken: await tokenManager.createTokenFor("100") }),
     { class: UserAlreadyDeleted, userId: "100" }
   );
 });
@@ -47,7 +45,7 @@ test("deleting the user", async () => {
   for (const userId of ["1", "2", "3"]) {
     expect(await userDb.getById(userId)).not.toBeNull();
     const { userId: deletedUserId } = await deleteUser({
-      userAuthToken: await tm.createTokenFor(userId),
+      userAuthToken: await tokenManager.createTokenFor(userId),
     });
     expect(deletedUserId).toEqual(userId);
     expect(await userDb.getById(userId)).toBeNull();
@@ -56,11 +54,11 @@ test("deleting the user", async () => {
 
 test("deleteUserById failure", async () => {
   const deleteUser = buildDeleteUser({
-    verifyUserToken: tm.verifyToken,
+    verifyUserToken: tokenManager.verifyToken,
     deleteUserById: rejectWith(new Error("db err")),
   });
   await expectThrownErrorToMatch(
-    async () => deleteUser({ userAuthToken: await tm.createTokenFor("1") }),
+    async () => deleteUser({ userAuthToken: await tokenManager.createTokenFor("1") }),
     {
       class: CouldNotCompleteRequest,
       message: "could not delete the user",

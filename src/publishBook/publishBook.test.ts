@@ -1,10 +1,10 @@
 import { BookStatus } from "../domain/Book";
-import getFakeAdmin from "../fakes/FakeAdmin";
-import getFakeBook from "../fakes/FakeBook";
-import getFakePlainUser from "../fakes/FakePlainUser";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import bookDb from "../testObjects/bookDb";
+import getFakeAdmin from "../testObjects/FakeAdmin";
+import getFakeBook from "../testObjects/FakeBook";
+import getFakePlainUser from "../testObjects/FakePlainUser";
+import tokenManager from "../testObjects/tokenManager";
+import userDb from "../testObjects/userDb";
 import {
   createBuildHelper,
   expectThrownErrorToMatch,
@@ -19,14 +19,11 @@ import {
   UserIsNotAdmin,
 } from "./interface";
 
-const tm = new FakeTokenManager();
-const bookDb = new InMemoryBookDb();
-const userDb = new InMemoryUserDb();
 const buildPublishBookHelper = createBuildHelper(buildPublishBook, {
   getBookById: bookDb.getById,
   saveBook: bookDb.save,
   getUserById: userDb.getById,
-  verifyAdminAuthToken: tm.verifyToken,
+  verifyAdminAuthToken: tokenManager.verifyToken,
 });
 const publishBook = buildPublishBookHelper({});
 const adminId = "1001";
@@ -34,14 +31,14 @@ const plainUserId = "1002";
 const bookId = "1";
 let adminAuthToken: string;
 beforeEach(async () => {
-  bookDb.clear();
-  userDb.clear();
+  await bookDb.TEST_ONLY_clear();
+  await userDb.TEST_ONLY_clear();
   await bookDb.save(
     await getFakeBook({ id: bookId, status: BookStatus.notPublished })
   );
   await userDb.save(await getFakeAdmin({ id: adminId }));
   await userDb.save(await getFakePlainUser({ id: plainUserId }));
-  adminAuthToken = await tm.createTokenFor(adminId);
+  adminAuthToken = await tokenManager.createTokenFor(adminId);
 });
 
 test("book does not exist", async () => {
@@ -55,7 +52,7 @@ test("book does not exist", async () => {
 test("admin does not exist", async () => {
   const err: AdminNotFound = await getThrownError(async () =>
     publishBook({
-      adminAuthToken: await tm.createTokenFor("123321"),
+      adminAuthToken: await tokenManager.createTokenFor("123321"),
       bookId,
     })
   );
@@ -66,7 +63,7 @@ test("user is not an admin", async () => {
   await expectThrownErrorToMatch(
     async () =>
       publishBook({
-        adminAuthToken: await tm.createTokenFor(plainUserId),
+        adminAuthToken: await tokenManager.createTokenFor(plainUserId),
         bookId,
       }),
     { class: UserIsNotAdmin, userId: plainUserId }

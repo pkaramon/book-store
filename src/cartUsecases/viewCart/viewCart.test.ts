@@ -1,14 +1,14 @@
 import { TokenVerificationError } from "../../auth/VerifyToken";
 import { BookStatus } from "../../domain/Book";
 import Price from "../../domain/Price";
-import getFakeAdmin from "../../fakes/FakeAdmin";
-import getFakeBook from "../../fakes/FakeBook";
-import getFakeBookAuthor from "../../fakes/FakeBookAuthor";
-import getFakeCustomer from "../../fakes/FakeCustomer";
-import FakeTokenManager from "../../fakes/FakeTokenManager";
-import InMemoryBookDb from "../../fakes/InMemoryBookDb";
-import InMemoryCartDb from "../../fakes/InMemoryCartDb";
-import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import bookDb from "../../testObjects/bookDb";
+import cartDb from "../../testObjects/cartDb";
+import getFakeAdmin from "../../testObjects/FakeAdmin";
+import getFakeBook from "../../testObjects/FakeBook";
+import getFakeBookAuthor from "../../testObjects/FakeBookAuthor";
+import getFakeCustomer from "../../testObjects/FakeCustomer";
+import tokenManager from "../../testObjects/tokenManager";
+import userDb from "../../testObjects/userDb";
 import {
   checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
@@ -20,17 +20,12 @@ import {
   UserNotFound,
 } from "./interface";
 
-const tm = new FakeTokenManager();
-const userDb = new InMemoryUserDb();
-const bookDb = new InMemoryBookDb();
-const cartDb = new InMemoryCartDb();
 const dependencies = {
-  saveCart: cartDb.saveCart,
+  saveCart: cartDb.save,
   getCartFor: cartDb.getCartFor,
   getUserById: userDb.getById,
-  verifyUserToken: tm.verifyToken,
-  getBooksWithAuthors: (bookIds: string[]) =>
-    bookDb.getBooksWithAuthors(userDb.getById, bookIds),
+  verifyUserToken: tokenManager.verifyToken,
+  getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
 };
 const viewCart = buildViewCart(dependencies);
 
@@ -43,7 +38,8 @@ test("user auth token is invalid", async () => {
 
 test("user does not exist", async () => {
   await expectThrownErrorToMatch(
-    async () => viewCart({ userAuthToken: await tm.createTokenFor("123") }),
+    async () =>
+      viewCart({ userAuthToken: await tokenManager.createTokenFor("123") }),
     { class: UserNotFound, userId: "123" }
   );
 });
@@ -52,7 +48,8 @@ test("user is not a customer", async () => {
   const adminId = Math.random().toString();
   await userDb.save(await getFakeAdmin({ id: adminId }));
   await expectThrownErrorToMatch(
-    async () => viewCart({ userAuthToken: await tm.createTokenFor(adminId) }),
+    async () =>
+      viewCart({ userAuthToken: await tokenManager.createTokenFor(adminId) }),
     { class: InvalidUserType, wanted: "Customer", received: "Admin" }
   );
 });
@@ -81,9 +78,9 @@ test("viewing the cart", async () => {
   const cart = await cartDb.getCartFor(customerId);
   cart.add("b1");
   cart.add("b2");
-  await cartDb.saveCart(cart);
+  await cartDb.save(cart);
 
-  const customerToken = await tm.createTokenFor(customerId);
+  const customerToken = await tokenManager.createTokenFor(customerId);
   const { cartItems } = await viewCart({ userAuthToken: customerToken });
   expect(cartItems).toHaveLength(2);
   const cartItem = cartItems[1];
@@ -107,7 +104,9 @@ test("dependency failures", async () => {
       "getBooksWithAuthors",
       "getCartFor",
     ],
-    validInputData: [{ userAuthToken: await tm.createTokenFor(userId) }],
+    validInputData: [
+      { userAuthToken: await tokenManager.createTokenFor(userId) },
+    ],
     expectedErrorClass: CouldNotCompleteRequest,
   });
 });

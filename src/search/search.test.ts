@@ -1,17 +1,15 @@
 import { BookStatus } from "../domain/Book";
-import getFakeBook from "../fakes/FakeBook";
-import getFakeBookAuthor from "../fakes/FakeBookAuthor";
-import InMemoryBookDb from "../fakes/InMemoryBookDb";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
+import bookDb from "../testObjects/bookDb";
+import getFakeBook from "../testObjects/FakeBook";
+import getFakeBookAuthor from "../testObjects/FakeBookAuthor";
+import userDb from "../testObjects/userDb";
 import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
 import buildSearch from "./imp";
 import { CouldNotCompleteRequest } from "./interface";
 
-const bookDb = new InMemoryBookDb();
-const userDb = new InMemoryUserDb();
 const search = buildSearch({
-  getBooksAndAuthorsWithMatchingTitle: (titleRegex) =>
-    bookDb.getBooksAndAuthorsWithMatchingTitle(userDb.getById, titleRegex),
+  getBooksAndAuthorsWithMatchingTitle:
+    bookDb.getBooksAndAuthorsWithMatchingTitle.bind(bookDb),
 });
 
 const bookAuthorData = {
@@ -20,8 +18,8 @@ const bookAuthorData = {
   lastName: "Smith",
 };
 beforeEach(async () => {
-  bookDb.clear();
-  userDb.clear();
+  await bookDb.TEST_ONLY_clear();
+  await userDb.TEST_ONLY_clear();
   await userDb.save(await getFakeBookAuthor({ ...bookAuthorData }));
 });
 

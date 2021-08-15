@@ -1,3 +1,4 @@
+import Clock from "./Clock";
 import { Schema, ValidationResult } from "./SchemaValidator";
 
 export interface UserData {
@@ -8,14 +9,12 @@ export interface UserData {
   birthDate: Date;
 }
 
-export default function buildPlainUserSchema(
-  now: () => Date = () => new Date()
-): Schema<UserData> {
+export default function buildPlainUserSchema(clock: Clock): Schema<UserData> {
   return {
     firstName: validateFirstName,
     lastName: validateLastName,
     email: validateEmail,
-    birthDate: (v) => validateBirthDate(now, v),
+    birthDate: (v) => validateBirthDate(clock, v),
     password: validatePassword,
   };
 }
@@ -123,9 +122,9 @@ function containsAnySpecialCharacters(str: string) {
   return false;
 }
 
-function validateBirthDate(now: () => Date, birthDate: Date) {
+function validateBirthDate(clock: Clock, birthDate: Date) {
   const res = new ValidationResult("birthDate", birthDate);
-  if (birthDate.getTime() > now().getTime())
+  if (birthDate.getTime() > clock.now().getTime())
     res.addErrorMessage("birthDate cannot be in the future");
   return res;
 }

@@ -1,3 +1,4 @@
+import Clock from "../Clock";
 import buildPlainUserSchema, { UserData } from "../PlainUserSchema";
 import { Schema, ValidationResult } from "../SchemaValidator";
 
@@ -6,9 +7,9 @@ export interface BookAuthorData extends UserData {
 }
 
 export default function buildBookAuthorSchema(
-  now: () => Date = () => new Date()
+  clock: Clock
 ): Schema<BookAuthorData> {
-  const baseSchema = buildPlainUserSchema(now);
+  const baseSchema = buildPlainUserSchema(clock);
   return {
     ...baseSchema,
     bio: validateBio,

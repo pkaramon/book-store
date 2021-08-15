@@ -1,4 +1,5 @@
 import { AsyncSchema } from "../AsyncSchemaValidator";
+import Clock from "../Clock";
 import { ValidationResult } from "../SchemaValidator";
 import { TableOfContentsData } from "./TableOfContents";
 
@@ -13,18 +14,18 @@ export interface BookData {
   filePath: string;
 }
 
+export interface Tools {
+  isCorrectEbookFile: IsCorrectEbookFile;
+  clock: Clock;
+}
+
 export interface IsCorrectEbookFile {
   (path: string): Promise<boolean>;
 }
 
-export interface Tools {
-  isCorrectEbookFile: IsCorrectEbookFile;
-  now?: () => Date;
-}
-
 export default function buildBookSchema({
   isCorrectEbookFile,
-  now = () => new Date(),
+  clock,
 }: Tools): AsyncSchema<BookData> {
   return {
     title: validateTitle,
@@ -33,7 +34,7 @@ export default function buildBookSchema({
     filePath: (v) => validateFilePath(isCorrectEbookFile, v),
     sampleFilePath: (v) => validateSampleFilePath(isCorrectEbookFile, v),
     numberOfPages: validateNumberOfPages,
-    whenCreated: (v) => validateWhenCreated(now, v),
+    whenCreated: (v) => validateWhenCreated(clock, v),
     tableOfContents: (v) => noop("tableOfContents", v),
   };
 }
@@ -76,9 +77,9 @@ function validateNumberOfPages(numberOfPages: number) {
   return res;
 }
 
-function validateWhenCreated(now: () => Date, whenCreated: Date) {
+function validateWhenCreated(clock: Clock, whenCreated: Date) {
   const res = new ValidationResult("whenCreated", whenCreated);
-  if (whenCreated.getTime() > now().getTime())
+  if (whenCreated.getTime() > clock.now().getTime())
     res.addErrorMessage("whenCreated cannot be in the future");
   return res;
 }

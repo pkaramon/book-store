@@ -1,13 +1,13 @@
 import VerifyToken, { TokenVerificationError } from "../../auth/VerifyToken";
 import Book, { BookStatus } from "../../domain/Book";
 import BookAuthor from "../../domain/BookAuthor";
-import getFakeBook from "../../fakes/FakeBook";
-import getFakeBookAuthor from "../../fakes/FakeBookAuthor";
-import getFakeCustomer from "../../fakes/FakeCustomer";
-import FakeTokenManager from "../../fakes/FakeTokenManager";
-import InMemoryBookDb from "../../fakes/InMemoryBookDb";
-import InMemoryCartDb from "../../fakes/InMemoryCartDb";
-import InMemoryUserDb from "../../fakes/InMemoryUserDb";
+import bookDb from "../../testObjects/bookDb";
+import cartDb from "../../testObjects/cartDb";
+import getFakeBook from "../../testObjects/FakeBook";
+import getFakeBookAuthor from "../../testObjects/FakeBookAuthor";
+import getFakeCustomer from "../../testObjects/FakeCustomer";
+import tokenManager from "../../testObjects/tokenManager";
+import userDb from "../../testObjects/userDb";
 import {
   expectThrownErrorToMatch,
   checkIfItHandlesUnexpectedFailures,
@@ -22,20 +22,14 @@ import {
   BookWasNotPublished,
 } from "./interface";
 
-const userDb = new InMemoryUserDb();
-const bookDb = new InMemoryBookDb();
-const cartDb = new InMemoryCartDb();
-const tm = new FakeTokenManager();
-
 const dependencies = {
-  verifyUserToken: tm.verifyToken,
+  verifyUserToken: tokenManager.verifyToken,
   db: {
     getUserById: userDb.getById,
     getBookById: bookDb.getById,
-    getBooksWithAuthors: (ids: string[]) =>
-      bookDb.getBooksWithAuthors(userDb.getById, ids),
+    getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
     getCartFor: cartDb.getCartFor,
-    saveCart: cartDb.saveCart,
+    saveCart: cartDb.save,
   },
 };
 const addToCart = buildAddToCart(dependencies);
@@ -46,10 +40,10 @@ const secondBookId = "102";
 const bookAuthorId = "2";
 let userAuthToken: string;
 beforeEach(async () => {
-  userDb.clear();
-  bookDb.clear();
-  cartDb.clear();
-  userAuthToken = await tm.createTokenFor(userId);
+  await userDb.TEST_ONLY_clear();
+  await bookDb.TEST_ONLY_clear();
+  await cartDb.TEST_ONLY_clear();
+  userAuthToken = await tokenManager.createTokenFor(userId);
   await userDb.save(await getFakeCustomer({ id: userId }));
   await userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
   await bookDb.save(await getFakeBook({ id: bookId, authorId: bookAuthorId }));
@@ -68,7 +62,10 @@ test("user auth token is invalid", async () => {
 test("user does not exist", async () => {
   await expectThrownErrorToMatch(
     async () =>
-      addToCart({ userAuthToken: await tm.createTokenFor("123"), bookId }),
+      addToCart({
+        userAuthToken: await tokenManager.createTokenFor("123"),
+        bookId,
+      }),
     { class: UserNotFound, userId: "123" }
   );
 });
@@ -77,7 +74,7 @@ test("user is not a customer", async () => {
   await expectThrownErrorToMatch(
     async () =>
       addToCart({
-        userAuthToken: await tm.createTokenFor(bookAuthorId),
+        userAuthToken: await tokenManager.createTokenFor(bookAuthorId),
         bookId,
       }),
     { class: InvalidUserType, wanted: "Customer", received: "BookAuthor" }

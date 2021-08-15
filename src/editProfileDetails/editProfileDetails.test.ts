@@ -1,9 +1,6 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
 import { UserInfo } from "../domain/User";
-import FakeClock from "../fakes/FakeClock";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import makeCustomer from "../fakes/makeCustomer";
+import makeCustomer from "../testObjects/makeCustomer";
 import { createBuildHelper, getThrownError } from "../__test_helpers__";
 import buildEditProfileDetails from "./imp";
 import {
@@ -13,15 +10,18 @@ import {
   ToUpdate,
   InvalidUserType,
 } from "./interface";
-import makePassword from "../fakes/makePassword";
-import getFakePlainUser from "../fakes/FakePlainUser";
+import makePassword from "../testObjects/makePassword";
+import getFakePlainUser from "../testObjects/FakePlainUser";
 import SchemaValidator from "../domain/SchemaValidator";
 import buildPlainUserSchema from "../domain/PlainUserSchema";
+import clock from "../testObjects/clock";
+import userDb from "../testObjects/userDb";
+import tokenManager from "../testObjects/tokenManager";
 
 test("user does not exist", async () => {
   const err: UserNotFound = await getThrownError(async () =>
     editProfileDetails({
-      userAuthToken: await tm.createTokenFor("123321"),
+      userAuthToken: await tokenManager.createTokenFor("123321"),
       toUpdate: { firstName: "Tom" },
     })
   );
@@ -161,17 +161,14 @@ test("saveUser failure", async () => {
   expect(err.message).toEqual("could not save the user to db");
 });
 
-const tm = new FakeTokenManager();
-const userDb = new InMemoryUserDb();
-const now = new FakeClock({ now: new Date(2020, 1, 1) }).now;
-const userDataValidator = new SchemaValidator(buildPlainUserSchema(now));
+const userDataValidator = new SchemaValidator(buildPlainUserSchema(clock));
 const buildEditProfileDetailsHelper = createBuildHelper(
   buildEditProfileDetails,
   {
     getUserById: userDb.getById,
     saveUser: userDb.save,
     userDataValidator,
-    verifyUserAuthToken: tm.verifyToken,
+    verifyUserAuthToken: tokenManager.verifyToken,
   }
 );
 const editProfileDetails = buildEditProfileDetailsHelper({});
@@ -190,8 +187,8 @@ beforeEach(async () => {
     }),
     birthDate: new Date(2000, 1, 1),
   };
-  userAuthToken = await tm.createTokenFor(userInfo.id);
-  userDb.clear();
+  userAuthToken = await tokenManager.createTokenFor(userInfo.id);
+  userDb.TEST_ONLY_clear();
   await userDb.save(await makeCustomer(userInfo));
 });
 
@@ -202,7 +199,7 @@ async function expectValidationToFail<K extends keyof ToUpdate>(
 ) {
   try {
     await editProfileDetails({
-      userAuthToken: await tm.createTokenFor(userInfo.id),
+      userAuthToken: await tokenManager.createTokenFor(userInfo.id),
       toUpdate: { [key]: value },
     });
     throw "should have thrown";

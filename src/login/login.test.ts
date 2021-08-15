@@ -1,7 +1,5 @@
-import getFakeCustomer from "../fakes/FakeCustomer";
-import FakeTokenManager from "../fakes/FakeTokenManager";
-import InMemoryUserDb from "../fakes/InMemoryUserDb";
-import makePassword from "../fakes/makePassword";
+import getFakeCustomer from "../testObjects/FakeCustomer";
+import makePassword from "../testObjects/makePassword";
 import {
   checkIfItHandlesUnexpectedFailures,
   createBuildHelper,
@@ -10,6 +8,8 @@ import {
 } from "../__test_helpers__";
 import buildLogin from "./imp";
 import { CouldNotCompleteRequest, InvalidLoginData } from "./interface";
+import userDb from "../testObjects/userDb";
+import tokenManager from "../testObjects/tokenManager";
 
 test("email is not correct", async () => {
   await expect(
@@ -55,8 +55,6 @@ test("unexpected failure when comparing passwords", async () => {
   });
 });
 
-const userDb = new InMemoryUserDb();
-const tokenManager = new FakeTokenManager();
 const dependencies = {
   getUserByEmail: userDb.getByEmail,
   createToken: tokenManager.createTokenFor,
