@@ -53,6 +53,7 @@ export default abstract class CartRelatedAction<
   private async checkIfUserWasFound(userId: string, user: User | null) {
     if (user === null) throw new UserNotFound(userId);
   }
+
   private async checkIfUserIsCustomer(user: User) {
     if (!(user instanceof Customer))
       throw new InvalidUserType("Customer", user.constructor.name);
@@ -81,7 +82,7 @@ export default abstract class CartRelatedAction<
   ): Promise<Result> {
     return {
       cartItems: await this.createCartItems(cart.info.bookIds),
-    } as any as Result;
+    } as unknown as Result;
   }
 
   private async createCartItems(bookIds: string[]) {

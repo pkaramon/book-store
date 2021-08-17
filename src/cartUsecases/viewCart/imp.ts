@@ -2,7 +2,6 @@ import VerifyToken from "../../auth/VerifyToken";
 import Book from "../../domain/Book";
 import BookAuthor from "../../domain/BookAuthor";
 import Cart from "../../domain/Cart";
-import Customer from "../../domain/Customer";
 import User from "../../domain/User";
 import CartRelatedAction from "../CartRelatedAction";
 import ViewCart, { Response, InputData } from "./interface";

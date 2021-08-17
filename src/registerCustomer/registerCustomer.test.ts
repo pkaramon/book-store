@@ -82,8 +82,10 @@ describe("validation", () => {
       "A234567+",
       "A234567_",
     ];
-    for (const pass of goodPasswords)
+    for (const pass of goodPasswords) {
+      await userDb.TEST_ONLY_clear();
       await expectValidationToPass("password", pass);
+    }
   });
 
   test("password must contain at least 1 uppercase character", async () => {

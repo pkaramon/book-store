@@ -16,8 +16,9 @@ export default abstract class InMemoryDb<T> {
     return this.items.get(itemId) ?? null;
   }
 
-  async deleteById(itemId: string): Promise<void> {
-    this.items.delete(itemId);
+  async deleteById(itemId: string): Promise<{ wasDeleted: boolean }> {
+    const wasDeleted = this.items.delete(itemId);
+    return { wasDeleted };
   }
 
   protected abstract getId(item: T): string;

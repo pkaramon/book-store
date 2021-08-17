@@ -77,24 +77,34 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
 
   private async fromDocumentToCustomer(doc: CustomerDocument) {
     return await this.tools.makeCustomer({
-      ...doc,
       id: doc._id,
+      birthDate: doc.birthDate,
+      lastName: doc.lastName,
+      firstName: doc.firstName,
+      email: doc.email,
       password: await this.getPasswordFromDocument(doc),
     });
   }
 
   private async fromDocumentToBookAuthor(doc: BookAuthorDocument) {
     return await this.tools.makeBookAuthor({
-      ...doc,
       id: doc._id,
+      birthDate: doc.birthDate,
+      lastName: doc.lastName,
+      firstName: doc.firstName,
+      email: doc.email,
+      bio: doc.bio,
       password: await this.getPasswordFromDocument(doc),
     });
   }
 
   private async fromDocumentToAdmin(doc: AdminDocument) {
     return await this.tools.makeAdmin({
-      ...doc,
       id: doc._id,
+      birthDate: doc.birthDate,
+      lastName: doc.lastName,
+      firstName: doc.firstName,
+      email: doc.email,
       password: await this.getPasswordFromDocument(doc),
     });
   }
@@ -102,7 +112,6 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   private async getPasswordFromDocument(doc: UserDocument) {
     return await this.tools.makePassword({
       password: doc.hashedPassword,
-
       isHashed: true,
     });
   }

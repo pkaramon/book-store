@@ -28,11 +28,6 @@ export default class MongoUserDb {
     private gateway: UserToDocumentGateway
   ) {}
 
-  public async TESTS_ONLY_clear() {
-    const client = await this.getClient();
-    await client.db(this.data.databaseName).dropDatabase();
-  }
-
   public async getById(id: string): Promise<User | null> {
     return await this.findOne({ _id: id });
   }
@@ -57,14 +52,19 @@ export default class MongoUserDb {
     return { wasDeleted: result.deletedCount === 1 };
   }
 
-  protected async findOne(filter: mongo.Filter<UserDocument>) {
+  public async TEST_ONLY_clear() {
+    const collection = await this.getCollection();
+    await collection.deleteMany({});
+  }
+
+  private async findOne(filter: mongo.Filter<UserDocument>) {
     const collection = await this.getCollection();
     const document = await collection.findOne(filter);
     if (document === undefined) return null;
     return this.gateway.fromDocumentToUser(document);
   }
 
-  protected async getCollection() {
+  private async getCollection() {
     const client = await this.getClient();
     const db = client.db(this.data.databaseName);
     return db.collection<UserDocument>(this.data.collectionName);

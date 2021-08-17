@@ -7,5 +7,6 @@ export default interface VerifyToken {
 export class TokenVerificationError extends Error {
   constructor(public readonly invalidToken: string) {
     super(`invalid token: ${invalidToken}`);
+    this.name = TokenVerificationError.name;
   }
 }

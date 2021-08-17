@@ -12,14 +12,14 @@ export default class AsyncSchemaValidator<
   public async validateData(
     data: DataStruct
   ): Promise<DataValidationResult<DataStruct>> {
-    const validationResultsPromises = this.allDataKeys.map((k) =>
+    const resultPromises = this.allDataKeys.map((k) =>
       this.validateProperty(k, data[k])
     );
-    const validationResults = await Promise.all(validationResultsPromises);
+    const results = await Promise.all(resultPromises);
     return {
-      isValid: this.computeIsValid(validationResults),
-      value: this.constructCleanedData(validationResults),
-      errorMessages: this.constructErrorMessages(validationResults),
+      isValid: this.computeIsValid(results),
+      value: this.constructCleanedData(results),
+      errorMessages: this.constructErrorMessages(results),
     };
   }
 

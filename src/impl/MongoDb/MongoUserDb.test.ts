@@ -27,7 +27,7 @@ const userDb = new MongoUserDb(
 );
 
 beforeEach(async () => {
-  await userDb.TESTS_ONLY_clear();
+  await userDb.TEST_ONLY_clear();
 });
 
 test("user does not exist", async () => {

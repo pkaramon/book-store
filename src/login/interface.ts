@@ -10,6 +10,7 @@ export interface LoginData {
 export class CouldNotCompleteRequest extends Error {
   constructor(public reason: string, public originalError: any) {
     super(reason);
+    this.name = CouldNotCompleteRequest.name;
   }
 }
 

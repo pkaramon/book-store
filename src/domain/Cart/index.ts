@@ -1,3 +1,7 @@
+import CartInfo from "./CartInfo";
+
+export { CartInfo };
+
 export default class Cart {
   constructor(private _info: CartInfo) {}
 
@@ -24,9 +28,4 @@ export default class Cart {
   clear() {
     this._info.bookIds = [];
   }
-}
-
-export interface CartInfo {
-  customerId: string;
-  bookIds: string[];
 }

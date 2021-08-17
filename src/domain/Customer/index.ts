@@ -11,7 +11,4 @@ export default class Customer extends CustomUser {
   get info() {
     return this.customerInfo;
   }
-  get password() {
-    return this.customerInfo.password;
-  }
 }

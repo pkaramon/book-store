@@ -8,7 +8,9 @@ export default abstract class User {
     return this.info.password;
   }
 
-  abstract changePassword(value: Password): void;
+  changePassword(value: Password): void {
+    this.info.password = value;
+  }
 }
 
 export { UserInfo };

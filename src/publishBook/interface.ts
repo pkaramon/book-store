@@ -38,5 +38,6 @@ export class AlreadyPublished extends Error {
 export class CouldNotCompleteRequest extends Error {
   constructor(message: string, public originalError: any) {
     super(message);
+    this.name = CouldNotCompleteRequest.name;
   }
 }

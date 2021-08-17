@@ -33,6 +33,7 @@ export interface CartItemOutput {
 export class BookNotInCart extends Error {
   constructor(public bookId: string) {
     super(`book with id :${bookId} does not exist in th`);
+    this.name = BookNotInCart.name;
   }
 }
 

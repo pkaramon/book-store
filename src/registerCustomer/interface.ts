@@ -16,17 +16,20 @@ export class InvalidCustomerRegisterData extends Error {
     public readonly invalidProperties: (keyof InputData)[]
   ) {
     super();
+    this.name = InvalidCustomerRegisterData.name;
   }
 }
 
 export class EmailAlreadyTaken extends Error {
   constructor(public readonly email: string) {
     super();
+    this.name = EmailAlreadyTaken.name;
   }
 }
 
 export class CouldNotCompleteRequest extends Error {
   constructor(reason: string, public originalError: any) {
     super(reason);
+    this.name = CouldNotCompleteRequest.name;
   }
 }
