@@ -2,7 +2,7 @@ import getFakePlainUser from "../../testObjects/FakePlainUser";
 import makePassword from "../../testObjects/makePassword";
 import resetPasswordTokenManager from "../../testObjects/resetPasswordTokenManager";
 import userDb from "../../testObjects/userDb";
-import { createBuildHelper, getThrownError } from "../../__test_helpers__";
+import { getThrownError } from "../../__test_helpers__";
 import buildFinishChangePassword from "./imp";
 import {
   CouldNotCompleteRequest,

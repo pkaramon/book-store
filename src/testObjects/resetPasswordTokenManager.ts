@@ -2,6 +2,7 @@ import ResetPasswordTokenManager, {
   MaybePromise,
 } from "../changePassword/ResetPasswordTokenManager";
 
+// fake token format <UserId> <Email>
 class FakeResetPasswordTokenManager implements ResetPasswordTokenManager {
   create(info: {
     userId: string;
@@ -15,7 +16,8 @@ class FakeResetPasswordTokenManager implements ResetPasswordTokenManager {
     token: string
   ): MaybePromise<{ isValid: boolean; userId?: string | undefined }> {
     const [userId, email] = token.split(" ");
-    if (email.includes("@")) return { isValid: true, userId };
+    if (email !== undefined && email.includes("@"))
+      return { isValid: true, userId };
     return { isValid: false as false };
   }
 }

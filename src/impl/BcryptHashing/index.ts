@@ -2,6 +2,8 @@ import MakePassword from "../../domain/Password/MakePassword";
 import bcrypt from "bcrypt";
 import Password from "../../domain/Password";
 
+const SALT_ROUNDS = 10;
+
 export const makeBcryptPassword: MakePassword = async ({
   isHashed,
   password,
@@ -9,7 +11,7 @@ export const makeBcryptPassword: MakePassword = async ({
   if (isHashed) {
     return new BcryptPassword(password);
   } else {
-    const hashed = await bcrypt.hash(password, 5);
+    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     return new BcryptPassword(hashed);
   }
 };
