@@ -11,7 +11,7 @@ export interface GetUserByEmail {
 }
 
 export interface CreateResetPasswordToken {
-  (userInfo: { userId: string; email: string }, expiresInMinutes: number):
+  (info: { userId: string; email: string; expiresInMinutes: number }):
     | Promise<string>
     | string;
 }

@@ -37,6 +37,7 @@ const validateRawPassword = (password: string) => {
     : ["password must have at least 8 characters"];
   return { isValid, errorMessages, password };
 };
+
 const buildFinishChangePasswordHelper = createBuildHelper(
   buildFinishChangePassword,
   {
@@ -83,17 +84,6 @@ test("token is valid but new password does not pass requirements", async () => {
   ]);
 });
 
-test("saveUser has a failure", async () => {
-  const finishChangePassword = buildFinishChangePasswordHelper({
-    saveUser: jest.fn().mockRejectedValue(new Error("save err")),
-  });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    finishChangePassword(validData)
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("save err"));
-});
-
 test("changing the password", async () => {
   const { userId } = await finishChangePassword(validData);
   expect(userId).toEqual("1");
@@ -108,4 +98,15 @@ test("user does not exist, ie maybe it got deleted after calling initChangePassw
   );
   expect(err).toBeInstanceOf(UserNotFound);
   expect(err.userId).toEqual("2");
+});
+
+test("saveUser has a failure", async () => {
+  const finishChangePassword = buildFinishChangePasswordHelper({
+    saveUser: jest.fn().mockRejectedValue(new Error("save err")),
+  });
+  const err: CouldNotCompleteRequest = await getThrownError(() =>
+    finishChangePassword(validData)
+  );
+  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
+  expect(err.originalError).toEqual(new Error("save err"));
 });

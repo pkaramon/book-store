@@ -35,10 +35,11 @@ export default function buildInitChangePassword({
 
   async function createTokenFor(user: User) {
     try {
-      return await createResetPasswordToken(
-        { email: user.info.email, userId: user.info.id },
-        5
-      );
+      return await createResetPasswordToken({
+        email: user.info.email,
+        userId: user.info.id,
+        expiresInMinutes: 5,
+      });
     } catch (e) {
       throw new CouldNotCompleteRequest(
         "could not create reset password token",

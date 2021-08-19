@@ -30,6 +30,10 @@ beforeEach(async () => {
   await userDb.TEST_ONLY_clear();
 });
 
+afterAll(async () => {
+  await userDb.closeCollection();
+});
+
 test("user does not exist", async () => {
   expect(await userDb.getById("1")).toBe(null);
 });

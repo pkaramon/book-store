@@ -10,10 +10,9 @@ export default interface Dependencies {
 }
 
 export interface VerifyResetPasswordToken {
-  (token: string): Promise<
-    { isValid: true; userId: string } | { isValid: false }
-  >;
+  (token: string): Promise<{ isValid: boolean; userId?: string }>;
 }
+
 
 export interface ValidateRawPassword {
   (password: string): {

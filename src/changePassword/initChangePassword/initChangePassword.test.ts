@@ -11,8 +11,8 @@ import {
 
 const deliverResetPasswordTokenToUser = jest.fn().mockResolvedValue(undefined);
 const createResetPasswordToken = jest.fn(
-  async (userData: { email: string; userId: string }) => {
-    return `${userData.userId} ${userData.email}`;
+  async (info: { email: string; userId: string }) => {
+    return `${info.userId} ${info.email}`;
   }
 );
 const buildInitChangePasswordHelper = createBuildHelper(
@@ -62,10 +62,11 @@ test("passed email does exist in our db", async () => {
     email: "bob@mail.com",
   });
   expect(resetPasswordToken).toEqual("1 bob@mail.com");
-  expect(createResetPasswordToken).toHaveBeenCalledWith(
-    { email: "bob@mail.com", userId: "1" },
-    5
-  );
+  expect(createResetPasswordToken).toHaveBeenCalledWith({
+    email: "bob@mail.com",
+    userId: "1",
+    expiresInMinutes: 5,
+  });
   expect(deliverResetPasswordTokenToUser).toHaveBeenCalledWith(
     await userDb.getByEmail("bob@mail.com"),
     resetPasswordToken

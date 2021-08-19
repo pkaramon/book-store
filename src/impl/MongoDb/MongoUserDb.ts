@@ -52,6 +52,11 @@ export default class MongoUserDb {
     return { wasDeleted: result.deletedCount === 1 };
   }
 
+  public async closeCollection() {
+    const client = await this.getClient();
+    await client.close();
+  }
+
   public async TEST_ONLY_clear() {
     const collection = await this.getCollection();
     await collection.deleteMany({});
@@ -73,10 +78,8 @@ export default class MongoUserDb {
   private async getClient() {
     if (this.client === undefined) {
       const client = new mongo.MongoClient(this.data.uri);
-      await client.connect();
-      return client;
-    } else {
-      return this.client;
+      this.client = await client.connect();
     }
+    return this.client;
   }
 }

@@ -25,7 +25,7 @@ export default function buildFinishChangePassword(
   async function verifyResetPasswordToken(token: string) {
     const res = await verifyToken(token);
     if (!res.isValid) throw new InvalidResetPasswordToken(token);
-    return res.userId;
+    return res.userId!;
   }
 
   async function verifyToken(token: string) {
