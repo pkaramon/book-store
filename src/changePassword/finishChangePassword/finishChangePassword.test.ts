@@ -1,5 +1,6 @@
 import getFakePlainUser from "../../testObjects/FakePlainUser";
 import makePassword from "../../testObjects/makePassword";
+import resetPasswordTokenManager from "../../testObjects/resetPasswordTokenManager";
 import userDb from "../../testObjects/userDb";
 import { createBuildHelper, getThrownError } from "../../__test_helpers__";
 import buildFinishChangePassword from "./imp";
@@ -10,14 +11,8 @@ import {
   UserNotFound,
 } from "./interface";
 
-// fake token format: <userId> <email>
-const verifyResetPasswordToken = jest.fn(async (token: string) => {
-  const [userId, email] = token.split(" ");
-  if (email.includes("@")) return { isValid: true, userId };
-  return { isValid: false as false };
-});
-
 const oldPassword = "123Aa!@#";
+let validData: { token: string; newPassword: string };
 beforeEach(async () => {
   userDb.TEST_ONLY_clear();
   await userDb.save(
@@ -27,6 +22,15 @@ beforeEach(async () => {
       password: await makePassword({ password: oldPassword, isHashed: false }),
     })
   );
+
+  validData = {
+    newPassword: "Pass123$",
+    token: await resetPasswordTokenManager.create({
+      userId: "1",
+      email: "bob@mail.com",
+      expiresInMinutes: 60,
+    }),
+  };
 });
 
 const validateRawPassword = (password: string) => {
@@ -38,21 +42,21 @@ const validateRawPassword = (password: string) => {
   return { isValid, errorMessages, password };
 };
 
-const buildFinishChangePasswordHelper = createBuildHelper(
-  buildFinishChangePassword,
-  {
-    verifyResetPasswordToken,
-    validateRawPassword,
-    getUserById: userDb.getById,
-    saveUser: userDb.save,
-    makePassword,
-  }
-);
-const finishChangePassword = buildFinishChangePasswordHelper({});
+const dependencies = {
+  verifyResetPasswordToken: resetPasswordTokenManager.verify.bind(
+    resetPasswordTokenManager
+  ),
+  validateRawPassword,
+  getUserById: userDb.getById,
+  saveUser: userDb.save,
+  makePassword,
+};
 
-const validData = { token: "1 bob@mail.com", newPassword: "Pass123$" };
+const finishChangePassword = buildFinishChangePassword(dependencies);
+
 test("verifyResetPasswordToken has a failure", async () => {
-  const finishChangePassword = buildFinishChangePasswordHelper({
+  const finishChangePassword = buildFinishChangePassword({
+    ...dependencies,
     verifyResetPasswordToken: jest
       .fn()
       .mockRejectedValue(new Error("token err")),
@@ -65,17 +69,17 @@ test("verifyResetPasswordToken has a failure", async () => {
 test("token is invalid", async () => {
   const err: InvalidResetPasswordToken = await getThrownError(() =>
     finishChangePassword({
-      token: "1 blablabla",
+      token: "blablabla",
       newPassword: validData.newPassword,
     })
   );
   expect(err).toBeInstanceOf(InvalidResetPasswordToken);
-  expect(err.token).toEqual("1 blablabla");
+  expect(err.token).toEqual("blablabla");
 });
 
 test("token is valid but new password does not pass requirements", async () => {
   const err: InvalidNewPassword = await getThrownError(() =>
-    finishChangePassword({ token: "1 bob@mail.com", newPassword: "12" })
+    finishChangePassword({ token: validData.token, newPassword: "12" })
   );
   expect(err).toBeInstanceOf(InvalidNewPassword);
   expect(err.password).toEqual("12");
@@ -93,15 +97,22 @@ test("changing the password", async () => {
 });
 
 test("user does not exist, ie maybe it got deleted after calling initChangePassword", async () => {
+  const token = await resetPasswordTokenManager.create({
+    userId: "2",
+    email: "tom@mail.com",
+    expiresInMinutes: 60,
+  });
+
   const err: UserNotFound = await getThrownError(() =>
-    finishChangePassword({ token: "2 tom@mail.com", newPassword: "Pass123$" })
+    finishChangePassword({ token, newPassword: "Pass123$" })
   );
   expect(err).toBeInstanceOf(UserNotFound);
   expect(err.userId).toEqual("2");
 });
 
 test("saveUser has a failure", async () => {
-  const finishChangePassword = buildFinishChangePasswordHelper({
+  const finishChangePassword = buildFinishChangePassword({
+    ...dependencies,
     saveUser: jest.fn().mockRejectedValue(new Error("save err")),
   });
   const err: CouldNotCompleteRequest = await getThrownError(() =>

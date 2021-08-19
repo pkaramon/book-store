@@ -1,6 +1,6 @@
-import ResetPasswordTokenManager from ".";
+import JWTResetPasswordTokenManager from ".";
 
-const tokenManager = new ResetPasswordTokenManager("123321");
+const tokenManager = new JWTResetPasswordTokenManager("123321");
 test("creating and validating a token", async () => {
   const token = await tokenManager.create({
     userId: "1",

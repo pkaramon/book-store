@@ -1,5 +1,6 @@
 import getFakePlainUser from "../../testObjects/FakePlainUser";
 import makePassword from "../../testObjects/makePassword";
+import resetPasswordTokenManager from "../../testObjects/resetPasswordTokenManager";
 import userDb from "../../testObjects/userDb";
 import { createBuildHelper, getThrownError } from "../../__test_helpers__";
 import buildInitChangePassword from "./imp";
@@ -10,24 +11,20 @@ import {
 } from "./interface";
 
 const deliverResetPasswordTokenToUser = jest.fn().mockResolvedValue(undefined);
-const createResetPasswordToken = jest.fn(
-  async (info: { email: string; userId: string }) => {
-    return `${info.userId} ${info.email}`;
-  }
-);
 const buildInitChangePasswordHelper = createBuildHelper(
   buildInitChangePassword,
   {
     getUserByEmail: userDb.getByEmail,
     deliverResetPasswordTokenToUser,
-    createResetPasswordToken,
+    createResetPasswordToken: resetPasswordTokenManager.create.bind(
+      resetPasswordTokenManager
+    ),
   }
 );
 const initChangePassword = buildInitChangePasswordHelper({});
 
 beforeEach(async () => {
   deliverResetPasswordTokenToUser.mockClear();
-  createResetPasswordToken.mockClear();
   userDb.TEST_ONLY_clear();
   await userDb.save(
     await getFakePlainUser({
@@ -61,11 +58,9 @@ test("passed email does exist in our db", async () => {
   const { resetPasswordToken } = await initChangePassword({
     email: "bob@mail.com",
   });
-  expect(resetPasswordToken).toEqual("1 bob@mail.com");
-  expect(createResetPasswordToken).toHaveBeenCalledWith({
-    email: "bob@mail.com",
+  expect(await resetPasswordTokenManager.verify(resetPasswordToken)).toEqual({
     userId: "1",
-    expiresInMinutes: 5,
+    isValid: true,
   });
   expect(deliverResetPasswordTokenToUser).toHaveBeenCalledWith(
     await userDb.getByEmail("bob@mail.com"),

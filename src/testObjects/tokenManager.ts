@@ -33,5 +33,5 @@ class FakeTokenManager {
   }
 }
 
-const tokenManager: TokenManager = new FakeTokenManager()
-export default tokenManager
+const tokenManager: TokenManager = new FakeTokenManager();
+export default tokenManager;
