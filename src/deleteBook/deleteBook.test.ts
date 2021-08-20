@@ -3,6 +3,7 @@ import bookDb from "../testObjects/bookDb";
 import getFakeBook from "../testObjects/FakeBook";
 import tokenManager from "../testObjects/tokenManager";
 import {
+  checkIfItHandlesUnexpectedFailures,
   createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
@@ -11,11 +12,12 @@ import {
 import buildDeleteBook from "./imp";
 import { BookNotFound, CouldNotCompleteRequest, NotAllowed } from "./interface";
 
-const buildDeleteBookHelper = createBuildHelper(buildDeleteBook, {
-  getBookById: bookDb.getById,
-  deleteBookById: bookDb.deleteById,
+const dependencies = {
+  bookDb,
   verifyUserAuthToken: tokenManager.verifyToken,
-});
+};
+
+const buildDeleteBookHelper = createBuildHelper(buildDeleteBook, dependencies);
 const deleteBook = buildDeleteBookHelper({});
 
 const authorId = "100";
@@ -38,28 +40,11 @@ test("book does not exist", async () => {
 test("user is not the author of the book", async () => {
   await expectThrownErrorToMatch(
     async () =>
-      deleteBook({ userAuthToken: await tokenManager.createTokenFor("123321"), bookId }),
+      deleteBook({
+        userAuthToken: await tokenManager.createTokenFor("123321"),
+        bookId,
+      }),
     { class: NotAllowed, userId: "123321", bookId }
-  );
-});
-
-test("getBookById throws error", async () => {
-  const deleteBook = buildDeleteBookHelper({
-    getBookById: rejectWith(new Error("could not get the book")),
-  });
-  await expectThrownErrorToMatch(
-    () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
-    { class: CouldNotCompleteRequest }
-  );
-});
-
-test("deleteById throws error", async () => {
-  const deleteBook = buildDeleteBookHelper({
-    deleteBookById: rejectWith(new Error("could not delete book")),
-  });
-  await expectThrownErrorToMatch(
-    () => deleteBook({ userAuthToken: authorAuthToken, bookId }),
-    { class: CouldNotCompleteRequest }
   );
 });
 
@@ -73,4 +58,14 @@ test("user token is invalid", async () => {
     () => deleteBook({ userAuthToken: "#invalid#", bookId }),
     { class: TokenVerificationError, invalidToken: "#invalid#" }
   );
+});
+
+test("dependency failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildDeleteBook,
+    validInputData: [{ userAuthToken: authorAuthToken, bookId }],
+    dependenciesToTest: ["bookDb.deleteById", "bookDb.getById"],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
+  });
 });

@@ -22,7 +22,7 @@ export class NotAllowed extends Error {
 }
 
 export class CouldNotCompleteRequest extends Error {
-  constructor(reason: string) {
+  constructor(reason: string, public readonly originalError: any) {
     super(reason);
     this.name = CouldNotCompleteRequest.name;
   }

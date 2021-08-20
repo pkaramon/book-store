@@ -8,14 +8,16 @@ import DeleteBook, {
 } from "./interface";
 
 export interface Dependencies {
-  deleteBookById: (bookId: string) => Promise<void>;
-  getBookById: (bookId: string) => Promise<Book | null>;
   verifyUserAuthToken: VerifyToken;
+  bookDb: BookDb;
+}
+export interface BookDb {
+  deleteById(id: string): Promise<void>;
+  getById(id: string): Promise<Book | null>;
 }
 
 export default function buildDeleteBook({
-  deleteBookById,
-  getBookById,
+  bookDb,
   verifyUserAuthToken,
 }: Dependencies): DeleteBook {
   async function deleteBook(data: InputData) {
@@ -26,9 +28,9 @@ export default function buildDeleteBook({
 
   async function tryToGetBook(bookId: string) {
     try {
-      return await getBookById(bookId);
-    } catch {
-      throw new CouldNotCompleteRequest("could not get the book from db");
+      return await bookDb.getById(bookId);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not get the book from db", e);
     }
   }
 
@@ -44,9 +46,9 @@ export default function buildDeleteBook({
 
   async function tryToDeleteBook(book: Book) {
     try {
-      await deleteBookById(book.info.id);
-    } catch {
-      throw new CouldNotCompleteRequest("could not delete the book from db");
+      await bookDb.deleteById(book.info.id);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not delete the book from db", e);
     }
   }
   return deleteBook;
