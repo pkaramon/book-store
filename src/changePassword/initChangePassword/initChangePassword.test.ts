@@ -2,7 +2,11 @@ import getFakePlainUser from "../../testObjects/FakePlainUser";
 import makePassword from "../../testObjects/makePassword";
 import resetPasswordTokenManager from "../../testObjects/resetPasswordTokenManager";
 import userDb from "../../testObjects/userDb";
-import { createBuildHelper, getThrownError } from "../../__test_helpers__";
+import {
+  checkIfItHandlesUnexpectedFailures,
+  getThrownError,
+  rejectWith,
+} from "../../__test_helpers__";
 import buildInitChangePassword from "./imp";
 import {
   CouldNotCompleteRequest,
@@ -11,17 +15,14 @@ import {
 } from "./interface";
 
 const deliverResetPasswordTokenToUser = jest.fn().mockResolvedValue(undefined);
-const buildInitChangePasswordHelper = createBuildHelper(
-  buildInitChangePassword,
-  {
-    getUserByEmail: userDb.getByEmail,
-    deliverResetPasswordTokenToUser,
-    createResetPasswordToken: resetPasswordTokenManager.create.bind(
-      resetPasswordTokenManager
-    ),
-  }
-);
-const initChangePassword = buildInitChangePasswordHelper({});
+const dependencies = {
+  getUserByEmail: userDb.getByEmail.bind(userDb),
+  deliverResetPasswordTokenToUser,
+  createResetPasswordToken: resetPasswordTokenManager.create.bind(
+    resetPasswordTokenManager
+  ),
+};
+const initChangePassword = buildInitChangePassword(dependencies);
 
 beforeEach(async () => {
   deliverResetPasswordTokenToUser.mockClear();
@@ -33,17 +34,6 @@ beforeEach(async () => {
       password: await makePassword({ password: "Pass123$", isHashed: false }),
     })
   );
-});
-
-test("getUserByEmail has a failure", async () => {
-  const initChangePassword = buildInitChangePasswordHelper({
-    getUserByEmail: jest.fn().mockRejectedValue(new Error("db err")),
-  });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    initChangePassword({ email: "bob@mail.com" })
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("db err"));
 });
 
 test("passed email does not exist in our db", async () => {
@@ -68,27 +58,23 @@ test("passed email does exist in our db", async () => {
   );
 });
 
-test("error when creating password reset token", async () => {
-  const initChangePassword = buildInitChangePasswordHelper({
-    createResetPasswordToken: jest
-      .fn()
-      .mockRejectedValue(new Error("token err")),
-  });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    initChangePassword({ email: "bob@mail.com" })
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("token err"));
-});
-
 test("error when trying to deliver the token", async () => {
-  const initChangePassword = buildInitChangePasswordHelper({
-    deliverResetPasswordTokenToUser: jest
-      .fn()
-      .mockRejectedValue(new Error("deliver err")),
+  const initChangePassword = buildInitChangePassword({
+    ...dependencies,
+    deliverResetPasswordTokenToUser: rejectWith(new Error("deliver err")),
   });
   const err: TokenCouldNotBeDeliver = await getThrownError(() =>
     initChangePassword({ email: "bob@mail.com" })
   );
   expect(err).toBeInstanceOf(TokenCouldNotBeDeliver);
+});
+
+test("dependency failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildInitChangePassword,
+    validInputData: [{ email: "bob@mail.com" }],
+    dependenciesToTest: ["getUserByEmail", "createResetPasswordToken"],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
+  });
 });
