@@ -4,9 +4,13 @@ import User from "../../../domain/User";
 export default interface Dependencies {
   verifyResetPasswordToken: VerifyResetPasswordToken;
   validateRawPassword: ValidateRawPassword;
-  getUserById: (id: string) => Promise<User | null>;
-  saveUser: (u: User) => Promise<void>;
+  userDb: UserDb;
   makePassword: MakePassword;
+}
+
+export interface UserDb {
+  save(u: User): Promise<void>;
+  getById(id: string): Promise<User | null>;
 }
 
 export interface VerifyResetPasswordToken {

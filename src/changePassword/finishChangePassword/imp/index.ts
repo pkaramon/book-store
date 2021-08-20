@@ -8,16 +8,15 @@ import FinishChangePassword, {
 } from "../interface";
 import Dependencies from "./Dependencies";
 
-export default function buildFinishChangePassword(
-  deps: Dependencies
-): FinishChangePassword {
+export default function buildFinishChangePassword({
+  userDb,
+  ...deps
+}: Dependencies): FinishChangePassword {
   async function finishChangePassword({ token, newPassword }: InputData) {
     const userId = await verifyResetPasswordToken(token);
     const user = await getUser(userId);
     const newPass = validateNewPassword(newPassword);
-    user.changePassword(
-      await deps.makePassword({ password: newPass, isHashed: false })
-    );
+    user.changePassword(await createPassword(newPass));
     await save(user);
     return { userId };
   }
@@ -37,9 +36,17 @@ export default function buildFinishChangePassword(
   }
 
   async function getUser(userId: string) {
-    const user = await deps.getUserById(userId);
+    const user = await tryToGetUser(userId);
     if (user === null) throw new UserNotFound(userId);
     return user;
+  }
+
+  async function tryToGetUser(id: string) {
+    try {
+      return await userDb.getById(id);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not talk to db", e);
+    }
   }
 
   function validateNewPassword(pass: string) {
@@ -48,9 +55,17 @@ export default function buildFinishChangePassword(
     return password;
   }
 
+  async function createPassword(password: string) {
+    try {
+      return await deps.makePassword({ password, isHashed: false });
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not create password", e);
+    }
+  }
+
   async function save(u: User) {
     try {
-      await deps.saveUser(u);
+      await userDb.save(u);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not save user", e);
     }

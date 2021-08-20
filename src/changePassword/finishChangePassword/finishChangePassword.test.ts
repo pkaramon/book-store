@@ -2,7 +2,10 @@ import getFakePlainUser from "../../testObjects/FakePlainUser";
 import makePassword from "../../testObjects/makePassword";
 import resetPasswordTokenManager from "../../testObjects/resetPasswordTokenManager";
 import userDb from "../../testObjects/userDb";
-import { getThrownError } from "../../__test_helpers__";
+import {
+  checkIfItHandlesUnexpectedFailures,
+  getThrownError,
+} from "../../__test_helpers__";
 import buildFinishChangePassword from "./imp";
 import {
   CouldNotCompleteRequest,
@@ -46,9 +49,8 @@ const dependencies = {
   verifyResetPasswordToken: resetPasswordTokenManager.verify.bind(
     resetPasswordTokenManager
   ),
+  userDb,
   validateRawPassword,
-  getUserById: userDb.getById,
-  saveUser: userDb.save,
   makePassword,
 };
 
@@ -110,14 +112,12 @@ test("user does not exist, ie maybe it got deleted after calling initChangePassw
   expect(err.userId).toEqual("2");
 });
 
-test("saveUser has a failure", async () => {
-  const finishChangePassword = buildFinishChangePassword({
-    ...dependencies,
-    saveUser: jest.fn().mockRejectedValue(new Error("save err")),
+test("dependency failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildFinishChangePassword,
+    validInputData: [validData],
+    dependenciesToTest: ["userDb.save", "userDb.getById", "makePassword"],
+    defaultDependencies: dependencies,
+    expectedErrorClass: CouldNotCompleteRequest,
   });
-  const err: CouldNotCompleteRequest = await getThrownError(() =>
-    finishChangePassword(validData)
-  );
-  expect(err).toBeInstanceOf(CouldNotCompleteRequest);
-  expect(err.originalError).toEqual(new Error("save err"));
 });
