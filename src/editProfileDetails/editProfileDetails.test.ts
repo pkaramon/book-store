@@ -1,6 +1,4 @@
 import { TokenVerificationError } from "../auth/VerifyToken";
-import { UserInfo } from "../domain/User";
-import makeCustomer from "../testObjects/makeCustomer";
 import { createBuildHelper, getThrownError } from "../__test_helpers__";
 import buildEditProfileDetails from "./imp";
 import {
@@ -10,13 +8,13 @@ import {
   ToUpdate,
   InvalidUserType,
 } from "./interface";
-import makePassword from "../testObjects/makePassword";
 import getFakePlainUser from "../testObjects/FakePlainUser";
 import SchemaValidator from "../domain/SchemaValidator";
 import buildPlainUserSchema from "../domain/PlainUserSchema";
 import clock from "../testObjects/clock";
 import userDb from "../testObjects/userDb";
 import tokenManager from "../testObjects/tokenManager";
+import getFakeCustomer from "../testObjects/FakeCustomer";
 
 test("user does not exist", async () => {
   const err: UserNotFound = await getThrownError(async () =>
@@ -71,7 +69,7 @@ describe("changing firstName", () => {
       userAuthToken,
       toUpdate: { firstName: "Tom" },
     });
-    const u = await userDb.getById(userInfo.id);
+    const u = await userDb.getById(userDetails.id);
     expect(u?.info.firstName).toBe("Tom");
   });
   test("invalid firstName", async () => {
@@ -86,7 +84,7 @@ describe("changing lastName", () => {
       userAuthToken,
       toUpdate: { lastName: "Johnson" },
     });
-    const u = await userDb.getById(userInfo.id);
+    const u = await userDb.getById(userDetails.id);
     expect(u?.info.lastName).toBe("Johnson");
   });
   test("invalid lastName", async () => {
@@ -101,7 +99,7 @@ describe("changing birthDate", () => {
       userAuthToken,
       toUpdate: { birthDate: new Date(1990, 1, 3) },
     });
-    const u = await userDb.getById(userInfo.id);
+    const u = await userDb.getById(userDetails.id);
     expect(u?.info.birthDate).toEqual(new Date(1990, 1, 3));
   });
   test("invalid birthDate", async () => {
@@ -123,7 +121,7 @@ describe("changing multiple properties at at time", () => {
         lastName: "Johnson",
       },
     });
-    const u = await userDb.getById(userInfo.id);
+    const u = await userDb.getById(userDetails.id);
     expect(u?.info.firstName).toEqual("Tom");
     expect(u?.info.lastName).toEqual("Johnson");
     expect(u?.info.birthDate).toEqual(new Date(1990, 1, 1));
@@ -172,24 +170,19 @@ const buildEditProfileDetailsHelper = createBuildHelper(
   }
 );
 const editProfileDetails = buildEditProfileDetailsHelper({});
-let userInfo: UserInfo;
 let userAuthToken: string;
+const userDetails = {
+  id: "1",
+  firstName: "bob",
+  lastName: "smith",
+  email: "bob@mail.com",
+  birthDate: new Date(2000, 1, 1),
+};
 
 beforeEach(async () => {
-  userInfo = {
-    id: "1",
-    firstName: "bob",
-    lastName: "smith",
-    email: "bob@mail.com",
-    password: await makePassword({
-      password: "Pas@!#1231232",
-      isHashed: false,
-    }),
-    birthDate: new Date(2000, 1, 1),
-  };
-  userAuthToken = await tokenManager.createTokenFor(userInfo.id);
+  userAuthToken = await tokenManager.createTokenFor(userDetails.id);
   userDb.TEST_ONLY_clear();
-  await userDb.save(await makeCustomer(userInfo));
+  await userDb.save(await getFakeCustomer(userDetails));
 });
 
 async function expectValidationToFail<K extends keyof ToUpdate>(
@@ -199,7 +192,7 @@ async function expectValidationToFail<K extends keyof ToUpdate>(
 ) {
   try {
     await editProfileDetails({
-      userAuthToken: await tokenManager.createTokenFor(userInfo.id),
+      userAuthToken: await tokenManager.createTokenFor(userDetails.id),
       toUpdate: { [key]: value },
     });
     throw "should have thrown";

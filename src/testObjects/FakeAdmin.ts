@@ -1,11 +1,10 @@
 import Admin, { AdminInfo } from "../domain/Admin";
-import makeAdmin from "./makeAdmin";
 import makePassword from "./makePassword";
 
 export default async function getFakeAdmin(
   newAdminInfo?: Partial<AdminInfo>
 ): Promise<Admin> {
-  return await makeAdmin({
+  return new Admin({
     id: "1",
     email: "bob@mail.com",
     firstName: "bob",

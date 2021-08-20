@@ -1,9 +1,6 @@
 import Admin from "../../domain/Admin";
-import MakeAdmin from "../../domain/Admin/MakeAdmin";
 import BookAuthor from "../../domain/BookAuthor";
-import MakeBookAuthor from "../../domain/BookAuthor/MakeBookAuthor";
 import Customer from "../../domain/Customer";
-import MakeCustomer from "../../domain/Customer/MakeCustomer";
 import MakePassword from "../../domain/Password/MakePassword";
 import User from "../../domain/User";
 import { UserDocument, UserToDocumentGateway } from "./MongoUserDb";
@@ -24,10 +21,8 @@ interface BookAuthorDocument extends UserDocument {
 export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   constructor(
     protected tools: {
-      makeCustomer: MakeCustomer;
-      makeBookAuthor: MakeBookAuthor;
       makePassword: MakePassword;
-      makeAdmin: MakeAdmin;
+      generateId: () => string | Promise<string>;
     }
   ) {}
 
@@ -65,7 +60,7 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   async fromDocumentToUser(document: UserDocument): Promise<User> {
     switch (document.userType) {
       case "customer":
-        return await this.fromDocumentToCustomer(document as any);
+        return this.fromDocumentToCustomer(document as any);
       case "bookAuthor":
         return await this.fromDocumentToBookAuthor(document as any);
       case "admin":
@@ -76,7 +71,7 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   }
 
   private async fromDocumentToCustomer(doc: CustomerDocument) {
-    return await this.tools.makeCustomer({
+    return new Customer({
       id: doc._id,
       birthDate: doc.birthDate,
       lastName: doc.lastName,
@@ -87,7 +82,7 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   }
 
   private async fromDocumentToBookAuthor(doc: BookAuthorDocument) {
-    return await this.tools.makeBookAuthor({
+    return new BookAuthor({
       id: doc._id,
       birthDate: doc.birthDate,
       lastName: doc.lastName,
@@ -99,7 +94,7 @@ export default class UserToDocumentGatewayImp implements UserToDocumentGateway {
   }
 
   private async fromDocumentToAdmin(doc: AdminDocument) {
-    return await this.tools.makeAdmin({
+    return new Admin({
       id: doc._id,
       birthDate: doc.birthDate,
       lastName: doc.lastName,

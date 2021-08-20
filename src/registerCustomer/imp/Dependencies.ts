@@ -1,14 +1,17 @@
-import MakeCustomer from "../../domain/Customer/MakeCustomer";
 import MakePassword from "../../domain/Password/MakePassword";
 import SchemaValidator from "../../domain/SchemaValidator";
 import User from "../../domain/User";
 import { InputData } from "../interface";
 
 export default interface Dependencies {
-  saveUser: (u: User) => Promise<void>;
-  getUserByEmail: (email: string) => Promise<User | null>;
+  userDb: UserDb;
   notifyUser: (user: User) => Promise<void>;
   userDataValidator: SchemaValidator<InputData>;
-  makeCustomer: MakeCustomer;
   makePassword: MakePassword;
+}
+
+export interface UserDb {
+  getByEmail(email: string): Promise<User | null>;
+  save(u: User): Promise<void>;
+  generateId(): string | Promise<string>;
 }

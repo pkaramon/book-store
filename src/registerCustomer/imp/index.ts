@@ -1,3 +1,4 @@
+import Customer from "../../domain/Customer";
 import User from "../../domain/User";
 import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
 import RegisterCustomer, {
@@ -9,11 +10,9 @@ import RegisterCustomer, {
 import Dependencies from "./Dependencies";
 
 export default function buildRegisterCustomer({
-  saveUser,
   userDataValidator,
   notifyUser,
-  getUserByEmail,
-  makeCustomer,
+  userDb,
   makePassword,
 }: Dependencies): RegisterCustomer {
   async function registerCustomer(data: InputData) {
@@ -23,14 +22,14 @@ export default function buildRegisterCustomer({
 
   class CustomerRegistrator extends UserRegistrator<InputData> {
     public static instance = new CustomerRegistrator({
-      saveUser,
-      getUserByEmail,
       notifyUser,
       makePassword,
+      userDb,
     });
 
-    protected async createUser(data: InputData): Promise<User> {
-      return await makeCustomer({
+    protected async createUser(id: string, data: InputData): Promise<User> {
+      return new Customer({
+        id,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,

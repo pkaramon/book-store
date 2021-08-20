@@ -2,11 +2,10 @@ import Customer from "../domain/Customer";
 import buildPlainUserSchema from "../domain/PlainUserSchema";
 import SchemaValidator from "../domain/SchemaValidator";
 import clock from "../testObjects/clock";
-import makeCustomer from "../testObjects/makeCustomer";
 import makePassword from "../testObjects/makePassword";
 import userDb from "../testObjects/userDb";
 import {
-  createBuildHelper,
+  checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
   getThrownError,
   rejectWith,
@@ -155,13 +154,17 @@ test("hashing passwords", async () => {
 
 test("customer should receive a notification when successfully registered", async () => {
   const notifyUser = jest.fn().mockResolvedValue(undefined);
-  const registerCustomer = buildRegisterCustomerHelper({ notifyUser });
+  const registerCustomer = buildRegisterCustomer({
+    ...dependencies,
+    notifyUser,
+  });
   const { userId } = await registerCustomer({ ...validData });
   expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
 });
 
 test("errors thrown from notifyUser are silenced, they do not impact the result of the transaction", async () => {
-  const registerCustomer = buildRegisterCustomerHelper({
+  const registerCustomer = buildRegisterCustomer({
+    ...dependencies,
     notifyUser: rejectWith(new Error("email server error")),
   });
   const { userId } = await registerCustomer({ ...validData });
@@ -169,7 +172,8 @@ test("errors thrown from notifyUser are silenced, they do not impact the result 
 });
 
 test("hashing failure", async () => {
-  const registerCustomer = buildRegisterCustomerHelper({
+  const registerCustomer = buildRegisterCustomer({
+    ...dependencies,
     makePassword: rejectWith(new Error("hashing failure")),
   });
 
@@ -179,36 +183,27 @@ test("hashing failure", async () => {
   });
 });
 
-test("saveCustomer throws error", async () => {
-  const registerCustomer = buildRegisterCustomerHelper({
-    saveUser: rejectWith(new Error("could not save customer")),
-  });
-
-  await expectThrownErrorToMatch(() => registerCustomer({ ...validData }), {
-    class: CouldNotCompleteRequest,
-    originalError: new Error("could not save customer"),
-  });
-});
-
-test("getUserByEmail throws error", async () => {
-  const registerCustomer = buildRegisterCustomerHelper({
-    getUserByEmail: rejectWith(new Error("db err")),
-  });
-  await expectThrownErrorToMatch(() => registerCustomer({ ...validData }), {
-    class: CouldNotCompleteRequest,
-    originalError: new Error("db err"),
+test("dependency failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildRegisterCustomer,
+    validInputData: [validData],
+    dependenciesToTest: [
+      "userDb.save",
+      "userDb.getByEmail",
+      "userDb.generateId",
+    ],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
   });
 });
 
-const buildRegisterCustomerHelper = createBuildHelper(buildRegisterCustomer, {
-  saveUser: userDb.save,
+const dependencies = {
+  userDb,
   notifyUser: jest.fn().mockResolvedValue(undefined),
   userDataValidator: new SchemaValidator(buildPlainUserSchema(clock)),
-  getUserByEmail: userDb.getByEmail,
-  makeCustomer,
   makePassword,
-});
-const registerCustomer = buildRegisterCustomerHelper({});
+};
+const registerCustomer = buildRegisterCustomer(dependencies);
 const validData: InputData = {
   firstName: "Bob",
   lastName: "Smith",

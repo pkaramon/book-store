@@ -8,13 +8,15 @@ export { ValidationResult, ErrorMessages };
 export default abstract class UserRegistrator<
   UserData extends { email: string }
 > {
+  private userDb = this.deps.userDb;
   constructor(private deps: Dependencies) {}
 
   async registerUser(data: UserData) {
     await this.checkIfEmailIsAlreadyTaken(data.email);
     const result = this.validateUserData(data);
     if (!result.isValid) throw this.createFailedValidationError(result);
-    const user = await this.createUser(result.cleaned);
+    const id = await this.getId();
+    const user = await this.createUser(id, result.cleaned);
     await this.save(user);
     await this.tryToNotifyUser(user);
     return user;
@@ -27,15 +29,23 @@ export default abstract class UserRegistrator<
 
   private async tryToGetUserByEmail(email: string) {
     try {
-      return await this.deps.getUserByEmail(email);
+      return await this.userDb.getByEmail(email);
     } catch (e) {
       throw this.createUnexpectedFailureError("could not get user by email", e);
     }
   }
 
+  private async getId() {
+    try {
+      return await this.userDb.generateId();
+    } catch (e) {
+      throw this.createUnexpectedFailureError("could not generate id", e);
+    }
+  }
+
   private async save(u: User) {
     try {
-      await this.deps.saveUser(u);
+      await this.userDb.save(u);
     } catch (e) {
       throw this.createUnexpectedFailureError("could not save user", e);
     }
@@ -57,7 +67,10 @@ export default abstract class UserRegistrator<
     }
   }
 
-  protected abstract createUser(data: UserData): Promise<User> | User;
+  protected abstract createUser(
+    id: string,
+    data: UserData
+  ): Promise<User> | User;
   protected abstract validateUserData(
     data: UserData
   ): ValidationResult<UserData>;

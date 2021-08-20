@@ -1,9 +1,8 @@
-import { BookInfo, BookStatus, TableOfContents } from "../domain/Book";
+import Book, { BookInfo, BookStatus, TableOfContents } from "../domain/Book";
 import Price from "../domain/Price";
-import makeBook from "./makeBook";
 
 export default async function getFakeBook(newBookInfo?: Partial<BookInfo>) {
-  return await makeBook({
+  return new Book({
     id: "1",
     status: BookStatus.published,
     price: new Price("USD", 300),

@@ -1,11 +1,10 @@
-import { BookAuthorData } from "../domain/BookAuthor/MakeBookAuthor";
-import makeBookAuthor from "./makeBookAuthor";
+import BookAuthor, { BookAuthorInfo } from "../domain/BookAuthor";
 import makePassword from "./makePassword";
 
 export default async function getFakeBookAuthor(
-  newData?: Partial<BookAuthorData>
+  newInfo?: Partial<BookAuthorInfo>
 ) {
-  return makeBookAuthor({
+  return new BookAuthor({
     id: "1",
     email: "bob@mail.com",
     firstName: "bob",
@@ -13,6 +12,6 @@ export default async function getFakeBookAuthor(
     birthDate: new Date(2000, 1, 1),
     password: await makePassword({ password: "Pass123$", isHashed: false }),
     bio: "My story begins...",
-    ...newData,
+    ...newInfo,
   });
 }

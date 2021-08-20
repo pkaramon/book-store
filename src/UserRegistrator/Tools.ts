@@ -2,8 +2,13 @@ import MakePassword from "../domain/Password/MakePassword";
 import User from "../domain/User";
 
 export default interface Dependencies {
-  saveUser: (user: User) => Promise<void>;
-  getUserByEmail: (email: string) => Promise<User | null>;
+  userDb: UserDb;
   notifyUser: (user: User) => Promise<void>;
   makePassword: MakePassword;
+}
+
+export interface UserDb {
+  save(user: User): Promise<void>;
+  getByEmail(email: string): Promise<User | null>;
+  generateId(): string | Promise<string>;
 }

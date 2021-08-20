@@ -1,4 +1,3 @@
-import { CommentInfoWithOptionalId } from "../../domain/Comment/MakeComment";
 import Comment, { CommentContent } from "../../domain/Comment";
 import PostComment, {
   BookNotFound,
@@ -13,9 +12,16 @@ import Customer from "../../domain/Customer";
 import Dependencies from "./Dependencies";
 import Book, { BookStatus } from "../../domain/Book";
 
-export default function buildPostComment(deps: Dependencies): PostComment {
+export default function buildPostComment({
+  verifyUserAuthToken,
+  getUserById,
+  getBookById,
+  commentContentValidator,
+  clock,
+  commentDb,
+}: Dependencies): PostComment {
   async function postComment(data: InputData) {
-    const userId = await deps.verifyUserAuthToken(data.userAuthToken);
+    const userId = await verifyUserAuthToken(data.userAuthToken);
     await verifyUser(userId);
     const bookId = data.comment.bookId;
     const book = await getBook(bookId);
@@ -36,7 +42,7 @@ export default function buildPostComment(deps: Dependencies): PostComment {
 
   async function tryToGetUser(userId: string) {
     try {
-      return await deps.getUserById(userId);
+      return await getUserById(userId);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not get user from db", e);
     }
@@ -55,14 +61,14 @@ export default function buildPostComment(deps: Dependencies): PostComment {
 
   async function tryToGetBook(bookId: string) {
     try {
-      return await deps.getBookById(bookId);
+      return await getBookById(bookId);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not get book from db", e);
     }
   }
 
   async function validateCommentContent(content: CommentContent) {
-    const result = await deps.commentContentValidator.validateContent(content);
+    const result = await commentContentValidator.validateContent(content);
     if (!result.isValid)
       throw new InvalidCommentContent(
         result.errorMessages,
@@ -76,25 +82,28 @@ export default function buildPostComment(deps: Dependencies): PostComment {
     userId: string;
     commentContent: CommentContent;
   }) {
-    return await tryToCreateComment({
-      bookId: data.bookId,
-      authorId: data.userId,
-      postedAt: deps.clock.now(),
-      ...data.commentContent,
-    });
+    return new Comment(
+      {
+        id: await getId(),
+        bookId: data.bookId,
+        authorId: data.userId,
+        postedAt: clock.now(),
+      },
+      data.commentContent
+    );
   }
 
-  async function tryToCreateComment(info: CommentInfoWithOptionalId) {
+  async function getId() {
     try {
-      return await deps.makeComment(info);
+      return await commentDb.generateId();
     } catch (e) {
-      throw new CouldNotCompleteRequest("could not create comment", e);
+      throw new CouldNotCompleteRequest("could not generate id", e);
     }
   }
 
   async function save(comment: Comment) {
     try {
-      await deps.saveComment(comment);
+      await commentDb.save(comment);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not save comment to db", e);
     }

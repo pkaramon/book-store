@@ -2,10 +2,12 @@ import BookAuthor from "../domain/BookAuthor";
 import buildBookAuthorSchema from "../domain/BookAuthor/BookAuthorSchema";
 import SchemaValidator from "../domain/SchemaValidator";
 import clock from "../testObjects/clock";
-import makeBookAuthor from "../testObjects/makeBookAuthor";
 import makePassword from "../testObjects/makePassword";
 import userDb from "../testObjects/userDb";
-import { expectThrownErrorToMatch, rejectWith } from "../__test_helpers__";
+import {
+  checkIfItHandlesUnexpectedFailures,
+  expectThrownErrorToMatch,
+} from "../__test_helpers__";
 import nCharString from "../__test_helpers__/nCharString";
 import buildRegisterBookAuthor from "./imp";
 import {
@@ -18,11 +20,9 @@ import {
 const notifyUser = jest.fn().mockResolvedValue(undefined);
 const dependencies = {
   notifyUser,
-  saveUser: userDb.save,
   makePassword: makePassword,
-  makeBookAuthor: makeBookAuthor,
-  getUserByEmail: userDb.getByEmail,
   userDataValidator: new SchemaValidator(buildBookAuthorSchema(clock)),
+  userDb,
 };
 const registerBookAuthor = buildRegisterBookAuthor(dependencies);
 beforeEach(() => {
@@ -112,15 +112,17 @@ test("bookAuthor should receive notification when successfully registered", asyn
   expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
 });
 
-test("db failure", async () => {
-  const registerBookAuthor = buildRegisterBookAuthor({
-    ...dependencies,
-    saveUser: rejectWith(new Error("db err")),
-  });
-
-  await expectThrownErrorToMatch(() => registerBookAuthor(validData), {
-    class: CouldNotCompleteRequest,
-    originalError: new Error("db err"),
-    message: "could not save user",
+test("dependency failure", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildRegisterBookAuthor,
+    validInputData: [validData],
+    dependenciesToTest: [
+      "userDb.save",
+      "userDb.getByEmail",
+      "userDb.generateId",
+      "makePassword",
+    ],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
   });
 });

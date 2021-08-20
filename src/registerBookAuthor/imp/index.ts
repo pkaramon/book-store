@@ -1,3 +1,4 @@
+import BookAuthor from "../../domain/BookAuthor";
 import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
 import RegisterBookAuthor, {
   InputData,
@@ -7,19 +8,26 @@ import RegisterBookAuthor, {
 } from "../interface";
 import Dependencies from "./Dependencies";
 
-export default function buildRegisterBookAuthor(
-  deps: Dependencies
-): RegisterBookAuthor {
+export default function buildRegisterBookAuthor({
+  userDataValidator,
+  userDb,
+  notifyUser,
+  makePassword,
+}: Dependencies): RegisterBookAuthor {
   async function registerBookAuthor(data: InputData) {
     const user = await BookAuthorRegistrator.instance.registerUser(data);
     return { userId: user.info.id };
   }
 
   class BookAuthorRegistrator extends UserRegistrator<InputData> {
-    public static instance = new BookAuthorRegistrator(deps);
+    public static instance = new BookAuthorRegistrator({
+      makePassword,
+      notifyUser,
+      userDb,
+    });
 
     protected validateUserData(data: InputData) {
-      const result = deps.userDataValidator.validateData(data);
+      const result = userDataValidator.validateData(data);
       return {
         cleaned: result.value,
         isValid: result.isValid,
@@ -28,9 +36,10 @@ export default function buildRegisterBookAuthor(
       };
     }
 
-    protected async createUser(data: InputData) {
-      return await deps.makeBookAuthor({
+    protected async createUser(id: string, data: InputData) {
+      return new BookAuthor({
         ...data,
+        id,
         password: await this.createPassword(data.password),
       });
     }

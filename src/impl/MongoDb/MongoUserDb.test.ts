@@ -5,9 +5,6 @@ import User from "../../domain/User";
 import getFakeAdmin from "../../testObjects/FakeAdmin";
 import getFakeBookAuthor from "../../testObjects/FakeBookAuthor";
 import getFakeCustomer from "../../testObjects/FakeCustomer";
-import makeAdmin from "../../testObjects/makeAdmin";
-import makeBookAuthor from "../../testObjects/makeBookAuthor";
-import makeCustomer from "../../testObjects/makeCustomer";
 import makePassword from "../../testObjects/makePassword";
 import MongoUserDb from "./MongoUserDb";
 import UserToDocumentGatewayImp from "./UserToDocumentGatewayImp";
@@ -20,9 +17,9 @@ const userDb = new MongoUserDb(
   },
   new UserToDocumentGatewayImp({
     makePassword,
-    makeCustomer,
-    makeBookAuthor,
-    makeAdmin,
+    generateId() {
+      return Math.random().toString();
+    },
   })
 );
 

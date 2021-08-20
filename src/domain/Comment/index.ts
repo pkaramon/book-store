@@ -3,7 +3,7 @@ import CommentMetadata from "./CommentMetadata";
 
 export { CommentContent, CommentMetadata };
 
-export default abstract class Comment {
+export default class Comment {
   constructor(
     private _metadata: CommentMetadata,
     private _content: CommentContent

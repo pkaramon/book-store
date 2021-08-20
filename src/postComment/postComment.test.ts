@@ -7,12 +7,10 @@ import commentDb from "../testObjects/commentDb";
 import getFakeBook from "../testObjects/FakeBook";
 import getFakeBookAuthor from "../testObjects/FakeBookAuthor";
 import getFakeCustomer from "../testObjects/FakeCustomer";
-import makeComment from "../testObjects/makeComment";
 import tokenManager from "../testObjects/tokenManager";
 import userDb from "../testObjects/userDb";
 import {
   checkIfItHandlesUnexpectedFailures,
-  createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
 } from "../__test_helpers__";
@@ -28,21 +26,16 @@ import {
 } from "./interface";
 
 const dependencies = {
-  getBookById: bookDb.getById,
+  getBookById: bookDb.getById.bind(bookDb),
   verifyUserAuthToken: tokenManager.verifyToken,
   clock,
-  getUserById: userDb.getById,
-  makeComment,
-  saveComment: commentDb.save,
+  getUserById: userDb.getById.bind(userDb),
   commentContentValidator: new CommentContentValidatorImp(),
+  commentDb,
 };
-const buildPostCommentHelper = createBuildHelper(
-  buildPostComment,
-  dependencies
-);
-const postComment = buildPostCommentHelper({});
+const postComment = buildPostComment(dependencies);
 
-const commentorId = "101";
+const posterId = "101";
 const bookAuthorId = "102";
 let userAuthToken: string;
 const bookId = "1";
@@ -59,9 +52,9 @@ beforeEach(async () => {
   await userDb.TEST_ONLY_clear();
   await commentDb.TEST_ONLY_clear();
   bookDb.save(await getFakeBook({ id: bookId, authorId: bookAuthorId }));
-  userDb.save(await getFakeCustomer({ id: commentorId }));
+  userDb.save(await getFakeCustomer({ id: posterId }));
   userDb.save(await getFakeBookAuthor({ id: bookAuthorId }));
-  userAuthToken = await tokenManager.createTokenFor(commentorId);
+  userAuthToken = await tokenManager.createTokenFor(posterId);
 });
 
 test("userAuthToken is invalid", async () => {
@@ -156,7 +149,7 @@ test("creating a comment", async () => {
   expect(com.content.stars).toEqual(comment.stars);
   expect(com.metadata.bookId).toEqual(comment.bookId);
   expect(com.metadata.postedAt).toEqual(clock.now());
-  expect(com.metadata.authorId).toEqual(commentorId);
+  expect(com.metadata.authorId).toEqual(posterId);
   expect(typeof com.metadata.id).toBe("string");
   expect(createdComment).toMatchObject({ ...com.metadata, ...com.content });
 });
@@ -165,13 +158,13 @@ test("unexpected failures from dependencies", async () => {
   await checkIfItHandlesUnexpectedFailures({
     buildFunction: buildPostComment,
     dependenciesToTest: [
-      "makeComment",
       "getBookById",
-      "saveComment",
       "getUserById",
+      "commentDb.save",
+      "commentDb.generateId",
     ],
-    expectedErrorClass: CouldNotCompleteRequest,
     defaultDependencies: dependencies,
+    expectedErrorClass: CouldNotCompleteRequest,
     validInputData: [{ comment, userAuthToken }],
   });
 });
