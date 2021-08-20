@@ -28,7 +28,7 @@ export default async function checkIfItHandlesUnexpectedFailures<
       usecase(...(validInputData as any))
     );
     if (!(error instanceof expectedErrorClass)) {
-      throw `did not handle failure at ${dependencyName}`;
+      throw new Error(`did not handle failure at ${dependencyName}`);
     }
     expect(error.originalError).toEqual(new Error("err"));
   }

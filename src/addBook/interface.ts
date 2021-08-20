@@ -47,7 +47,7 @@ export class UserNotFound extends Error {
 }
 
 export class CouldNotCompleteRequest extends Error {
-  constructor(message?: string) {
+  constructor(message: string, public readonly originalError: any) {
     super(message);
     this.name = CouldNotCompleteRequest.name;
   }

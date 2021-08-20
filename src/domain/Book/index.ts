@@ -2,7 +2,7 @@ import BookInfo from "./BookInfo";
 import BookStatus from "./BookStatus";
 import TableOfContents from "./TableOfContents";
 
-export default abstract class Book {
+export default class Book {
   constructor(private _info: BookInfo) {}
 
   get info() {

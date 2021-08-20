@@ -14,9 +14,8 @@ import Dependencies from "./Dependencies";
 
 export default function buildAddBook({
   verifyUserToken,
-  makeBook,
-  saveBook,
-  getUserById,
+  userDb,
+  bookDb,
   bookDataValidator,
 }: Dependencies): AddBook {
   async function addBook({ bookData, userToken }: InputData) {
@@ -45,21 +44,22 @@ export default function buildAddBook({
   async function tryToValidateBookData(bookData: BookData) {
     try {
       return await bookDataValidator.validateData(bookData);
-    } catch {
-      throw new CouldNotCompleteRequest();
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could nto validate book data", e);
     }
   }
 
   async function tryToGetUser(userId: string) {
     try {
-      return await getUserById(userId);
-    } catch {
-      throw new CouldNotCompleteRequest("could not get user from db");
+      return await userDb.getById(userId);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not get user from db", e);
     }
   }
 
-  function createBook(authorId: string, data: BookData) {
-    return makeBook({
+  async function createBook(authorId: string, data: BookData) {
+    return new Book({
+      id: await bookDb.generateId(),
       status: BookStatus.notPublished,
       authorId,
       title: data.title,
@@ -77,9 +77,9 @@ export default function buildAddBook({
 
   async function tryToSaveBook(book: Book) {
     try {
-      await saveBook(book);
-    } catch {
-      throw new CouldNotCompleteRequest("could not save book");
+      await bookDb.save(book);
+    } catch (e) {
+      throw new CouldNotCompleteRequest("could not save book", e);
     }
   }
 

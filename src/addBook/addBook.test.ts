@@ -9,7 +9,6 @@ import {
   UserNotFound,
 } from "./interface";
 import { TokenVerificationError } from "../auth/VerifyToken";
-import makeBook from "../testObjects/makeBook";
 import getFakeBookAuthor from "../testObjects/FakeBookAuthor";
 import getFakePlainUser from "../testObjects/FakePlainUser";
 import AsyncSchemaValidator from "../domain/AsyncSchemaValidator";
@@ -19,6 +18,7 @@ import {
   expectThrownErrorToMatch,
   nCharString,
   DidNotThrowError,
+  checkIfItHandlesUnexpectedFailures,
 } from "../__test_helpers__";
 import Dependencies from "./imp/Dependencies";
 import clock from "../testObjects/clock";
@@ -31,10 +31,9 @@ const isCorrectEbookFile = jest.fn(async (filePath: string) =>
 );
 
 const dependencies: Dependencies = {
-  saveBook: bookDb.save,
-  makeBook,
   verifyUserToken: tokenManager.verifyToken,
-  getUserById: userDb.getById,
+  bookDb,
+  userDb,
   bookDataValidator: new AsyncSchemaValidator(
     buildBookSchema({ isCorrectEbookFile, clock })
   ),
@@ -233,34 +232,23 @@ test("creating a book", async () => {
   expect(savedBook.info.sampleFilePath).toEqual(bookData.sampleFilePath);
 });
 
+test("handling errors from dependencies", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildAddBook,
+    validInputData: [validData],
+    dependenciesToTest: ["userDb.getById", "bookDb.save"],
+    expectedErrorClass: CouldNotCompleteRequest,
+    defaultDependencies: dependencies,
+  });
+});
+
 test("file system error", async () => {
   isCorrectEbookFile.mockRejectedValueOnce(
     new Error("could not check the file")
   );
   await expectThrownErrorToMatch(() => addBook(validData), {
     class: CouldNotCompleteRequest,
-  });
-});
-
-test("saveBook error", async () => {
-  const addBook = buildAddBook({
-    ...dependencies,
-    saveBook: jest.fn().mockRejectedValue(new Error("save book err")),
-  });
-  await expectThrownErrorToMatch(() => addBook(validData), {
-    class: CouldNotCompleteRequest,
-    message: "could not save book",
-  });
-});
-
-test("getUserById error", async () => {
-  const addBook = buildAddBook({
-    ...dependencies,
-    getUserById: jest.fn().mockRejectedValue(new Error("could not save book")),
-  });
-  await expectThrownErrorToMatch(() => addBook({ ...validData }), {
-    class: CouldNotCompleteRequest,
-    message: "could not get user from db",
+    originalError: new Error("could not check the file"),
   });
 });
 

@@ -2,6 +2,7 @@ import Book from "../domain/Book";
 import BookAuthor from "../domain/BookAuthor";
 import User from "../domain/User";
 import userDb from "./userDb";
+import crypto from "crypto";
 
 interface BookDb {
   save(b: Book): Promise<void>;
@@ -12,6 +13,7 @@ interface BookDb {
     titleRegex: RegExp
   ): Promise<BookWithAuthor[]>;
   TEST_ONLY_clear(): Promise<void>;
+  generateId(): string | Promise<string>;
 }
 
 interface BookWithAuthor {
@@ -29,6 +31,7 @@ class InMemoryBookDb implements BookDb {
     this.getBooksWithAuthors = this.getBooksWithAuthors.bind(this);
     this.getBooksAndAuthorsWithMatchingTitle =
       this.getBooksAndAuthorsWithMatchingTitle.bind(this);
+    this.generateId = this.generateId.bind(this);
   }
 
   async save(book: Book) {
@@ -69,6 +72,10 @@ class InMemoryBookDb implements BookDb {
 
   async TEST_ONLY_clear() {
     this.books = new Map();
+  }
+
+  generateId(): string | Promise<string> {
+    return crypto.randomUUID();
   }
 }
 

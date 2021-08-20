@@ -106,12 +106,8 @@ async function validateBookFilePath<Key extends string>(
   isCorrectEbookFile: IsCorrectEbookFile,
   res: ValidationResult<Key, string>
 ) {
-  try {
-    if (!(await isCorrectEbookFile(res.value))) {
-      res.addErrorMessage(`${res.key} is invalid`);
-    }
-    return res;
-  } catch {
-    throw new Error("could not verify filepath");
+  if (!(await isCorrectEbookFile(res.value))) {
+    res.addErrorMessage(`${res.key} is invalid`);
   }
+  return res;
 }
