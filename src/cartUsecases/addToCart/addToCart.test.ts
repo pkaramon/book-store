@@ -1,4 +1,4 @@
-import VerifyToken, { TokenVerificationError } from "../../auth/VerifyToken";
+import { TokenVerificationError } from "../../auth/VerifyToken";
 import Book, { BookStatus } from "../../domain/Book";
 import BookAuthor from "../../domain/BookAuthor";
 import bookDb from "../../testObjects/bookDb";
@@ -13,7 +13,7 @@ import {
   checkIfItHandlesUnexpectedFailures,
 } from "../../__test_helpers__";
 import buildAddToCart from "./imp";
-import { Database } from "./imp/Dependencies";
+import Dependencies from "./imp/Dependencies";
 import {
   UserNotFound,
   InvalidUserType,
@@ -22,15 +22,11 @@ import {
   BookWasNotPublished,
 } from "./interface";
 
-const dependencies = {
+const dependencies: Dependencies = {
   verifyUserToken: tokenManager.verifyToken,
-  db: {
-    getUserById: userDb.getById,
-    getBookById: bookDb.getById,
-    getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
-    getCartFor: cartDb.getCartFor,
-    saveCart: cartDb.save,
-  },
+  userDb,
+  bookDb,
+  cartDb,
 };
 const addToCart = buildAddToCart(dependencies);
 
@@ -136,16 +132,14 @@ test("book info returned from usecase", async () => {
 
 test("dependency failures", async () => {
   await checkIfItHandlesUnexpectedFailures({
-    buildFunction: (deps: Database & { verifyUserToken: VerifyToken }) => {
-      return buildAddToCart({ ...deps, db: { ...deps } });
-    },
-    defaultDependencies: { ...dependencies, ...dependencies.db },
+    buildFunction: buildAddToCart,
+    defaultDependencies: dependencies,
     dependenciesToTest: [
-      "getUserById",
-      "getBookById",
-      "saveCart",
-      "getBooksWithAuthors",
-      "getCartFor",
+      "userDb.getById",
+      "cartDb.save",
+      "cartDb.getCartFor",
+      "bookDb.getById",
+      "bookDb.getBooksWithAuthors",
     ],
     validInputData: [{ bookId, userAuthToken }],
     expectedErrorClass: CouldNotCompleteRequest,

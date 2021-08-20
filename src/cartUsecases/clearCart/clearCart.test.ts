@@ -19,11 +19,10 @@ import {
 } from "./interface";
 
 const dependencies = {
-  saveCart: cartDb.save,
-  getCartFor: cartDb.getCartFor,
-  getUserById: userDb.getById,
   verifyUserToken: tokenManager.verifyToken,
-  getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
+  userDb,
+  bookDb,
+  cartDb,
 };
 const clearCart = buildClearCart(dependencies);
 
@@ -36,7 +35,8 @@ test("user auth token is invalid", async () => {
 
 test("user does not exist", async () => {
   await expectThrownErrorToMatch(
-    async () => clearCart({ userAuthToken: await tokenManager.createTokenFor("123") }),
+    async () =>
+      clearCart({ userAuthToken: await tokenManager.createTokenFor("123") }),
     { class: UserNotFound, userId: "123" }
   );
 });
@@ -45,7 +45,8 @@ test("user is not a customer", async () => {
   const adminId = Math.random().toString();
   await userDb.save(await getFakeAdmin({ id: adminId }));
   await expectThrownErrorToMatch(
-    async () => clearCart({ userAuthToken: await tokenManager.createTokenFor(adminId) }),
+    async () =>
+      clearCart({ userAuthToken: await tokenManager.createTokenFor(adminId) }),
     { class: InvalidUserType, wanted: "Customer", received: "Admin" }
   );
 });
@@ -77,12 +78,14 @@ test("dependency failures", async () => {
     buildFunction: buildClearCart,
     defaultDependencies: dependencies,
     dependenciesToTest: [
-      "getUserById",
-      "saveCart",
-      "getBooksWithAuthors",
-      "getCartFor",
+      "userDb.getById",
+      "cartDb.getCartFor",
+      "cartDb.save",
+      "bookDb.getBooksWithAuthors",
     ],
-    validInputData: [{ userAuthToken: await tokenManager.createTokenFor(userId) }],
+    validInputData: [
+      { userAuthToken: await tokenManager.createTokenFor(userId) },
+    ],
     expectedErrorClass: CouldNotCompleteRequest,
   });
 });

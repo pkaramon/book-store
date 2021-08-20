@@ -1,19 +1,13 @@
 import VerifyToken from "../../auth/VerifyToken";
-import Book from "../../domain/Book";
-import BookAuthor from "../../domain/BookAuthor";
-import Cart from "../../domain/Cart";
-import User from "../../domain/User";
 import CartRelatedAction from "../CartRelatedAction";
+import Databases from "../CartRelatedAction/Databases";
 import ViewCart, { Response, InputData } from "./interface";
 
 export interface Dependencies {
+  userDb: Databases["user"];
+  bookDb: Databases["book"];
+  cartDb: Databases["cart"];
   verifyUserToken: VerifyToken;
-  getUserById(userId: string): Promise<User | null>;
-  saveCart(c: Cart): Promise<void>;
-  getCartFor(customerId: string): Promise<Cart>;
-  getBooksWithAuthors(
-    booksIds: string[]
-  ): Promise<{ book: Book; author: BookAuthor }[]>;
 }
 
 export default function buildViewCart(deps: Dependencies): ViewCart {
@@ -21,6 +15,10 @@ export default function buildViewCart(deps: Dependencies): ViewCart {
     protected modifyCart() {}
   }
 
-  const VIEW_CART = new ViewCart(deps.verifyUserToken, deps);
+  const VIEW_CART = new ViewCart(deps.verifyUserToken, {
+    user: deps.userDb,
+    cart: deps.cartDb,
+    book: deps.bookDb,
+  });
   return VIEW_CART.execute;
 }

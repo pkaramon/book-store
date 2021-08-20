@@ -5,7 +5,7 @@ import Cart from "../../domain/Cart";
 import Customer from "../../domain/Customer";
 import User from "../../domain/User";
 import CartItemOutput from "../CartItemOutput";
-import Database from "./Database";
+import Databases from "./Databases";
 import {
   UserNotFound,
   InvalidUserType,
@@ -18,7 +18,7 @@ export default abstract class CartRelatedAction<
   InputData extends { userAuthToken: string },
   Result = { cartItems: CartItemOutput[] }
 > {
-  constructor(private _verifyUserToken: VerifyToken, private _db: Database) {}
+  constructor(private _verifyUserToken: VerifyToken, private _dbs: Databases) {}
 
   protected abstract modifyCart(
     data: InputData,
@@ -44,7 +44,7 @@ export default abstract class CartRelatedAction<
 
   private async getCartFor(customer: Customer) {
     try {
-      return await this._db.getCartFor(customer.info.id);
+      return await this._dbs.cart.getCartFor(customer.info.id);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not get cart from db", e);
     }
@@ -61,7 +61,7 @@ export default abstract class CartRelatedAction<
 
   private async tryToGetUser(userId: string) {
     try {
-      return await this._db.getUserById(userId);
+      return await this._dbs.user.getById(userId);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not get user from db", e);
     }
@@ -69,7 +69,7 @@ export default abstract class CartRelatedAction<
 
   private async tryToSaveCart(cart: Cart) {
     try {
-      await this._db.saveCart(cart);
+      await this._dbs.cart.save(cart);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not save user", e);
     }
@@ -93,7 +93,7 @@ export default abstract class CartRelatedAction<
 
   private async tryToGetBooksWithAuthors(bookIds: string[]) {
     try {
-      return await this._db.getBooksWithAuthors(bookIds);
+      return await this._dbs.book.getBooksWithAuthors(bookIds);
     } catch (e) {
       throw new CouldNotCompleteRequest("could not get books and authors", e);
     }

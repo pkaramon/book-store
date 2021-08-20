@@ -21,11 +21,10 @@ import {
 } from "./interface";
 
 const dependencies = {
-  saveCart: cartDb.save,
-  getCartFor: cartDb.getCartFor,
-  getUserById: userDb.getById,
   verifyUserToken: tokenManager.verifyToken,
-  getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
+  userDb,
+  cartDb,
+  bookDb,
 };
 const viewCart = buildViewCart(dependencies);
 
@@ -99,10 +98,10 @@ test("dependency failures", async () => {
     buildFunction: buildViewCart,
     defaultDependencies: dependencies,
     dependenciesToTest: [
-      "getUserById",
-      "saveCart",
-      "getBooksWithAuthors",
-      "getCartFor",
+      "userDb.getById",
+      "cartDb.save",
+      "bookDb.getBooksWithAuthors",
+      "cartDb.getCartFor",
     ],
     validInputData: [
       { userAuthToken: await tokenManager.createTokenFor(userId) },

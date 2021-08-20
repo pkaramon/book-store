@@ -1,20 +1,15 @@
 import VerifyToken from "../../auth/VerifyToken";
-import Book from "../../domain/Book";
-import BookAuthor from "../../domain/BookAuthor";
 import Cart from "../../domain/Cart";
 import Customer from "../../domain/Customer";
-import User from "../../domain/User";
 import CartRelatedAction from "../CartRelatedAction";
 import { ClearCart, InputData } from "./interface";
+import Databases from "../CartRelatedAction/Databases";
 
 export interface Dependencies {
   verifyUserToken: VerifyToken;
-  getUserById(userId: string): Promise<User | null>;
-  saveCart(c: Cart): Promise<void>;
-  getCartFor(customerId: string): Promise<Cart>;
-  getBooksWithAuthors(
-    booksIds: string[]
-  ): Promise<{ book: Book; author: BookAuthor }[]>;
+  cartDb: Databases["cart"];
+  userDb: Databases["user"];
+  bookDb: Databases["book"];
 }
 
 export default function buildClearCart(deps: Dependencies): ClearCart {
@@ -24,6 +19,10 @@ export default function buildClearCart(deps: Dependencies): ClearCart {
     }
   }
 
-  const CLEAR_CART = new ClearCart(deps.verifyUserToken, deps);
+  const CLEAR_CART = new ClearCart(deps.verifyUserToken, {
+    user: deps.userDb,
+    book: deps.bookDb,
+    cart: deps.cartDb,
+  });
   return CLEAR_CART.execute;
 }

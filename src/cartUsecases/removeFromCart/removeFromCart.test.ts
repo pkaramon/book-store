@@ -22,10 +22,9 @@ import {
 
 const dependencies = {
   verifyUserToken: tokenManager.verifyToken,
-  saveCart: cartDb.save,
-  getUserById: userDb.getById,
-  getCartFor: cartDb.getCartFor,
-  getBooksWithAuthors: bookDb.getBooksWithAuthors.bind(bookDb),
+  bookDb,
+  userDb,
+  cartDb,
 };
 const removeFromCart = buildRemoveFromCart(dependencies);
 
@@ -81,27 +80,6 @@ test("user is not a customer", async () => {
   );
 });
 
-test("dependency failures", async () => {
-  await checkIfItHandlesUnexpectedFailures({
-    buildFunction: buildRemoveFromCart,
-    defaultDependencies: dependencies,
-    dependenciesToTest: [
-      "getUserById",
-      "saveCart",
-      "getCartFor",
-      "getBooksWithAuthors",
-    ],
-    validInputData: [{ bookId, userAuthToken }],
-    expectedErrorClass: CouldNotCompleteRequest,
-    async beforeEach() {
-      const cart = await cartDb.getCartFor(customerId);
-      cart.clear();
-      cart.add(bookId);
-      await cartDb.save(cart);
-    },
-  });
-});
-
 test("book does not exist in the cart", async () => {
   const cart = await cartDb.getCartFor(customerId);
   cart.clear();
@@ -141,4 +119,25 @@ test("usecase output", async () => {
   expect(cartItem.title).toEqual(secondBook.info.title);
   expect(cartItem.author.firstName).toEqual(bookAuthor.info.firstName);
   expect(cartItem.author.lastName).toEqual(bookAuthor.info.lastName);
+});
+
+test("dependency failures", async () => {
+  await checkIfItHandlesUnexpectedFailures({
+    buildFunction: buildRemoveFromCart,
+    defaultDependencies: dependencies,
+    dependenciesToTest: [
+      "userDb.getById",
+      "cartDb.save",
+      "cartDb.getCartFor",
+      "bookDb.getBooksWithAuthors",
+    ],
+    validInputData: [{ bookId, userAuthToken }],
+    expectedErrorClass: CouldNotCompleteRequest,
+    async beforeEach() {
+      const cart = await cartDb.getCartFor(customerId);
+      cart.clear();
+      cart.add(bookId);
+      await cartDb.save(cart);
+    },
+  });
 });

@@ -1,4 +1,3 @@
-import VerifyToken from "../../../auth/VerifyToken";
 import Book, { BookStatus } from "../../../domain/Book";
 import Cart from "../../../domain/Cart";
 import Customer from "../../../domain/Customer";
@@ -10,14 +9,15 @@ import {
   CouldNotCompleteRequest,
   BookWasNotPublished,
 } from "../interface";
-import Dependencies, { Database } from "./Dependencies";
+import Dependencies from "./Dependencies";
 
-export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
+export default function buildAddToCart({
+  verifyUserToken,
+  userDb,
+  bookDb,
+  cartDb,
+}: Dependencies) {
   class AddToCart extends CartRelatedAction<InputData, Promise<Response>> {
-    constructor(verifyUserToken: VerifyToken, private db: Database) {
-      super(verifyUserToken, db);
-    }
-
     protected async modifyCart(data: InputData, _: Customer, cart: Cart) {
       const book = await this.getBook(data.bookId);
       this.checkIfBookWasPublished(book);
@@ -32,7 +32,7 @@ export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
 
     private async tryToGetBook(bookId: string) {
       try {
-        return await this.db.getBookById(bookId);
+        return await bookDb.getById(bookId);
       } catch (e) {
         throw new CouldNotCompleteRequest("could not get book from db", e);
       }
@@ -49,6 +49,10 @@ export default function buildAddToCart({ verifyUserToken, db }: Dependencies) {
     }
   }
 
-  const ADD_TO_CART = new AddToCart(verifyUserToken, db);
+  const ADD_TO_CART = new AddToCart(verifyUserToken, {
+    book: bookDb,
+    cart: cartDb,
+    user: userDb,
+  });
   return ADD_TO_CART.execute;
 }
