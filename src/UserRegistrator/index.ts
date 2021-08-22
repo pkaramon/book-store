@@ -1,6 +1,6 @@
 import Password from "../domain/Password";
 import User from "../domain/User";
-import Dependencies from "./Tools";
+import Dependencies from "./Dependencies";
 import ValidationResult, { ErrorMessages } from "./ValidationResult";
 
 export { ValidationResult, ErrorMessages };
@@ -9,6 +9,7 @@ export default abstract class UserRegistrator<
   UserData extends { email: string }
 > {
   private userDb = this.deps.userDb;
+  private userNotifier = this.deps.userNotifier;
   constructor(private deps: Dependencies) {}
 
   async registerUser(data: UserData) {
@@ -53,7 +54,7 @@ export default abstract class UserRegistrator<
 
   private async tryToNotifyUser(u: User) {
     try {
-      await this.deps.notifyUser(u);
+      await this.userNotifier.notify(u);
     } catch {
       // silencing errors is desired in this case
     }

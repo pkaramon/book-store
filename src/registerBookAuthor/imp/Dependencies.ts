@@ -1,10 +1,11 @@
 import MakePassword from "../../domain/Password/MakePassword";
 import SchemaValidator from "../../domain/SchemaValidator";
 import User from "../../domain/User";
+import UserNotifier from "../../UserNotifier";
 import { InputData } from "../interface";
 
 export default interface Dependencies {
-  notifyUser: (u: User) => Promise<void>;
+  userNotifier: UserNotifier;
   makePassword: MakePassword;
   userDataValidator: SchemaValidator<InputData>;
   userDb: UserDb;

@@ -4,6 +4,7 @@ import SchemaValidator from "../domain/SchemaValidator";
 import clock from "../testObjects/clock";
 import makePassword from "../testObjects/makePassword";
 import userDb from "../testObjects/userDb";
+import userNotifier from "../testObjects/userNotifier";
 import {
   checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
@@ -17,9 +18,8 @@ import {
   InvalidBookAuthorRegisterData,
 } from "./interface";
 
-const notifyUser = jest.fn().mockResolvedValue(undefined);
 const dependencies = {
-  notifyUser,
+  userNotifier,
   makePassword: makePassword,
   userDataValidator: new SchemaValidator(buildBookAuthorSchema(clock)),
   userDb,
@@ -27,7 +27,6 @@ const dependencies = {
 const registerBookAuthor = buildRegisterBookAuthor(dependencies);
 beforeEach(() => {
   userDb.TEST_ONLY_clear();
-  notifyUser.mockClear();
 });
 const validData: InputData = {
   email: "bob@mail.com",
@@ -108,8 +107,10 @@ test("email must be unique", async () => {
 });
 
 test("bookAuthor should receive notification when successfully registered", async () => {
+  userNotifier.clearNotifications();
   const { userId } = await registerBookAuthor({ ...validData });
-  expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
+  const user = (await userDb.getById(userId))!;
+  expect(userNotifier.wasUserNotified(user)).toBe(true);
 });
 
 test("dependency failure", async () => {

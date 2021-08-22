@@ -11,7 +11,7 @@ import Dependencies from "./Dependencies";
 
 export default function buildRegisterCustomer({
   userDataValidator,
-  notifyUser,
+  userNotifier,
   userDb,
   makePassword,
 }: Dependencies): RegisterCustomer {
@@ -22,7 +22,7 @@ export default function buildRegisterCustomer({
 
   class CustomerRegistrator extends UserRegistrator<InputData> {
     public static instance = new CustomerRegistrator({
-      notifyUser,
+      userNotifier,
       makePassword,
       userDb,
     });

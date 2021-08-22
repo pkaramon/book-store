@@ -15,7 +15,7 @@ export default function buildRegisterAdmin({
   userDb,
   makePassword,
   adminDataValidator,
-  notifyUser,
+  userNotifier,
   verifySuperAdminToken,
 }: Dependecies): RegisterAdmin {
   async function registerAdmin(data: InputData) {
@@ -85,7 +85,7 @@ export default function buildRegisterAdmin({
 
   async function tryToNotifyUser(user: User) {
     try {
-      await notifyUser(user);
+      await userNotifier.notify(user);
     } catch {
       // silencing errors is desired in this case
     }

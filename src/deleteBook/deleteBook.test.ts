@@ -7,7 +7,6 @@ import {
   createBuildHelper,
   expectThrownErrorToMatch,
   getThrownError,
-  rejectWith,
 } from "../__test_helpers__";
 import buildDeleteBook from "./imp";
 import { BookNotFound, CouldNotCompleteRequest, NotAllowed } from "./interface";

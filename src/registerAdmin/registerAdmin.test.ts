@@ -5,6 +5,7 @@ import clock from "../testObjects/clock";
 import makePassword from "../testObjects/makePassword";
 import superAdminTokenManager from "../testObjects/superAdminTokenManager";
 import userDb from "../testObjects/userDb";
+import userNotifier from "../testObjects/userNotifier";
 import {
   checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
@@ -18,7 +19,6 @@ import {
   InvalidSuperAdminCredentials,
 } from "./interface";
 
-const notifyUser = jest.fn().mockResolvedValue(undefined);
 const dependencies = {
   verifySuperAdminToken: (token: string) => {
     return superAdminTokenManager.verify(token);
@@ -26,7 +26,7 @@ const dependencies = {
   makePassword: makePassword,
   userDb,
   adminDataValidator: new SchemaValidator(buildPlainUserSchema(clock)),
-  notifyUser,
+  userNotifier: userNotifier,
 };
 const registerAdmin = buildRegisterAdmin(dependencies);
 
@@ -101,15 +101,16 @@ test("email must be unique", async () => {
 });
 
 test("notifing admin about the registration", async () => {
+  userNotifier.clearNotifications();
   const { adminId } = await registerAdmin({ superAdminToken, adminData });
   const admin = (await userDb.getById(adminId)) as Admin;
-  expect(notifyUser).toHaveBeenCalledWith(admin);
+  expect(userNotifier.wasUserNotified(admin)).toBe(true);
 });
 
-test("notifyUser failure does not impact the result of the transaction", async () => {
+test("failure when notifying does not impact the result of the transaction", async () => {
   const registerAdmin = buildRegisterAdmin({
     ...dependencies,
-    notifyUser: jest.fn().mockRejectedValue(new Error("err")),
+    userNotifier: userNotifier.createFaultyNotifier(),
   });
   const { adminId } = await registerAdmin({ superAdminToken, adminData });
   expect(await userDb.getById(adminId)).not.toBeNull();

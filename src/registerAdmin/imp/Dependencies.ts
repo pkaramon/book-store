@@ -1,13 +1,14 @@
 import MakePassword from "../../domain/Password/MakePassword";
 import SchemaValidator from "../../domain/SchemaValidator";
 import User from "../../domain/User";
+import UserNotifier from "../../UserNotifier";
 import { AdminData } from "../interface";
 
 export default interface Dependecies {
   verifySuperAdminToken: (token: string) => boolean | Promise<boolean>;
   makePassword: MakePassword;
   userDb: UserDb;
-  notifyUser: (u: User) => Promise<void>;
+  userNotifier: UserNotifier;
   adminDataValidator: SchemaValidator<AdminData>;
 }
 

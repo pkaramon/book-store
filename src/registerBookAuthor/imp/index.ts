@@ -1,4 +1,5 @@
 import BookAuthor from "../../domain/BookAuthor";
+import User from "../../domain/User";
 import UserRegistrator, { ValidationResult } from "../../UserRegistrator";
 import RegisterBookAuthor, {
   InputData,
@@ -11,7 +12,7 @@ import Dependencies from "./Dependencies";
 export default function buildRegisterBookAuthor({
   userDataValidator,
   userDb,
-  notifyUser,
+  userNotifier,
   makePassword,
 }: Dependencies): RegisterBookAuthor {
   async function registerBookAuthor(data: InputData) {
@@ -22,7 +23,7 @@ export default function buildRegisterBookAuthor({
   class BookAuthorRegistrator extends UserRegistrator<InputData> {
     public static instance = new BookAuthorRegistrator({
       makePassword,
-      notifyUser,
+      userNotifier,
       userDb,
     });
 

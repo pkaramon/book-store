@@ -4,6 +4,7 @@ import SchemaValidator from "../domain/SchemaValidator";
 import clock from "../testObjects/clock";
 import makePassword from "../testObjects/makePassword";
 import userDb from "../testObjects/userDb";
+import userNotifier from "../testObjects/userNotifier";
 import {
   checkIfItHandlesUnexpectedFailures,
   expectThrownErrorToMatch,
@@ -153,19 +154,17 @@ test("hashing passwords", async () => {
 });
 
 test("customer should receive a notification when successfully registered", async () => {
-  const notifyUser = jest.fn().mockResolvedValue(undefined);
-  const registerCustomer = buildRegisterCustomer({
-    ...dependencies,
-    notifyUser,
-  });
+  userNotifier.clearNotifications();
   const { userId } = await registerCustomer({ ...validData });
-  expect(notifyUser).toHaveBeenCalledWith(await userDb.getById(userId));
+
+  const customer = (await userDb.getById(userId)) as Customer;
+  expect(userNotifier.wasUserNotified(customer)).toBe(true);
 });
 
-test("errors thrown from notifyUser are silenced, they do not impact the result of the transaction", async () => {
+test("errors when notifying user are silenced, they do not impact the result of the transaction", async () => {
   const registerCustomer = buildRegisterCustomer({
     ...dependencies,
-    notifyUser: rejectWith(new Error("email server error")),
+    userNotifier: userNotifier.createFaultyNotifier(),
   });
   const { userId } = await registerCustomer({ ...validData });
   expect(await userDb.getById(userId)).not.toBeNull();
@@ -199,7 +198,7 @@ test("dependency failures", async () => {
 
 const dependencies = {
   userDb,
-  notifyUser: jest.fn().mockResolvedValue(undefined),
+  userNotifier,
   userDataValidator: new SchemaValidator(buildPlainUserSchema(clock)),
   makePassword,
 };

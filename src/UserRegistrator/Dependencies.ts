@@ -1,9 +1,10 @@
 import MakePassword from "../domain/Password/MakePassword";
 import User from "../domain/User";
+import UserNotifier from "../UserNotifier";
 
 export default interface Dependencies {
   userDb: UserDb;
-  notifyUser: (user: User) => Promise<void>;
+  userNotifier: UserNotifier;
   makePassword: MakePassword;
 }
 
