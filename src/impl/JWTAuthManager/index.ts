@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { TokenVerificationError } from "../../auth/VerifyToken";
 
-export default class JWTManager {
+export default class JWTAuthManager {
   constructor(private secretKey: string) {
     this.createTokenFor = this.createTokenFor.bind(this);
     this.verifyToken = this.verifyToken.bind(this);
