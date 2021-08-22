@@ -1,4 +1,5 @@
 import { getThrownError, rejectWith } from ".";
+import DidNotThrowError from "./DidNotThrowError";
 
 export default async function checkIfItHandlesUnexpectedFailures<
   Deps,
@@ -27,6 +28,10 @@ export default async function checkIfItHandlesUnexpectedFailures<
     const error = await getThrownError(() =>
       usecase(...(validInputData as any))
     );
+    if (error instanceof DidNotThrowError) {
+      throw new Error(`did not throw any error at ${dependencyName}`);
+    }
+
     if (!(error instanceof expectedErrorClass)) {
       throw new Error(`did not handle failure at ${dependencyName}`);
     }
@@ -35,7 +40,9 @@ export default async function checkIfItHandlesUnexpectedFailures<
 
   function buildBadDepsForMethod(accessor: string) {
     const [objectName, method] = accessor.split(".");
-    const obj = Object.assign({}, (defaultDependencies as any)[objectName]);
+    const original = (defaultDependencies as any)[objectName];
+    const obj = Object.assign({}, original);
+    Object.setPrototypeOf(obj, original.constructor.prototype);
     if (typeof obj[method] !== "function")
       throw new Error(`${accessor} is not a method`);
     obj[method] = rejectWith(new Error("err"));
