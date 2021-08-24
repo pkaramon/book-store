@@ -117,3 +117,4 @@ lib
 .pnp.*
 
 notes
+src/impl/EmailNotifications/e2e.test.ts
