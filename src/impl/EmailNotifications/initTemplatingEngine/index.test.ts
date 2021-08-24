@@ -10,8 +10,13 @@ beforeAll(async () => {
   await fs.rm(templatesDirPath, { recursive: true, force: true });
   await fs.mkdir(templatesDirPath);
   await fs.mkdir(partialsDirPath);
+  await fs.mkdir(path.join(templatesDirPath, "inner"));
   await fs.writeFile(path.join(templatesDirPath, "registered.hbs"), "{{name}}");
   await fs.writeFile(path.join(templatesDirPath, "another.hbs"), "{{age}}");
+  await fs.writeFile(
+    path.join(templatesDirPath, "inner/", "innertemplate.hbs"),
+    "{{age}}"
+  );
   await fs.writeFile(
     path.join(partialsDirPath, "user.hbs"),
     "NAME: {{name}} AGE: {{age}}"
@@ -26,10 +31,12 @@ it("finds and initializes all the templates", async () => {
 
   expect(templates.has("registered")).toBe(true);
   expect(templates.has("another")).toBe(true);
+  expect(templates.has("inner/innertemplate")).toBe(true);
 
   const user = { name: "Peter", age: 42 };
   expect(templates.get("registered")!(user)).toEqual("Peter");
   expect(templates.get("another")!(user)).toEqual("42");
+  expect(templates.get("inner/innertemplate")!(user)).toEqual("42");
 });
 
 it("finds and initializes partials", async () => {
@@ -38,4 +45,16 @@ it("finds and initializes partials", async () => {
   expect(template({ user: { name: "Peter", age: 42 } })).toEqual(
     "NAME: Peter AGE: 42"
   );
+});
+
+it("finds partials in nested directories", async () => {
+  await fs.mkdir(path.join(partialsDirPath, "nested"), { recursive: true });
+  await fs.writeFile(
+    path.join(partialsDirPath, "nested", "nested-partial.hbs"),
+    "{{age}}"
+  );
+  await initTemplatingEngine(templatesDirPath);
+
+  const template = hbs.compile(`{{> nested/nested-partial age=user.age }}`);
+  expect(template({ user: { name: "Peter", age: 42 } })).toEqual("42");
 });
