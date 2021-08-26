@@ -1,4 +1,3 @@
-import Password from "../domain/Password";
 import User, { UserInfo } from "../domain/User";
 import makePassword from "./makePassword";
 
@@ -23,9 +22,5 @@ class FakePlainUser extends User {
 
   get info() {
     return this._info;
-  }
-
-  changePassword(value: Password): void {
-    this.info.password = value;
   }
 }

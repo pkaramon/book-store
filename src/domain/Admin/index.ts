@@ -1,4 +1,3 @@
-import Password from "../Password";
 import User, { UserInfo } from "../User";
 
 export default class Admin extends User {
@@ -8,10 +7,6 @@ export default class Admin extends User {
 
   get info() {
     return this._info;
-  }
-
-  changePassword(value: Password): void {
-    this._info.password = value;
   }
 }
 
