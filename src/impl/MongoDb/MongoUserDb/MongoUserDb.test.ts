@@ -1,13 +1,12 @@
-import Admin from "../../domain/Admin";
-import BookAuthor from "../../domain/BookAuthor";
-import Customer from "../../domain/Customer";
-import User from "../../domain/User";
-import getFakeAdmin from "../../testObjects/FakeAdmin";
-import getFakeBookAuthor from "../../testObjects/FakeBookAuthor";
-import getFakeCustomer from "../../testObjects/FakeCustomer";
-import makePassword from "../../testObjects/makePassword";
-import MongoUserDb from "./MongoUserDb";
-import UserToDocumentGatewayImp from "./UserToDocumentGatewayImp";
+import Admin from "../../../domain/Admin";
+import BookAuthor from "../../../domain/BookAuthor";
+import Customer from "../../../domain/Customer";
+import User from "../../../domain/User";
+import getFakeAdmin from "../../../testObjects/FakeAdmin";
+import getFakeBookAuthor from "../../../testObjects/FakeBookAuthor";
+import getFakeCustomer from "../../../testObjects/FakeCustomer";
+import makePassword from "../../../testObjects/makePassword";
+import MongoUserDb from "../MongoUserDb";
 
 const userDb = new MongoUserDb(
   {
@@ -15,12 +14,7 @@ const userDb = new MongoUserDb(
     databaseName: "TEST_DB",
     collectionName: "USERS_TEST",
   },
-  new UserToDocumentGatewayImp({
-    makePassword,
-    generateId() {
-      return Math.random().toString();
-    },
-  })
+  makePassword
 );
 
 beforeEach(async () => {

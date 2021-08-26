@@ -1,9 +1,10 @@
-import Admin from "../../domain/Admin";
-import BookAuthor from "../../domain/BookAuthor";
-import Customer from "../../domain/Customer";
-import MakePassword from "../../domain/Password/MakePassword";
-import User from "../../domain/User";
-import { UserDocument, UserToDocumentGateway } from "./MongoUserDb";
+import Admin from "../../../domain/Admin";
+import BookAuthor from "../../../domain/BookAuthor";
+import Customer from "../../../domain/Customer";
+import MakePassword from "../../../domain/Password/MakePassword";
+import User from "../../../domain/User";
+import UserDocument from "./UserDocument";
+import UserToDocumentGateway from "./UserToDocumentGateway";
 
 interface CustomerDocument extends UserDocument {
   userType: "customer";
